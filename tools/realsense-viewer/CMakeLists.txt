@@ -17,6 +17,7 @@ if(BUILD_GRAPHICAL_EXAMPLES)
 set(RS_VIEWER_CPP
         ${COMMON_SRC}
         realsense-viewer.cpp
+        remote-source.h
         ../../third-party/imgui/imgui.cpp
         ../../third-party/imgui/imgui_draw.cpp
         ../../third-party/imgui/imgui_impl_glfw.cpp
@@ -77,6 +78,7 @@ target_link_libraries(realsense-viewer ${DEPENDENCIES}
                                         ${GTK3_LIBRARIES}
                                         Threads::Threads
                                         realsense2-gl
+										realsense2-ethernet
                                         )
 if (IMPORT_DEPTH_CAM_FW)
     add_definitions(-DINTERNAL_FW)
