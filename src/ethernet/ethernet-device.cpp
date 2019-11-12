@@ -74,10 +74,14 @@ void rs2::ethernet_device::stop() {
 	CloseHandle(hPipe);
 }
 
-rs2::software_sensor* rs2::ethernet_device::query_ethernet_device_sensors()
+std::vector<rs2::sensor> rs2::ethernet_device::ethernet_device::query_sensors()
 {
-	rs2::software_sensor* sensors_ptr;
-	return sensors_ptr;
+	std::cout << "Mock ethernet device querry";
+	std::vector<rs2::sensor> sensors;
+	//TODO: get device sensors via network
+	rs2::sensor mock_sensor;
+	sensors.push_back(mock_sensor);
+	return sensors;
 }
 
 #pragma region POC
@@ -105,6 +109,7 @@ rs2_device* rs2::ethernet_device::get_device() {
 }
 
 void rs2::ethernet_device::create_sensors() {
+
 	rs2_intrinsics depth_intrinsics = get_intrinsics();
 	depth_sensor = rs2_software_device_add_sensor(dev, "Depth (Remote)", NULL);
 	rs2_video_stream st = { RS2_STREAM_DEPTH, 0, 1, W,

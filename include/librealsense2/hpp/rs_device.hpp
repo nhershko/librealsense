@@ -22,7 +22,7 @@ namespace rs2
         * returns the list of adjacent devices, sharing the same physical parent composite device
         * \return            the list of adjacent devices
         */
-        std::vector<sensor> query_sensors() const
+        virtual std::vector<sensor> query_sensors()
         {
             rs2_error* e = nullptr;
             std::shared_ptr<rs2_sensor_list> list(
