@@ -10,6 +10,18 @@
 #include <librealsense2/hpp/rs_internal.hpp>
 #include <librealsense2/hpp/rs_sensor.hpp>
 
+#if defined(_WIN32)
+  #include <windows.h> 
+  #include <stdio.h>
+  #include <tchar.h>
+  #include <strsafe.h>
+#else
+  #include <unistd.h>
+  #include <sys/stat.h>
+  #include <sys/ioctl.h>
+  #include <fcntl.h>
+#endif
+
 namespace rs2
 {
 	class software_sensor;
@@ -65,7 +77,7 @@ namespace rs2
 		#ifdef _WIN32
 		__declspec(dllexport)
 		#endif
-		rs2_device* ethernet_device::get_device();
+		rs2_device* get_device();
 
 	private:
 
@@ -73,11 +85,13 @@ namespace rs2
 
 		void read_frame();
 
-		void ethernet_device::thread_main();
+		void thread_main();
 
 		rs2_software_video_frame& get_frame();
 
 		std::string pipe_name = "\\\\.\\pipe\\DepthStreamSink";
+
+		//std::string pipe_name = "\\\\.\\pipe\\DepthStreamSink";
 		
 
 			int frame_number = 0;
@@ -92,7 +106,12 @@ namespace rs2
 			const int H = 480;
 			const int BPP = 2;
 
-			HANDLE hPipe;
+#if defined(_WIN32)
+		HANDLE hPipe;
+#else
+		int fifo;
+		int fd;
+#endif
 			std::mutex mtx;
 			rs2_stream_profile* depth_stream;
 			rs2_software_video_frame depth_frame;

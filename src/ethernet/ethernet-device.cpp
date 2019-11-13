@@ -12,7 +12,13 @@ const int W = 640;
 const int H = 480;
 const int BPP = 2;
 
-HANDLE hPipe;
+#if defined(_WIN32)
+		HANDLE hPipe;
+#else
+		int fifo;
+		int fd;
+#endif
+
 std::mutex mtx;
 rs2_stream_profile* depth_stream;
 rs2_software_video_frame depth_frame;
@@ -23,7 +29,7 @@ void bla()
 {
 
 }
-
+#if defined(_WIN32)
 HANDLE create_named_pipe(std::string stream_name) {
 	HANDLE hPipe;
 
@@ -39,10 +45,15 @@ HANDLE create_named_pipe(std::string stream_name) {
 
 	return hPipe;
 }
+#endif
 
 rs2::ethernet_device::~ethernet_device()
 {
-	CloseHandle(hPipe);
+	#if defined(_WIN32)			
+			CloseHandle(hPipe);
+	#else
+			close(fd);
+	#endif
 	rs2_delete_device(dev);
 }
 
@@ -63,7 +74,18 @@ void rs2::ethernet_device::start() {
 	if (is_active)
 		return;
 	is_active = true;
-	hPipe = create_named_pipe(pipe_name);
+#if defined(_WIN32)
+			hPipe = CreateFileA(
+				this->pipe_name.c_str(),
+				GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+#else
+			int fifo = mkfifo(this->pipe_name.c_str(), 0666);
+			fd = open(this->pipe_name.c_str(), O_RDONLY);
+			int ret = fcntl(fd, F_SETPIPE_SZ, 1024*1024);
+			if (ret < 0) {
+				std::cout << "ERR: Set pipe size - " << std::strerror(errno) << std::endl;
+			}
+#endif	
 	t = std::thread(&rs2::ethernet_device::thread_main, this);
 }
 void rs2::ethernet_device::stop() {
@@ -71,7 +93,11 @@ void rs2::ethernet_device::stop() {
 		return;
 	is_active = false;
 	t.join();
-	CloseHandle(hPipe);
+#if defined(_WIN32)			
+			CloseHandle(hPipe);
+#else
+			close(fd);
+#endif
 }
 
 std::vector<rs2::sensor> rs2::ethernet_device::ethernet_device::query_sensors() const
@@ -87,7 +113,7 @@ std::vector<rs2::sensor> rs2::ethernet_device::ethernet_device::query_sensors() 
 #pragma region POC
 
 
-std::string pipe_name = "\\\\.\\pipe\\DepthStreamSink";
+
 
 rs2_intrinsics rs2::ethernet_device::get_intrinsics()
 {
@@ -121,20 +147,30 @@ void rs2::ethernet_device::create_sensors() {
 
 void rs2::ethernet_device::read_frame()
 {
-	std::lock_guard<std::mutex> lck(mtx);
-	DWORD bytesRead = 0;
-	if (ReadFile(hPipe, depth_frame.pixels, W * H * BPP, &bytesRead, NULL)) {
-		std::cout << " Read: " << bytesRead << " Bytes from buffer!" << std::endl;
-	}
-	else
-		std::cerr << "Cannot read from buffer!" << std::endl;
+				std::lock_guard<std::mutex> lck(mtx);
+#if defined(_WIN32)
+			{
+				DWORD bytesRead = 0;
+				if (ReadFile(hPipe, depth_frame.pixels, W * H * BPP, &bytesRead, NULL)) {
+#else
+			int nbytes = 0;
+			ioctl(fd, FIONREAD, &nbytes);
+			if (nbytes >= W*H*BPP) {
+				int bytesRead = read(fd, depth_frame.pixels, W * H * BPP);
+				if (bytesRead != -1) {
+#endif				
+					std::cout << " Read: " << bytesRead << " Bytes from buffer!" << std::endl;
+				}
+				else
+					std::cerr << "Cannot read from buffer!" << std::endl;
 
-	using namespace std::chrono;
-	auto now = system_clock::now();
-	depth_frame.timestamp = time_point_cast<milliseconds>(now).time_since_epoch().count();
-	rs2_software_sensor_on_video_frame(depth_sensor, depth_frame, NULL);
-
-	depth_frame.frame_number++;
+				using namespace std::chrono;
+				auto now = system_clock::now();
+				depth_frame.timestamp = time_point_cast<milliseconds>(now).time_since_epoch().count();
+				rs2_software_sensor_on_video_frame(depth_sensor, depth_frame, NULL);
+	
+				depth_frame.frame_number++;
+			}
 }
 
 void rs2::ethernet_device::thread_main() {
