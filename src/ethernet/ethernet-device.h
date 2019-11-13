@@ -31,6 +31,11 @@ namespace rs2
 		__declspec(dllexport)
 		#endif
 		ethernet_device();
+
+		#ifdef _WIN32
+		__declspec(dllexport)
+		#endif
+		ethernet_device(std::string ipadress);
 			
 		#ifdef _WIN32
 		__declspec(dllexport)
@@ -55,7 +60,7 @@ namespace rs2
 		#ifdef _WIN32
 		__declspec(dllexport)
 		#endif
-		virtual std::vector<sensor> query_sensors() override;
+		virtual std::vector<sensor> query_sensors() const override;
 
 		#ifdef _WIN32
 		__declspec(dllexport)

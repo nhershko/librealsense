@@ -74,7 +74,7 @@ void rs2::ethernet_device::stop() {
 	CloseHandle(hPipe);
 }
 
-std::vector<rs2::sensor> rs2::ethernet_device::ethernet_device::query_sensors()
+std::vector<rs2::sensor> rs2::ethernet_device::ethernet_device::query_sensors() const
 {
 	std::cout << "Mock ethernet device querry";
 	std::vector<rs2::sensor> sensors;

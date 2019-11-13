@@ -22,7 +22,7 @@ namespace rs2
         * returns the list of adjacent devices, sharing the same physical parent composite device
         * \return            the list of adjacent devices
         */
-        virtual std::vector<sensor> query_sensors()
+        virtual std::vector<sensor> query_sensors() const
         {
             rs2_error* e = nullptr;
             std::shared_ptr<rs2_sensor_list> list(
@@ -49,7 +49,7 @@ namespace rs2
         }
 
         template<class T>
-        T first()
+        T first() const
         {
             for (auto&& s : query_sensors())
             {
@@ -87,7 +87,7 @@ namespace rs2
         /**
         * send hardware reset request to the device
         */
-        void hardware_reset()
+        virtual void hardware_reset()
         {
             rs2_error* e = nullptr;
 
