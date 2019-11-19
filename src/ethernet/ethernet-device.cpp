@@ -3,8 +3,6 @@
 int frame_number = 0;
 std::chrono::high_resolution_clock::time_point last;
 
-//software_sensor* remote_device_sensors;
-
 std::vector<uint8_t> pixels;
 std::thread t;
 
@@ -12,59 +10,91 @@ const int W = 640;
 const int H = 480;
 const int BPP = 2;
 
-#if defined(_WIN32)
-		HANDLE hPipe;
-#else
-		int fifo;
-		int fd;
-#endif
-
 std::mutex mtx;
 rs2_stream_profile* depth_stream;
 rs2_software_video_frame depth_frame;
 rs2_sensor* depth_sensor;
 volatile bool is_active = false;
 
-void bla()
-{
 
-}
-#if defined(_WIN32)
-HANDLE create_named_pipe(std::string stream_name) {
-	HANDLE hPipe;
-
-	hPipe = CreateNamedPipeA(
-		stream_name.c_str(),
-		PIPE_ACCESS_DUPLEX,
-		PIPE_TYPE_BYTE | PIPE_WAIT,   // FILE_FLAG_FIRST_PIPE_INSTANCE is not needed but forces CreateNamedPipe(..) to fail if the pipe already exists...
-		1,
-		1024 * 1024 * 32,
-		1024 * 1024 * 32,
-		NMPWAIT_USE_DEFAULT_WAIT,
-		NULL);
-
-	return hPipe;
-}
-#endif
 
 rs2::ethernet_device::~ethernet_device()
 {
-	#if defined(_WIN32)			
-			CloseHandle(hPipe);
-	#else
-			close(fd);
-	#endif
 	rs2_delete_device(dev);
 }
 
-static int counter = 0;
-
-rs2::ethernet_device::ethernet_device()
+void rs2::ethernet_device::add_frame_to_queue(int type, Frame* raw_frame)
 {
+	if(QUEUE_MAX_SIZE>this->depth_frames.size())
+	{
+	std::mutex m_mtx;
+	const std::lock_guard<std::mutex> lock(m_mtx);
+	this->depth_frames.push(raw_frame);
+	frame_number++;
+	}
+	else
+	{
+	std::cout<< "queue is full. dropping frame" << std::endl;
+	}
+}
+
+void rs2::ethernet_device::inject_frames_to_sw_device()
+{
+	rs2_intrinsics depth_intrinsics = get_intrinsics();
+	depth_sensor = rs2_software_device_add_sensor(dev, "Depth (Remote)", NULL);
+	rs2_video_stream st = { RS2_STREAM_DEPTH, 0, 1, W,
+							H, 30, BPP,
+							RS2_FORMAT_Z16, depth_intrinsics };
+	depth_stream = rs2_software_sensor_add_video_stream(depth_sensor, st, NULL);
+	
 	depth_frame.bpp = BPP;
+	depth_frame.profile = depth_stream;
 	depth_frame.stride = BPP * W;
 	pixels.resize(depth_frame.stride * H, 0);
 	depth_frame.pixels = pixels.data();
+
+	while (is_active)
+	{
+			if (depth_frames.empty()) {
+				//do nothing 
+			} else {				
+				const std::lock_guard<std::mutex> lock(mtx);
+				Frame* frame = depth_frames.front();
+				depth_frames.pop();
+				memcpy(depth_frame.pixels, frame->m_buffer, frame->m_size);
+				// delete frame;
+				depth_frame.timestamp = frame->m_timestamp.tv_sec;//time_point_cast<milliseconds>(now).time_since_epoch().count();
+				depth_frame.frame_number++;
+				rs2_software_sensor_on_video_frame(depth_sensor, depth_frame, NULL);
+			}
+	}
+		
+}
+
+void rs2::ethernet_device::incomming_server_frames_handler()
+{
+	char stop = 0;
+	Environment env(stop);
+
+	// default value
+	int  timeout = 10;
+	int rtptransport = RTSPConnection::RTPUDPUNICAST;
+	int  logLevel = 255;
+	std::string output;
+	std::string url = "rtsp://10.12.144.74:8554/unicast";
+	//RTSPCallback cb(output);
+	RS_RTSPFrameCallback rs_cb(this, output);
+
+	RTSPConnection rtsp_client = RTSPConnection(env, &rs_cb, url.c_str(), timeout, rtptransport);
+
+	signal(SIGINT, sig_handler);
+	std::cout << "Start mainloop" << std::endl;
+	env.mainloop();
+
+}
+
+rs2::ethernet_device::ethernet_device()
+{
 	dev = rs2_create_software_device(NULL);
 	depth_frame.deleter = &ethernet_device_deleter;
 	create_sensors();
@@ -74,30 +104,16 @@ void rs2::ethernet_device::start() {
 	if (is_active)
 		return;
 	is_active = true;
-#if defined(_WIN32)
-			hPipe = CreateFileA(
-				this->pipe_name.c_str(),
-				GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-#else
-			int fifo = mkfifo(this->pipe_name.c_str(), 0666);
-			fd = open(this->pipe_name.c_str(), O_RDONLY);
-			int ret = fcntl(fd, F_SETPIPE_SZ, 1024*1024);
-			if (ret < 0) {
-				std::cout << "ERR: Set pipe size - " << std::strerror(errno) << std::endl;
-			}
-#endif	
-	t = std::thread(&rs2::ethernet_device::thread_main, this);
+
+	t = std::thread(&rs2::ethernet_device::incomming_server_frames_handler,this);
+	t2 = std::thread(&rs2::ethernet_device::inject_frames_to_sw_device,this);
 }
 void rs2::ethernet_device::stop() {
 	if (!is_active)
 		return;
 	is_active = false;
 	t.join();
-#if defined(_WIN32)			
-			CloseHandle(hPipe);
-#else
-			close(fd);
-#endif
+	t2.join();
 }
 
 std::vector<rs2::sensor> rs2::ethernet_device::ethernet_device::query_sensors() const
@@ -127,7 +143,8 @@ rs2_intrinsics rs2::ethernet_device::get_intrinsics()
 
 rs2_software_video_frame& rs2::ethernet_device::get_frame() {
 	std::lock_guard<std::mutex> lck(mtx);
-	return depth_frame;
+	rs2_software_video_frame bla;
+	return bla;
 }
 
 rs2_device* rs2::ethernet_device::get_device() {
@@ -136,17 +153,20 @@ rs2_device* rs2::ethernet_device::get_device() {
 
 void rs2::ethernet_device::create_sensors() {
 
+/*
 	rs2_intrinsics depth_intrinsics = get_intrinsics();
 	depth_sensor = rs2_software_device_add_sensor(dev, "Depth (Remote)", NULL);
 	rs2_video_stream st = { RS2_STREAM_DEPTH, 0, 1, W,
 							H, 30, BPP,
 							RS2_FORMAT_Z16, depth_intrinsics };
 	depth_stream = rs2_software_sensor_add_video_stream(depth_sensor, st, NULL);
-	depth_frame.profile = depth_stream;
+	//depth_frame.profile = depth_stream;
+	*/
 }
 
 void rs2::ethernet_device::read_frame()
 {
+	/*
 				std::lock_guard<std::mutex> lck(mtx);
 #if defined(_WIN32)
 			{
@@ -171,6 +191,7 @@ void rs2::ethernet_device::read_frame()
 	
 				depth_frame.frame_number++;
 			}
+			*/
 }
 
 void rs2::ethernet_device::thread_main() {

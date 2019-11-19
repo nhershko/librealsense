@@ -6,15 +6,23 @@ cmake_minimum_required(VERSION 3.9.0)
 project(realsense2-ethernet VERSION 1.0.0 LANGUAGES CXX C)
 # Save the command line compile commands in the build output
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+#set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
- set(DEPENDENCIES ${DEPENDENCIES} realsense2)
+set(DEPENDENCIES ${DEPENDENCIES} realsense2)
 
- file(GLOB SOURCES *.cpp)
+set(LIVE third-party/live555)
 
-add_library(${PROJECT_NAME} SHARED  ethernet-device.cpp ethernet-device.h)
+ file(GLOB ETHERNET_SOURCES 
+ "*.h"
+ "*.cpp"
+ "rtsp_client/*.cpp"
+  ${LIVE}/groupsock/*.c* 
+  ${LIVE}/liveMedia/*.c* 
+  ${LIVE}/UsageEnvironment/*.c* 
+  ${LIVE}/BasicUsageEnvironment/*.c* 
+)
 
-#target_sources(${PROJECT_NAME} ethernet-device.cpp)
+add_library(${PROJECT_NAME} SHARED ${ETHERNET_SOURCES})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 #target_link_libraries(${PROJECT_NAME} ${DEPENDENCIES})
@@ -22,8 +30,10 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE ${DEPENDENCIES}
 	realsense2
 )
+target_include_directories(${PROJECT_NAME} PUBLIC "rtsp_client/*.h")
 
-#include_directories(${PROJECT_NAME}  ../../common ../../third-party ../../third-party/tclap/include)
+target_include_directories(${PROJECT_NAME} PUBLIC ${LIVE}/groupsock/include ${LIVE}/liveMedia/include ${LIVE}/UsageEnvironment/include ${LIVE}/BasicUsageEnvironment/include inc)
+
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "Library")
 
 #install(TARGETS rs-software-device RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

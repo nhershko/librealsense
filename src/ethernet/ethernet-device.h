@@ -10,6 +10,17 @@
 #include <librealsense2/hpp/rs_internal.hpp>
 #include <librealsense2/hpp/rs_sensor.hpp>
 
+
+//RTSP_CLIENT
+
+#include "rtsp_client/environment.h"
+#include "rtsp_client/rtspconnectionclient.h"
+#include "rtsp_client/sdpclient.h"
+#include "rtsp_client/mkvclient.h"
+#include "rtsp_client/callbacks.h"
+
+
+
 #if defined(_WIN32)
   #include <windows.h> 
   #include <stdio.h>
@@ -79,6 +90,8 @@ namespace rs2
 		#endif
 		rs2_device* get_device();
 
+		void add_frame_to_queue(int type,Frame* frame);
+
 	private:
 
 		void create_sensors();
@@ -87,37 +100,58 @@ namespace rs2
 
 		void thread_main();
 
+		void incomming_server_frames_handler();
+		
+		void inject_frames_to_sw_device();
+
 		rs2_software_video_frame& get_frame();
 
 		std::string pipe_name = "\\\\.\\pipe\\DepthStreamSink";
 
-		//std::string pipe_name = "\\\\.\\pipe\\DepthStreamSink";
+		std::queue<Frame*> depth_frames;
+
+		unsigned int frame_queue_max_size = 30;
 		
+		int frame_number = 0;
+		std::chrono::high_resolution_clock::time_point last;
+		software_sensor* remote_device_sensors;
+			
+		std::vector<uint8_t> pixels;
+		std::thread t,t2;
 
-			int frame_number = 0;
-			std::chrono::high_resolution_clock::time_point last;
-			
-			software_sensor* remote_device_sensors;
-			
-			std::vector<uint8_t> pixels;
-			std::thread t;
-			
-			const int W = 640;
-			const int H = 480;
-			const int BPP = 2;
+		#if defined(_WIN32)
+				HANDLE hPipe;
+		#else
+				int fifo;
+				int fd;
+		#endif
 
-#if defined(_WIN32)
-		HANDLE hPipe;
-#else
-		int fifo;
-		int fd;
-#endif
-			std::mutex mtx;
-			rs2_stream_profile* depth_stream;
-			rs2_software_video_frame depth_frame;
-			rs2_sensor* depth_sensor;
-			//volatile bool is_active = false;
-			
-			rs2_device* dev; // Create software-only device
-	};
+		std::mutex mtx;
+		rs2_stream_profile* depth_stream;
+		rs2_software_video_frame depth_frame;
+		rs2_sensor* depth_sensor;
+		rs2_device* dev; // Create software-only device
+		Environment* env;
+
+};
+
+	class RS_RTSPFrameCallback: public RTSPCallback
+			{
+				public:
+				RS_RTSPFrameCallback(ethernet_device* ethernet_device, const std::string & output) : RTSPCallback(output)
+				{
+					dev = ethernet_device;
+				}
+
+				bool onData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) override
+				{
+					//std::cout << id << " " << size << " ts:" << presentationTime.tv_sec << "." << presentationTime.tv_usec << std::endl;
+					//std::cout << "[nhershko] got data!" << std::endl;
+					dev->add_frame_to_queue(0,new Frame((char*)buffer,size,presentationTime));
+					return true;
+				}
+
+				private:
+					rs2::ethernet_device* dev;
+			};
 }
