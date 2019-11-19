@@ -36,11 +36,10 @@ using namespace rs400;
 
 
 
-ethernet_device remote_device;
+ethernet_device remote_device("10.12.144.74:8554");
 
 void add_remote_device(context& ctx, std::string address) 
 {
-	
 	remote_device.start();
 	std::shared_ptr<rs2_context> rsctx = ctx.operator std::shared_ptr<rs2_context>();
 	rs2_context_add_software_device(rsctx.get(), remote_device.get_device(), NULL);

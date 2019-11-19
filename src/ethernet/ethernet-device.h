@@ -46,10 +46,6 @@ namespace rs2
 	{
 		public: 
 
-			/**
-			 * CTOR
-			 * \param[in]  address       ip adress + port of remote device server in the following format. IP:PORT. E.G.: 1.1.1.1:8080
-			 */
 		#ifdef _WIN32
 		__declspec(dllexport)
 		#endif
@@ -58,7 +54,7 @@ namespace rs2
 		#ifdef _WIN32
 		__declspec(dllexport)
 		#endif
-		ethernet_device(std::string ipadress);
+		ethernet_device(std::string ip_address);
 			
 		#ifdef _WIN32
 		__declspec(dllexport)
@@ -94,19 +90,12 @@ namespace rs2
 
 	private:
 
-		void create_sensors();
-
-		void read_frame();
-
-		void thread_main();
-
 		void incomming_server_frames_handler();
 		
 		void inject_frames_to_sw_device();
 
 		rs2_software_video_frame& get_frame();
 
-		std::string pipe_name = "\\\\.\\pipe\\DepthStreamSink";
 
 		std::queue<Frame*> depth_frames;
 
@@ -114,17 +103,11 @@ namespace rs2
 		
 		int frame_number = 0;
 		std::chrono::high_resolution_clock::time_point last;
-		software_sensor* remote_device_sensors;
+
+		std::string ip_address;
 			
 		std::vector<uint8_t> pixels;
 		std::thread t,t2;
-
-		#if defined(_WIN32)
-				HANDLE hPipe;
-		#else
-				int fifo;
-				int fd;
-		#endif
 
 		std::mutex mtx;
 		rs2_stream_profile* depth_stream;
@@ -146,7 +129,6 @@ namespace rs2
 				bool onData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) override
 				{
 					//std::cout << id << " " << size << " ts:" << presentationTime.tv_sec << "." << presentationTime.tv_usec << std::endl;
-					//std::cout << "[nhershko] got data!" << std::endl;
 					dev->add_frame_to_queue(0,new Frame((char*)buffer,size,presentationTime));
 					return true;
 				}

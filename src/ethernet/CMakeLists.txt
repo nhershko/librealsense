@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.9.0)
 project(realsense2-ethernet VERSION 1.0.0 LANGUAGES CXX C)
 # Save the command line compile commands in the build output
 
-#set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 set(DEPENDENCIES ${DEPENDENCIES} realsense2)
 
