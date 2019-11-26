@@ -17,6 +17,8 @@
 #include <string>
 #include <map>
 
+#include <vector>
+
 #define RTSP_CALLBACK(uri, resultCode, resultString) \
 static void continueAfter ## uri(RTSPClient* rtspClient, int resultCode, char* resultString) { static_cast<RTSPConnection::RTSPClientConnection*>(rtspClient)->continueAfter ## uri(resultCode, resultString); } \
 void continueAfter ## uri (int resultCode, char* resultString); \
@@ -34,6 +36,19 @@ void Task ## task (); \
 #else					
 	#define RTSPClientConstrutor(env, url, verbosity, appname, httpTunnelPort) RTSPClient(env, url, verbosity, appname, httpTunnelPort)
 #endif
+
+class MY_MediaSession : public MediaSession
+{
+	public: 
+
+		MediaSubsession* addNewMediaSubsession(std::string name)
+		{
+			MediaSubsession* subsession = createNewMediaSubsession();
+			subsession->setSessionId(name.c_str());
+			return subsession;
+		}
+
+};
 
 /* ---------------------------------------------------------------------------
 **  RTSP client connection interface
@@ -94,6 +109,8 @@ class RTSPConnection
 			public:
 				RTSPClientConnection(RTSPConnection& connection, Environment& env, Callback* callback, const char* rtspURL, int timeout, int rtptransport, int verbosityLevel = 0);
 				virtual ~RTSPClientConnection(); 
+
+				void add_new_subsession(std::string subsession_id);
 			
 			protected:
 				void sendNextCommand(); 
@@ -109,16 +126,17 @@ class RTSPConnection
 				RTSPConnection&          m_connection;
 				int                      m_timeout;
 				int                      m_rtptransport;
+				//nhershko
+				MY_MediaSession* 		 rs_media_session;
 				MediaSession*            m_session;                   
 				MediaSubsession*         m_subSession;             
 				MediaSubsessionIterator* m_subSessionIter;
 				Callback*                m_callback; 	
 				unsigned int             m_nbPacket;
 		};
+
 		
 	public:
-		//nhershko
-		//RTSPConnection()
 		RTSPConnection(Environment& env, Callback* callback, const char* rtspURL, const std::map<std::string,std::string> & opts, int verbosityLevel = 1);
 		RTSPConnection(Environment& env, Callback* callback, const char* rtspURL, int timeout = 5, int rtptransport = RTPUDPUNICAST, int verbosityLevel = 1);
 		//virtual ~RTSPConnection();
@@ -138,6 +156,10 @@ class RTSPConnection
 		int                      m_timeout;
 		int                      m_rtptransport;
 		int                      m_verbosity;
-	
+		
+		//nhershko connection to server
 		RTSPClientConnection*    m_rtspClient;
+		std::vector<RTSPClientConnection*> m_rtspClients;
 };
+
+

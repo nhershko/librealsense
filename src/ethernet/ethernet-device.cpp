@@ -12,8 +12,6 @@ const int BPP = 2;
 
 std::mutex mtx;
 rs2_stream_profile* depth_stream;
-rs2_software_video_frame depth_frame;
-rs2_sensor* depth_sensor;
 volatile bool is_active = false;
 
 
@@ -66,14 +64,19 @@ void rs2::ethernet_device::add_frame_to_queue(int type, Frame* raw_frame)
 {
 	if(QUEUE_MAX_SIZE>this->depth_frames.size())
 	{
-	std::mutex m_mtx;
-	const std::lock_guard<std::mutex> lock(m_mtx);
-	this->depth_frames.push(raw_frame);
-	frame_number++;
+		std::mutex m_mtx;
+		const std::lock_guard<std::mutex> lock(m_mtx);
+		if(type==0)
+			this->depth_frames.push(raw_frame);
+		else 
+		{
+			this->color_frames.push(raw_frame);
+		}
+		frame_number++;
 	}
 	else
 	{
-	std::cout<< "queue is full. dropping frame" << std::endl;
+		std::cout<< "queue is full. dropping frame" << std::endl;
 	}
 }
 
@@ -81,6 +84,7 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 {
 	rs2_intrinsics depth_intrinsics = get_intrinsics();
 	depth_sensor = rs2_software_device_add_sensor(dev, "Depth (Remote)", NULL);
+	
 	rs2_video_stream st = { RS2_STREAM_DEPTH, 0, 1, W,
 							H, 30, BPP,
 							RS2_FORMAT_Z16, depth_intrinsics };
@@ -92,6 +96,33 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 	pixels.resize(depth_frame.stride * H, 0);
 	depth_frame.pixels = pixels.data();
 	depth_frame.deleter = &ethernet_device_deleter;
+  
+	//color
+
+	rs2_intrinsics color_intrinsics = { W,H,
+            0, 0,
+            0, 0,
+            RS2_DISTORTION_BROWN_CONRADY ,{ 0,0,0,0,0 } };
+
+	int color_bpp = 3;
+
+	rs2_video_stream st2 = { RS2_STREAM_COLOR, 0, 1, W,
+							H, 30, BPP,
+							RS2_FORMAT_RGB8, color_intrinsics };
+
+	//software_sensor color_sensor = this->add_sensor("Color (Remote)");
+	//color_sensor.add_video_stream(st2);
+	
+	color_sensor = rs2_software_device_add_sensor(dev, "Color (Remote)", NULL);
+	color_stream = rs2_software_sensor_add_video_stream(color_sensor, st2, NULL);
+	
+	color_frame.bpp = BPP;
+	color_frame.profile = color_stream;
+	color_frame.stride = BPP * W;
+	pixels.resize(color_frame.stride * H, 0);
+	color_frame.pixels = pixels.data();
+	color_frame.deleter = &ethernet_device_deleter;
+
 
 	while (is_active)
 	{
@@ -103,9 +134,23 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 				depth_frames.pop();
 				memcpy(depth_frame.pixels, frame->m_buffer, frame->m_size);
 				// delete frame;
-				depth_frame.timestamp = frame->m_timestamp.tv_sec;//time_point_cast<milliseconds>(now).time_since_epoch().count();
+				depth_frame.timestamp = frame->m_timestamp.tv_sec;
 				depth_frame.frame_number++;
 				rs2_software_sensor_on_video_frame(depth_sensor, depth_frame, NULL);
+			}
+
+			if (color_frames.empty()) {
+				;//do nothing 
+			} else {				
+				const std::lock_guard<std::mutex> lock(mtx2);
+				Frame* frame = color_frames.front();
+				color_frames.pop();
+				memcpy(color_frame.pixels, frame->m_buffer, frame->m_size);
+				// delete frame;
+				color_frame.timestamp = frame->m_timestamp.tv_sec;
+				color_frame.frame_number++;
+				//color_sensor.on_video_frame(color_frame);
+				rs2_software_sensor_on_video_frame(color_sensor, color_frame, NULL);
 			}
 	}
 		
@@ -123,8 +168,12 @@ void rs2::ethernet_device::incomming_server_frames_handler()
 	std::string output;
 	std::string url = "rtsp://" + ip_address + "/unicast"; //"rtsp://10.12.144.74:8554/unicast";
 	RS_RTSPFrameCallback rs_cb(this, output);
+	rs_cb.id=0;
+	RS_RTSPFrameCallback rs_cb_color(this, output);
+	rs_cb_color.id=1;
 
 	RTSPConnection rtsp_client = RTSPConnection(env, &rs_cb, url.c_str(), timeout, rtptransport);
+	RTSPConnection rtsp_client_color = RTSPConnection(env, &rs_cb_color, (url+"2").c_str(), timeout, rtptransport);
 
 	signal(SIGINT, sig_handler);
 	std::cout << "Start mainloop" << std::endl;

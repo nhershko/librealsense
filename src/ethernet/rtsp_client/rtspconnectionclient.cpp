@@ -124,6 +124,11 @@ RTSPConnection::RTSPClientConnection::~RTSPClientConnection()
 		Medium::close(m_session);
 	}
 }
+
+void RTSPConnection::RTSPClientConnection::add_new_subsession(std::string subsession_id)
+{
+	rs_media_session->addNewMediaSubsession(subsession_id);
+}
 		
 void RTSPConnection::RTSPClientConnection::sendNextCommand() 
 {

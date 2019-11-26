@@ -98,6 +98,7 @@ namespace rs2
 
 
 		std::queue<Frame*> depth_frames;
+		std::queue<Frame*> color_frames;
 
 		unsigned int frame_queue_max_size = 30;
 		
@@ -109,10 +110,15 @@ namespace rs2
 		std::vector<uint8_t> pixels;
 		std::thread t,t2;
 
-		std::mutex mtx;
+		std::mutex mtx,mtx2;
 		rs2_stream_profile* depth_stream;
+		rs2_stream_profile* color_stream;
 		rs2_software_video_frame depth_frame;
+		rs2_software_video_frame color_frame;
 		rs2_sensor* depth_sensor;
+		rs2_sensor* color_sensor;
+
+		//software_sensor* color_sensor;
 		rs2_device* dev; // Create software-only device
 		Environment* env;
 
@@ -121,6 +127,9 @@ namespace rs2
 	class RS_RTSPFrameCallback: public RTSPCallback
 			{
 				public:
+
+				int id;
+
 				RS_RTSPFrameCallback(ethernet_device* ethernet_device, const std::string & output) : RTSPCallback(output)
 				{
 					dev = ethernet_device;
@@ -128,8 +137,8 @@ namespace rs2
 
 				bool onData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) override
 				{
-					//std::cout << id << " " << size << " ts:" << presentationTime.tv_sec << "." << presentationTime.tv_usec << std::endl;
-					dev->add_frame_to_queue(0,new Frame((char*)buffer,size,presentationTime));
+					//std::cout << this->id << " " << size << " ts:" << presentationTime.tv_sec << "." << presentationTime.tv_usec << std::endl;
+					dev->add_frame_to_queue(this->id,new Frame((char*)buffer,size,presentationTime));
 					return true;
 				}
 
