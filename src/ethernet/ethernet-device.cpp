@@ -108,7 +108,7 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 
 	rs2_video_stream st2 = { RS2_STREAM_COLOR, 0, 1, W,
 							H, 30, BPP,
-							RS2_FORMAT_RGB8, color_intrinsics };
+							RS2_FORMAT_YUYV, color_intrinsics };
 
 	//software_sensor color_sensor = this->add_sensor("Color (Remote)");
 	//color_sensor.add_video_stream(st2);
@@ -122,7 +122,6 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 	pixels.resize(color_frame.stride * H, 0);
 	color_frame.pixels = pixels.data();
 	color_frame.deleter = &ethernet_device_deleter;
-
 
 	while (is_active)
 	{

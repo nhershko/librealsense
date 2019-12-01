@@ -137,7 +137,7 @@ namespace rs2
 
 				bool onData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) override
 				{
-					//std::cout << this->id << " " << size << " ts:" << presentationTime.tv_sec << "." << presentationTime.tv_usec << std::endl;
+					std::cout << "CB_ID" << this->id << "sink id " << id << " " << size << " ts:" << presentationTime.tv_sec << "." << presentationTime.tv_usec << std::endl;
 					dev->add_frame_to_queue(this->id,new Frame((char*)buffer,size,presentationTime));
 					return true;
 				}
