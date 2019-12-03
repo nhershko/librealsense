@@ -447,7 +447,6 @@ namespace rs2
             };
 
             safe_send_command(cmd, "START_CALIB");
-
             memset(&result, 0, sizeof(DirectSearchCalibrationResult));
 
             // While not ready...
