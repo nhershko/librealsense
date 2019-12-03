@@ -30,6 +30,7 @@ class SessionCallback
 	public:
 		virtual bool    onNewSession(const char* id, const char* media, const char* codec, const char* sdp) { return true; }
 		virtual bool    onData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) = 0;
+		virtual bool    onData(char sink_format, const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) = 0;
 		virtual ssize_t onNewBuffer(const char* id, const char* mime, unsigned char* buffer, ssize_t size)  { 
 			ssize_t markerSize = 0;
 			if ( (strcmp(mime, "video/H264") == 0) || (strcmp(mime, "video/H265") == 0) ) {
@@ -50,6 +51,8 @@ class SessionSink: public MediaSink
 {
 	public:
 		static SessionSink* createNew(UsageEnvironment& env, SessionCallback* callback) { return new SessionSink(env, callback); }
+
+		char sink_payload_format;
 
 	private:
 		SessionSink(UsageEnvironment& env, SessionCallback* callback);

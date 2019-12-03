@@ -43,6 +43,8 @@ class RTSPCallback : public RTSPConnection::Callback
 			}
 			return true;
 		}
+
+		virtual bool onData(char sink_id, const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {}
 		
 		virtual void    onError(RTSPConnection& connection, const char* message) {
 			std::cout << "Error:" << message << std::endl;
@@ -125,15 +127,6 @@ class MKVCallback : public MKVClient::Callback
 			return true;
 		}
 };
-
-char stop = 0;
-void sig_handler(int signo)
-{
-	if (signo == SIGINT) {
-		printf("received SIGINT\n");
-		stop = 1;
-	}
-}
 
 
 //nhershko

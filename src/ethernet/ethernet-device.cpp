@@ -14,6 +14,14 @@ std::mutex mtx;
 rs2_stream_profile* depth_stream;
 volatile bool is_active = false;
 
+char stop_flag = 0;
+void sig_handler(int signo)
+{
+	if (signo == SIGINT) {
+		printf("received SIGINT\n");
+		stop_flag = 1;
+	}
+}
 
 rs2::ethernet_device::ethernet_device()
 {
@@ -104,15 +112,10 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
             0, 0,
             RS2_DISTORTION_BROWN_CONRADY ,{ 0,0,0,0,0 } };
 
-	int color_bpp = 3;
-
 	rs2_video_stream st2 = { RS2_STREAM_COLOR, 0, 1, W,
 							H, 30, BPP,
 							RS2_FORMAT_YUYV, color_intrinsics };
 
-	//software_sensor color_sensor = this->add_sensor("Color (Remote)");
-	//color_sensor.add_video_stream(st2);
-	
 	color_sensor = rs2_software_device_add_sensor(dev, "Color (Remote)", NULL);
 	color_stream = rs2_software_sensor_add_video_stream(color_sensor, st2, NULL);
 	
@@ -157,8 +160,7 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 
 void rs2::ethernet_device::incomming_server_frames_handler()
 {
-	char stop = 0;
-	Environment env(stop);
+	Environment env(stop_flag);
 
 	// default value
 	int  timeout = 10;
@@ -168,11 +170,11 @@ void rs2::ethernet_device::incomming_server_frames_handler()
 	std::string url = "rtsp://" + ip_address + "/unicast"; //"rtsp://10.12.144.74:8554/unicast";
 	RS_RTSPFrameCallback rs_cb(this, output);
 	rs_cb.id=0;
-	RS_RTSPFrameCallback rs_cb_color(this, output);
-	rs_cb_color.id=1;
+	//RS_RTSPFrameCallback rs_cb_color(this, output);
+	//rs_cb_color.id=1;
 
 	RTSPConnection rtsp_client = RTSPConnection(env, &rs_cb, url.c_str(), timeout, rtptransport);
-	RTSPConnection rtsp_client_color = RTSPConnection(env, &rs_cb_color, (url+"2").c_str(), timeout, rtptransport);
+	//RTSPConnection rtsp_client_color = RTSPConnection(env, &rs_cb_color, (url+"2").c_str(), timeout, rtptransport);
 
 	signal(SIGINT, sig_handler);
 	std::cout << "Start mainloop" << std::endl;

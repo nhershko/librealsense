@@ -46,7 +46,7 @@ void SessionSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedByt
 	}
 	else if (m_callback)
 	{
-		if (!m_callback->onData(this->name(), m_buffer, frameSize+m_markerSize, presentationTime))
+		if (!m_callback->onData(this->sink_payload_format,this->name(), m_buffer, frameSize+m_markerSize, presentationTime))
 		{
 			envir() << "NOTIFY failed\n";
 		}

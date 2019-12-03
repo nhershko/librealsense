@@ -214,6 +214,8 @@ void RTSPConnection::RTSPClientConnection::continueAfterSETUP(int resultCode, ch
 		else if (m_callback->onNewSession(sink->name(), m_subSession->mediumName(), m_subSession->codecName(), m_subSession->savedSDPLines())) 
 		{
 			envir() << "Start playing sink for \"" << m_subSession->mediumName() << "/" << m_subSession->codecName() << "\" subsession" << "\n";
+			envir() << "Payload format: " << m_subSession->rtpPayloadFormat() << "\n";
+			((SessionSink*)sink)->sink_payload_format = m_subSession->rtpPayloadFormat();
 			m_subSession->sink = sink;
 			m_subSession->sink->startPlaying(*(m_subSession->readSource()), NULL, NULL);
 		} 

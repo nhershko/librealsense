@@ -31,6 +31,7 @@
   #include <sys/stat.h>
   #include <sys/ioctl.h>
   #include <fcntl.h>
+  #include<signal.h>
 #endif
 
 namespace rs2
@@ -121,7 +122,7 @@ namespace rs2
 		//software_sensor* color_sensor;
 		rs2_device* dev; // Create software-only device
 		Environment* env;
-
+		
 };
 
 	class RS_RTSPFrameCallback: public RTSPCallback
@@ -137,8 +138,18 @@ namespace rs2
 
 				bool onData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) override
 				{
-					std::cout << "CB_ID" << this->id << "sink id " << id << " " << size << " ts:" << presentationTime.tv_sec << "." << presentationTime.tv_usec << std::endl;
+					std::cout << "CB_ID " << this->id << "sink id " << id << " " << size << " ts:" << presentationTime.tv_sec << "." << presentationTime.tv_usec << std::endl;
 					dev->add_frame_to_queue(this->id,new Frame((char*)buffer,size,presentationTime));
+					return true;
+				}
+
+				bool onData(char sink_id, const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) override
+				{
+					//std::cout << "CB_ID " << this->id << "sink id " << std::to_string(sink_id) << " " << size << " ts:" << presentationTime.tv_sec << "." << presentationTime.tv_usec << std::endl;
+					if("96"==std::to_string(sink_id))
+						dev->add_frame_to_queue(0,new Frame((char*)buffer,size,presentationTime));
+					else if ("97"==std::to_string(sink_id))
+						dev->add_frame_to_queue(1,new Frame((char*)buffer,size,presentationTime));
 					return true;
 				}
 
