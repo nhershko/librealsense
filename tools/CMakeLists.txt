@@ -19,6 +19,7 @@ add_subdirectory(terminal)
 add_subdirectory(stream-server)
 add_subdirectory(recorder)
 add_subdirectory(fw-update)
+add_subdirectory(rs-server)
 
 
 if(BUILD_GRAPHICAL_EXAMPLES)

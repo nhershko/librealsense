@@ -10,29 +10,45 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 set(DEPENDENCIES ${DEPENDENCIES} realsense2)
 
-set(LIVE third-party/live555)
+# set(LIVE third-party/live555)
+set(LIVE ../../third-party/live/)
 
- file(GLOB ETHERNET_SOURCES 
+file(GLOB ETHERNET_SOURCES 
  "*.h"
  "*.cpp"
  "rtsp_client/*.cpp"
-  ${LIVE}/groupsock/*.c* 
-  ${LIVE}/liveMedia/*.c* 
-  ${LIVE}/UsageEnvironment/*.c* 
-  ${LIVE}/BasicUsageEnvironment/*.c* 
+ ${LIVE}/groupsock/*.c* 
+ ${LIVE}/liveMedia/*.c* 
+ ${LIVE}/UsageEnvironment/*.c* 
+ ${LIVE}/BasicUsageEnvironment/*.c* 
 )
 
 add_library(${PROJECT_NAME} SHARED ${ETHERNET_SOURCES})
 
+include_directories(${PROJECT_NAME}
+        ../../common
+	#/usr/include/BasicUsageEnvironment
+	#/usr/include/UsageEnvironment
+	#/usr/include/groupsock
+	#/usr/include/liveMedia
+)
+
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
-#target_link_libraries(${PROJECT_NAME} ${DEPENDENCIES})
+
+# target_link_libraries(${PROJECT_NAME} ${DEPENDENCIES})
+
 target_link_libraries(${PROJECT_NAME} 
     PRIVATE ${DEPENDENCIES}
 	realsense2
+	#BasicUsageEnvironment
+	#UsageEnvironment
+	#groupsock
+	#liveMedia
 )
+
 target_include_directories(${PROJECT_NAME} PUBLIC "rtsp_client/*.h")
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${LIVE}/groupsock/include ${LIVE}/liveMedia/include ${LIVE}/UsageEnvironment/include ${LIVE}/BasicUsageEnvironment/include inc)
+target_include_directories(${PROJECT_NAME} PUBLIC ${LIVE}/groupsock/include ${LIVE}/liveMedia/include  ${LIVE}/UsageEnvironment/include ${LIVE}/BasicUsageEnvironment/include inc)
 
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "Library")
 
@@ -40,4 +56,5 @@ set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "Library")
 
 install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
