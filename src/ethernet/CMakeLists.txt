@@ -16,6 +16,7 @@ set(LIVE third-party/live555)
  "*.h"
  "*.cpp"
  "rtsp_client/*.cpp"
+ "common/*.hh"
   ${LIVE}/groupsock/*.c* 
   ${LIVE}/liveMedia/*.c* 
   ${LIVE}/UsageEnvironment/*.c* 
