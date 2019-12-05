@@ -1,9 +1,15 @@
 #include "ethernet-device.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 int frame_number = 0;
 std::chrono::high_resolution_clock::time_point last;
 
-std::vector<uint8_t> pixels;
+std::vector<uint8_t> depth_pixels;
+std::vector<uint8_t> color_pixels;
 std::thread t;
 
 const int W = 640;
@@ -27,6 +33,13 @@ rs2::ethernet_device::ethernet_device()
 {
 	dev = rs2_create_software_device(NULL);
 	
+	/*
+	fd_color_push = open("/tmp/color_push", O_CREAT | O_RDWR);
+	fd_color_pop  = open("/tmp/color_pop", O_CREAT | O_RDWR);
+
+	fd_depth_push = open("/tmp/depth_push", O_CREAT | O_RDWR);
+	fd_depth_pop  = open("/tmp/depth_pop", O_CREAT | O_RDWR);
+	*/
 }
 
 rs2::ethernet_device::ethernet_device(std::string url) : ethernet_device()
@@ -36,6 +49,14 @@ rs2::ethernet_device::ethernet_device(std::string url) : ethernet_device()
 
 rs2::ethernet_device::~ethernet_device()
 {
+	/*
+	if (fd_color_push) close(fd_color_push);
+	if (fd_color_pop) close(fd_color_pop);
+
+	if (fd_depth_push) close(fd_depth_push);
+	if (fd_depth_pop) close(fd_depth_pop);
+	*/
+
 	rs2_delete_device(dev);
 }
 
@@ -72,13 +93,20 @@ void rs2::ethernet_device::add_frame_to_queue(int type, Frame* raw_frame)
 {
 	if(QUEUE_MAX_SIZE>this->depth_frames.size())
 	{
-		std::mutex m_mtx;
-		const std::lock_guard<std::mutex> lock(m_mtx);
+		// std::mutex m_mtx;
+		// const std::lock_guard<std::mutex> lock(m_mtx);
+		const std::lock_guard<std::mutex> lock(mtx);
 		if(type==0)
+		{	
+			/// std::cout << "depth\n";
 			this->depth_frames.push(raw_frame);
+			/// write(fd_depth_push, raw_frame->m_buffer, raw_frame->m_size);
+		}
 		else 
 		{
+			/// std::cout << "color\n";
 			this->color_frames.push(raw_frame);
+			/// write(fd_color_push, raw_frame->m_buffer, raw_frame->m_size);
 		}
 		frame_number++;
 	}
@@ -101,8 +129,8 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 	depth_frame.bpp = BPP;
 	depth_frame.profile = depth_stream;
 	depth_frame.stride = BPP * W;
-	pixels.resize(depth_frame.stride * H, 0);
-	depth_frame.pixels = pixels.data();
+	depth_pixels.resize(depth_frame.stride * H, 0);
+	depth_frame.pixels = depth_pixels.data();
 	depth_frame.deleter = &ethernet_device_deleter;
   
 	//color
@@ -122,18 +150,19 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 	color_frame.bpp = BPP;
 	color_frame.profile = color_stream;
 	color_frame.stride = BPP * W;
-	pixels.resize(color_frame.stride * H, 0);
-	color_frame.pixels = pixels.data();
+	color_pixels.resize(color_frame.stride * H, 0);
+	color_frame.pixels = color_pixels.data();
 	color_frame.deleter = &ethernet_device_deleter;
 
 	while (is_active)
 	{
+			const std::lock_guard<std::mutex> lock(mtx);
 			if (depth_frames.empty()) {
 				//do nothing 
 			} else {				
-				const std::lock_guard<std::mutex> lock(mtx);
 				Frame* frame = depth_frames.front();
 				depth_frames.pop();
+			        /// write(fd_depth_pop, frame->m_buffer, frame->m_size);
 				memcpy(depth_frame.pixels, frame->m_buffer, frame->m_size);
 				// delete frame;
 				depth_frame.timestamp = frame->m_timestamp.tv_sec;
@@ -144,9 +173,9 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 			if (color_frames.empty()) {
 				;//do nothing 
 			} else {				
-				const std::lock_guard<std::mutex> lock(mtx2);
 				Frame* frame = color_frames.front();
 				color_frames.pop();
+			        /// write(fd_color_pop, frame->m_buffer, frame->m_size);
 				memcpy(color_frame.pixels, frame->m_buffer, frame->m_size);
 				// delete frame;
 				color_frame.timestamp = frame->m_timestamp.tv_sec;

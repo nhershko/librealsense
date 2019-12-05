@@ -36,7 +36,8 @@ using namespace rs400;
 
 
 
-ethernet_device remote_device("10.12.144.74:8554");
+ethernet_device remote_device("10.12.145.41:8554");
+// ethernet_device remote_device("10.12.144.74:8554");
 
 void add_remote_device(context& ctx, std::string address) 
 {

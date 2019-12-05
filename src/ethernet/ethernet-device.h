@@ -101,6 +101,12 @@ namespace rs2
 		std::queue<Frame*> depth_frames;
 		std::queue<Frame*> color_frames;
 
+		int fd_color_push;
+		int fd_depth_push;
+
+		int fd_color_pop;
+		int fd_depth_pop;
+
 		unsigned int frame_queue_max_size = 30;
 		
 		int frame_number = 0;
@@ -145,11 +151,16 @@ namespace rs2
 
 				bool onData(char sink_id, const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) override
 				{
-					//std::cout << "CB_ID " << this->id << "sink id " << std::to_string(sink_id) << " " << size << " ts:" << presentationTime.tv_sec << "." << presentationTime.tv_usec << std::endl;
-					if("96"==std::to_string(sink_id))
+					// std::cout << "CB_ID " << this->id << "sink id " << std::to_string(sink_id) << " " << size << " ts:" << presentationTime.tv_sec << "." << presentationTime.tv_usec << std::endl;
+					// if("96"==std::to_string(sink_id))
+					if (sink_id == 96) {
+						// std::cout << "color\n";
 						dev->add_frame_to_queue(0,new Frame((char*)buffer,size,presentationTime));
-					else if ("97"==std::to_string(sink_id))
+					// else if ("97"==std::to_string(sink_id))
+					} else {
+						// std::cout << "depth\n";
 						dev->add_frame_to_queue(1,new Frame((char*)buffer,size,presentationTime));
+					}
 					return true;
 				}
 
