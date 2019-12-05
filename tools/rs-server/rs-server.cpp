@@ -25,6 +25,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Note also that - unlike some other "*Streamer" demo applications - the resulting stream can be
 // received only using a RTSP client (such as "openRTSP")
 
+#include <iostream>
+
 #include <liveMedia.hh>
 #include <BasicUsageEnvironment.hh>
 #include <GroupsockHelper.hh>
@@ -166,17 +168,19 @@ void play()
   }
   else
   {
+    *env << "Found " << devices.size() << " cameras\n";
     selected_device = devices[0];
   }
+  
   RSDeviceParameters params1(640, 480, 2, 218, 0);
   RSDeviceParameters params2(640, 480, 2, 95, 1);
+
   devSource1 = RsDeviceSource::createNew(*env, params1, selected_device); //1,83);
   if (devSource1 == NULL)
   {
     *env << "Unable to read from device source\n";
     exit(1);
   }
-
   videoSink1->startPlaying(*devSource1, afterPlaying1, videoSink1);
 
   devSource2 = RsDeviceSource::createNew(*env, params2, selected_device); //1,83);
@@ -185,6 +189,5 @@ void play()
     *env << "Unable to read from device source\n";
     exit(1);
   }
-
   videoSink2->startPlaying(*devSource2, afterPlaying2, videoSink2);
 }

@@ -93,6 +93,8 @@ private:
   std::mutex m;
   std::condition_variable cv;
   bool isWaitingFrame;
+
+  unsigned char fbuf[640*480*2];
 };
 
 #endif

@@ -26,6 +26,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <librealsense2/h/rs_sensor.h>
 #include "BasicUsageEnvironment.hh"
 
+// unsigned char fbuf[640*480*2] = {0};
+// bool first_frame = true;
+
 RsDeviceSource *
 RsDeviceSource::createNew(UsageEnvironment &env, RSDeviceParameters deviceParams, rs2::device selectedDevice)
 {
@@ -43,8 +46,12 @@ RsDeviceSource::RsDeviceSource(UsageEnvironment &env, RSDeviceParameters deviceP
   if (sensors.size() > deviceParams.sensorID)
   {
     auto frameCallback = [&](const rs2::frame &f) {
-      frame = f;
       std::lock_guard<std::mutex> lk(m);
+      // envir() << "Received frame with size " << f.get_data_size() << "\n";
+      // memmove(fbuf, f.get_data(), 640*480*2 /*f.get_data_size()*/);
+      // memmove(fbuf, f.get_data(), f.get_data_size());
+      memcpy(fbuf, f.get_data(), f.get_data_size());
+      // frame = f;
       isWaitingFrame = true;
       cv.notify_one();
     };
@@ -78,18 +85,20 @@ void RsDeviceSource::doGetNextFrame()
   // If a new frame of data is immediately available to be delivered, then do this now:
   std::unique_lock<std::mutex> lk(m);
   cv.wait(lk, [&] { return isWaitingFrame == true; });
+/*  
   deliverRSFrame();
 }
 
 void RsDeviceSource::deliverRSFrame()
 {
+*/
   if (!isCurrentlyAwaitingData())
   {
     envir() << "isCurrentlyAwaitingData returned false"<<fParams.sensorID<<"\n";
     return; // we're not ready for the data yet
   }
   isWaitingFrame = false;
-  u_int8_t *newFrameDataStart = (u_int8_t *)frame.get_data();
+  //u_int8_t *newFrameDataStart = (u_int8_t *)frame.get_data();
   //int size = frame.get_data_size();
   //envir() << "frame size is "<<size<<"\n";
   unsigned newFrameSize = fParams.w * fParams.h * fParams.bpp;
@@ -104,7 +113,9 @@ void RsDeviceSource::deliverRSFrame()
     fFrameSize = newFrameSize;
   }
   gettimeofday(&fPresentationTime, NULL); // If you have a more accurate time - e.g., from an encoder - then use that instead.
-  memmove(fTo, frame.get_data(), fFrameSize);
+  //// memmove(fTo, frame.get_data(), fFrameSize);
+  //// unsigned char b[640*480*2];
+  memmove(fTo, fbuf, 640*480*2);
   // After delivering the data, inform the reader that it is now available:
   FramedSource::afterGetting(this);
 }
