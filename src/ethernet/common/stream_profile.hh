@@ -15,14 +15,20 @@ class stream_profile
 {
     public:
         stream_profile(stream_type_id id, stream_resolution res, int fps)
-        :m_stream_id(id),
+        :m_stream_type(id),
         m_stream_res(res),
         m_stream_fps(fps){}
 
+        //in case we want to have self-contained sdp parser
         stream_profile(char* sdp_line);
 
+        int width(){    return m_stream_res.width;  }
+        int hight(){    return m_stream_res.hight;  }
+        int fps(){  return m_stream_fps;  }
+        stream_type_id stream_type(){ return m_stream_type; }
+
     private:
-        stream_type_id m_stream_id;
+        stream_type_id m_stream_type;
         stream_resolution m_stream_res;
         int m_stream_fps;
 
