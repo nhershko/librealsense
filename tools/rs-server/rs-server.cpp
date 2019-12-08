@@ -160,7 +160,9 @@ void play()
 
   // Using the context we can get all connected devices in a device list
   rs2::device_list devices = ctx.query_devices();
+  std::string name; 
   
+
   if (devices.size() == 0)
   {
     rs2::device_hub device_hub(ctx);
@@ -169,6 +171,7 @@ void play()
   else
   {
     *env << "Found " << devices.size() << " cameras\n";
+    selected_device = devices[0];
   }
   
   RSDeviceParameters params1(640, 480, 2, 0, 30);

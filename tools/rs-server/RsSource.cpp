@@ -43,7 +43,7 @@ RsDeviceSource::RsDeviceSource(UsageEnvironment &env, RSDeviceParameters deviceP
   isWaitingFrame = false;
   selected_device = selectedDevice;
 
-  std::vector<rs2::sensor> sensors = selected_device.query_sensors();
+  std::vector<rs2::sensor> sensors = selectedDevice.query_sensors();
   if (sensors.size() > deviceParams.sensorID)
   {
     auto frameCallback = [&](const rs2::frame &f) {

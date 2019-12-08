@@ -43,12 +43,11 @@ public:
   RSDeviceParameters() //:DeviceParameters()
   {
   }
-  RSDeviceParameters(int width, int height, int bitPerPixel, /*int streamId,*/ int sensorId, int framePerSecond)
+  RSDeviceParameters(int width, int height, int bitPerPixel, int sensorId, int framePerSecond)
   {
     w = width;
     h = height;
     bpp = bitPerPixel;
-    //streamID = streamId;
     sensorID = sensorId;
     fps = framePerSecond;
   }
@@ -57,13 +56,12 @@ public:
     w = params.w;
     h = params.h;
     bpp = params.bpp;
-    //streamID = params.streamID;
     sensorID = params.sensorID;
     fps = params.fps;
   }
 
   //private:
-  int w, h, bpp, /*streamID,*/ sensorID, fps;
+  int w, h, bpp, sensorID, fps;
 };
 
 class RsDeviceSource : public FramedSource
