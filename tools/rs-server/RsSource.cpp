@@ -25,6 +25,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <GroupsockHelper.hh>
 #include <librealsense2/h/rs_sensor.h>
 #include "BasicUsageEnvironment.hh"
+#include <map>
 
 // unsigned char fbuf[640*480*2] = {0};
 // bool first_frame = true;
@@ -57,8 +58,17 @@ RsDeviceSource::RsDeviceSource(UsageEnvironment &env, RSDeviceParameters deviceP
     };
 
     selected_sensor = sensors[deviceParams.sensorID];
+    int streamID;
     std::vector<rs2::stream_profile> stream_profiles = selected_sensor.get_stream_profiles();
-    selected_sensor.open(stream_profiles[deviceParams.streamID]);
+  
+    streamID = get_stream_id();
+    if (streamID == -1)
+     {
+      envir() << "failed to open stream \n";
+      return;
+     }  
+    envir() << "stream ID is "<<streamID<< "\n";
+    selected_sensor.open(stream_profiles[streamID]);
     selected_sensor.start(frameCallback);
   }
   else
@@ -119,3 +129,53 @@ void RsDeviceSource::deliverRSFrame()
   // After delivering the data, inform the reader that it is now available:
   FramedSource::afterGetting(this);
 }
+
+int RsDeviceSource::get_stream_id()
+    {
+        rs2_format f;
+        if (fParams.sensorID == 0)
+        {
+          f = RS2_FORMAT_Z16;
+        }
+        else if(fParams.sensorID == 1)
+        {
+          f = RS2_FORMAT_YUYV;
+        }
+        else
+        {
+          return -1;
+        }
+        
+        std::vector<rs2::stream_profile> stream_profiles = selected_sensor.get_stream_profiles();
+        std::map<std::pair<rs2_stream, int>, int> unique_streams;
+        for (auto&& sp : stream_profiles)
+        {
+            unique_streams[std::make_pair(sp.stream_type(), sp.stream_index())]++;
+        }
+        for (size_t i = 0; i < unique_streams.size(); i++)
+        {
+            auto it = unique_streams.begin();
+            std::advance(it, i);
+        }
+        int profile_num = 0;
+        for (rs2::stream_profile stream_profile : stream_profiles)
+        {
+            rs2_stream stream_data_type = stream_profile.stream_type();
+            int stream_index = stream_profile.stream_index();
+            int unique_stream_id = stream_profile.unique_id(); 
+            if (stream_profile.is<rs2::video_stream_profile>()) 
+            {     
+                rs2::video_stream_profile video_stream_profile = stream_profile.as<rs2::video_stream_profile>();
+                if (video_stream_profile.format() == f &&
+                    video_stream_profile.width() == fParams.w &&
+                    video_stream_profile.height() == fParams.h &&
+                    video_stream_profile.fps() == fParams.fps )
+                    {
+                      return profile_num;
+                    }
+            }
+            profile_num++;
+        }
+        return -1;
+    }
+

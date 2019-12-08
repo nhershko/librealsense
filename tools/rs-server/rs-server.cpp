@@ -160,7 +160,7 @@ void play()
 
   // Using the context we can get all connected devices in a device list
   rs2::device_list devices = ctx.query_devices();
-
+  
   if (devices.size() == 0)
   {
     rs2::device_hub device_hub(ctx);
@@ -169,13 +169,11 @@ void play()
   else
   {
     *env << "Found " << devices.size() << " cameras\n";
-    selected_device = devices[0];
   }
   
-  RSDeviceParameters params1(640, 480, 2, 218, 0);
-  RSDeviceParameters params2(640, 480, 2, 95, 1);
-
-  devSource1 = RsDeviceSource::createNew(*env, params1, selected_device); //1,83);
+  RSDeviceParameters params1(640, 480, 2, 0, 30);
+  RSDeviceParameters params2(640, 480, 2, 1, 30);
+  devSource1 = RsDeviceSource::createNew(*env, params1, selected_device); 
   if (devSource1 == NULL)
   {
     *env << "Unable to read from device source\n";
@@ -183,7 +181,7 @@ void play()
   }
   videoSink1->startPlaying(*devSource1, afterPlaying1, videoSink1);
 
-  devSource2 = RsDeviceSource::createNew(*env, params2, selected_device); //1,83);
+  devSource2 = RsDeviceSource::createNew(*env, params2, selected_device); 
   if (devSource2 == NULL)
   {
     *env << "Unable to read from device source\n";
