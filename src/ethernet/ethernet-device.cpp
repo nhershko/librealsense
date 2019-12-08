@@ -1,4 +1,6 @@
 #include "ethernet-device.h"
+#include "IdecompressFrame.h"
+#include "decompressFrameFactory.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -154,6 +156,7 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 	color_frame.pixels = color_pixels.data();
 	color_frame.deleter = &ethernet_device_deleter;
 
+	IdecompressFrame* idecomress = decompressFrameFactory::create(zipMethod::gzip);
 	while (is_active)
 	{
 			const std::lock_guard<std::mutex> lock(mtx);
@@ -162,8 +165,11 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 			} else {				
 				Frame* frame = depth_frames.front();
 				depth_frames.pop();
+				std::cout << "Got frame " << frame->m_size << " bytes (" << *((unsigned int*)(frame->m_buffer)) << ").\n";
 			        /// write(fd_depth_pop, frame->m_buffer, frame->m_size);
-				memcpy(depth_frame.pixels, frame->m_buffer, frame->m_size);
+				unsigned char uncompressedBuf[frame->m_size];
+				idecomress->decompressFrame((unsigned char *)frame->m_buffer, frame->m_size, uncompressedBuf);
+				memcpy(depth_frame.pixels, uncompressedBuf, frame->m_size);
 				// delete frame;
 				depth_frame.timestamp = frame->m_timestamp.tv_sec;
 				depth_frame.frame_number++;
