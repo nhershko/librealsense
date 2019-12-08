@@ -140,7 +140,7 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
             0, 0,
             RS2_DISTORTION_BROWN_CONRADY ,{ 0,0,0,0,0 } };
 
-	rs2_video_stream st2 = { RS2_STREAM_COLOR, 0, 1, W,
+	rs2_video_stream st2 = { RS2_STREAM_COLOR, 0, 2, W,
 							H, 30, BPP,
 							RS2_FORMAT_YUYV, color_intrinsics };
 
