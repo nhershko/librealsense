@@ -1,4 +1,5 @@
 #include "ethernet-device.h"
+#include "common/stream_profile.hh"
 
 int frame_number = 0;
 std::chrono::high_resolution_clock::time_point last;
@@ -42,6 +43,13 @@ rs2::ethernet_device::~ethernet_device()
 std::vector<rs2::sensor> rs2::ethernet_device::ethernet_device::query_sensors() const
 {
 	std::cout << "Mock ethernet device querry";
+	
+	/*
+	TODO: use rtsp client
+	std::vector<stream_profile> rtsp_profiles = rtsp_client.query_streams();
+	std::vector<rs2_video_stream> ethernet_devie_streams = rtsp_stream_to_rs_video_stream(rtsp_profiles);
+	*/
+
 	std::vector<rs2::sensor> sensors;
 	//TODO: get device sensors via network
 	rs2::sensor mock_sensor;
@@ -90,6 +98,17 @@ void rs2::ethernet_device::add_frame_to_queue(int type, Frame* raw_frame)
 
 void rs2::ethernet_device::inject_frames_to_sw_device()
 {
+
+	/*
+	TODO: replace the pre-loop code with tream generation according to profile_list
+	something like:
+
+	for each stream in streams_list:
+		rs2_video_stream new_video_stream = { stream.stream_id, 0, 1, stream.W,stream.H, stream.fps, BPP, RS2_FORMAT_YUYV/Z16, stream.intrinsics };
+		new_sw_sensor = rs2_software_device_add_sensor(dev, stream.desciption + "(remote)", NULL);
+		rs2_software_sensor_add_video_stream(new_sensor, st2, NULL);
+	*/
+
 	rs2_intrinsics depth_intrinsics = get_intrinsics();
 	depth_sensor = rs2_software_device_add_sensor(dev, "Depth (Remote)", NULL);
 	
