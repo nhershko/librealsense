@@ -165,11 +165,15 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 			} else {				
 				Frame* frame = depth_frames.front();
 				depth_frames.pop();
-				std::cout << "Got frame " << frame->m_size << " bytes (" << *((unsigned int*)(frame->m_buffer)) << ").\n";
+				/// std::cout << "Got frame " << frame->m_size << " bytes (" << *((unsigned int*)(frame->m_buffer)) << ").\n";
 			        /// write(fd_depth_pop, frame->m_buffer, frame->m_size);
+#if 0				
 				unsigned char uncompressedBuf[frame->m_size];
 				idecomress->decompressFrame((unsigned char *)frame->m_buffer, frame->m_size, uncompressedBuf);
 				memcpy(depth_frame.pixels, uncompressedBuf, frame->m_size);
+#else
+				idecomress->decompressFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)depth_frame.pixels);
+#endif				
 				// delete frame;
 				depth_frame.timestamp = frame->m_timestamp.tv_sec;
 				depth_frame.frame_number++;
