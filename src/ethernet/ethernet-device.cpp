@@ -46,7 +46,6 @@ rs2::ethernet_device::ethernet_device()
 
 rs2::ethernet_device::ethernet_device(std::string url) : ethernet_device()
 {
-	ip_address = url;
 }
 
 rs2::ethernet_device::~ethernet_device()
@@ -221,10 +220,12 @@ void rs2::ethernet_device::incomming_server_frames_handler()
 
 }
 
-void rs2::ethernet_device::start() {
+void rs2::ethernet_device::start(std::string url) {
 	if (is_active)
 		return;
 	is_active = true;
+
+	ip_address = url;
 
 	t = std::thread(&rs2::ethernet_device::incomming_server_frames_handler,this);
 	t2 = std::thread(&rs2::ethernet_device::inject_frames_to_sw_device,this);

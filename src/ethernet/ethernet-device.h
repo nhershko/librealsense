@@ -65,7 +65,7 @@ namespace rs2
 		#ifdef _WIN32
 		__declspec(dllexport)
 		#endif
-		void start();
+		void start(std::string ip_address);
 
 		#ifdef _WIN32
 		__declspec(dllexport)
