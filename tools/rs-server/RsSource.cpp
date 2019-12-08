@@ -129,12 +129,16 @@ void RsDeviceSource::deliverRSFrame()
   //// unsigned char b[640*480*2];
    if(fParams.sensorID == 0) 
    {
+#if 0
        unsigned char compressedBuf[fFrameSize];
        // memset(fbuf, 0, fFrameSize);
        unsigned int newSize = iCompress->compressFrame(fbuf, fFrameSize, compressedBuf);
        envir() << "Compression income " << fFrameSize << ", outcome " << newSize << "\n";
        // memmove(fTo, compressedBuf, fFrameSize);
        memmove(fTo, compressedBuf, newSize + sizeof(unsigned int));
+#else
+       iCompress->compressFrame(fbuf, fFrameSize, fTo);
+#endif
    } else {
        memmove(fTo, fbuf, 640*480*2);
    }
