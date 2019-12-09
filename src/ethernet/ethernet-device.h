@@ -12,6 +12,7 @@
 
 
 //RTSP_CLIENT
+#include "common/camOE_stream_profile.hh"
 
 #include "rtsp_client/environment.h"
 #include "rtsp_client/rtspconnectionclient.h"
@@ -89,7 +90,11 @@ namespace rs2
 
 		void add_frame_to_queue(int type,Frame* frame);
 
+		
+
 	private:
+
+		rs2_video_stream rtsp_stream_to_rs_video_stream(camOE_stream_profile rtsp_stream);
 
 		void incomming_server_frames_handler();
 		
@@ -108,21 +113,18 @@ namespace rs2
 
 		std::string ip_address;
 			
-		std::vector<uint8_t> pixels;
 		std::thread t,t2;
 
 		std::mutex mtx,mtx2;
-		rs2_stream_profile* depth_stream;
-		rs2_stream_profile* color_stream;
-		rs2_software_video_frame depth_frame;
-		rs2_software_video_frame color_frame;
-		rs2_sensor* depth_sensor;
-		rs2_sensor* color_sensor;
+		
+		// TODO: modify dynamically 
+		rs2_sensor* sensors[2];
+		rs2_stream_profile* profiles[2];
 
-		//software_sensor* color_sensor;
 		rs2_device* dev; // Create software-only device
 		Environment* env;
-		
+		rs2_software_video_frame last_frame[2];
+		std::vector<uint8_t> pixels_buff[2];
 };
 
 	class RS_RTSPFrameCallback: public RTSPCallback

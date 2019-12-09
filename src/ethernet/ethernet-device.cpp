@@ -1,5 +1,4 @@
 #include "ethernet-device.h"
-#include "common/stream_profile.hh"
 
 int frame_number = 0;
 std::chrono::high_resolution_clock::time_point last;
@@ -69,7 +68,7 @@ rs2_intrinsics rs2::ethernet_device::get_intrinsics()
 }
 
 rs2_software_video_frame& rs2::ethernet_device::get_frame() {
-	return depth_frame;
+	return last_frame[0];
 }
 
 rs2_device* rs2::ethernet_device::get_device() {
@@ -96,54 +95,62 @@ void rs2::ethernet_device::add_frame_to_queue(int type, Frame* raw_frame)
 	}
 }
 
+
+rs2_video_stream rs2::ethernet_device::rtsp_stream_to_rs_video_stream(camOE_stream_profile profile)
+{
+	static int streams_count = 0;
+
+	rs2_stream type;
+	rs2_format format;
+	rs2_intrinsics intrinsics;
+	int BPP = 2;
+
+	if (profile.stream_type()==0)
+	{
+		intrinsics =  get_intrinsics();
+		type = RS2_STREAM_DEPTH;
+		format = RS2_FORMAT_Z16;
+	}
+	else
+	{
+		intrinsics =  { W, H ,0, 0, 0, 0, RS2_DISTORTION_BROWN_CONRADY, { 0,0,0,0,0 } };
+		type = RS2_STREAM_COLOR;
+		format = RS2_FORMAT_YUYV;
+	}
+	
+	rs2_video_stream st = {type,0,streams_count,profile.width(),profile.hight(),profile.fps(),BPP,format,intrinsics};
+	streams_count++;
+
+	return st;
+}
+
 void rs2::ethernet_device::inject_frames_to_sw_device()
 {
+	//todo:
+	std::queue<camOE_stream_profile> streams;
+	streams.push(camOE_stream_profile(stream_type_id::STREAM_DEPTH,{640,480},30));
+	streams.push(camOE_stream_profile(stream_type_id::STREAM_COLOR,{640,480},30));
 
-	/*
-	TODO: replace the pre-loop code with tream generation according to profile_list
-	something like:
+	for (size_t i = 0; i <= streams.size(); i++)
+	{
+		rs2_video_stream st = rtsp_stream_to_rs_video_stream(streams.front());
+		
+		if (streams.front().stream_type()==0)
+			sensors[i] = rs2_software_device_add_sensor(dev, "Depth (Remote)", NULL);
+		else 
+			sensors[i] = rs2_software_device_add_sensor(dev, "Color (Remote)", NULL);
 
-	for each stream in streams_list:
-		rs2_video_stream new_video_stream = { stream.stream_id, 0, 1, stream.W,stream.H, stream.fps, BPP, RS2_FORMAT_YUYV/Z16, stream.intrinsics };
-		new_sw_sensor = rs2_software_device_add_sensor(dev, stream.desciption + "(remote)", NULL);
-		rs2_software_sensor_add_video_stream(new_sensor, st2, NULL);
-	*/
+		profiles[i] = rs2_software_sensor_add_video_stream(sensors[i], st, NULL);
 
-	rs2_intrinsics depth_intrinsics = get_intrinsics();
-	depth_sensor = rs2_software_device_add_sensor(dev, "Depth (Remote)", NULL);
-	
-	rs2_video_stream st = { RS2_STREAM_DEPTH, 0, 1, W,
-							H, 30, BPP,
-							RS2_FORMAT_Z16, depth_intrinsics };
-	depth_stream = rs2_software_sensor_add_video_stream(depth_sensor, st, NULL);
-	
-	depth_frame.bpp = BPP;
-	depth_frame.profile = depth_stream;
-	depth_frame.stride = BPP * W;
-	pixels.resize(depth_frame.stride * H, 0);
-	depth_frame.pixels = pixels.data();
-	depth_frame.deleter = &ethernet_device_deleter;
-  
-	//color
-
-	rs2_intrinsics color_intrinsics = { W,H,
-            0, 0,
-            0, 0,
-            RS2_DISTORTION_BROWN_CONRADY ,{ 0,0,0,0,0 } };
-
-	rs2_video_stream st2 = { RS2_STREAM_COLOR, 0, 1, W,
-							H, 30, BPP,
-							RS2_FORMAT_YUYV, color_intrinsics };
-
-	color_sensor = rs2_software_device_add_sensor(dev, "Color (Remote)", NULL);
-	color_stream = rs2_software_sensor_add_video_stream(color_sensor, st2, NULL);
-	
-	color_frame.bpp = BPP;
-	color_frame.profile = color_stream;
-	color_frame.stride = BPP * W;
-	pixels.resize(color_frame.stride * H, 0);
-	color_frame.pixels = pixels.data();
-	color_frame.deleter = &ethernet_device_deleter;
+		last_frame[i].bpp = 2;
+		last_frame[i].profile = profiles[i];
+		last_frame[i].stride = 2 * W;
+		pixels_buff[i].resize(last_frame[i].stride * st.height, 0);
+		last_frame[i].pixels = pixels_buff[i].data();
+		last_frame[i].deleter = &ethernet_device_deleter;
+		
+		streams.pop();
+	}
 
 	while (is_active)
 	{
@@ -153,11 +160,11 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 				const std::lock_guard<std::mutex> lock(mtx);
 				Frame* frame = depth_frames.front();
 				depth_frames.pop();
-				memcpy(depth_frame.pixels, frame->m_buffer, frame->m_size);
+				memcpy(last_frame[0].pixels, frame->m_buffer, frame->m_size);
 				// delete frame;
-				depth_frame.timestamp = frame->m_timestamp.tv_sec;
-				depth_frame.frame_number++;
-				rs2_software_sensor_on_video_frame(depth_sensor, depth_frame, NULL);
+				last_frame[0].timestamp = frame->m_timestamp.tv_sec;
+				last_frame[0].frame_number++;
+				rs2_software_sensor_on_video_frame(sensors[0], last_frame[0], NULL);
 			}
 
 			if (color_frames.empty()) {
@@ -166,15 +173,13 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 				const std::lock_guard<std::mutex> lock(mtx2);
 				Frame* frame = color_frames.front();
 				color_frames.pop();
-				memcpy(color_frame.pixels, frame->m_buffer, frame->m_size);
+				memcpy(last_frame[1].pixels, frame->m_buffer, frame->m_size);
 				// delete frame;
-				color_frame.timestamp = frame->m_timestamp.tv_sec;
-				color_frame.frame_number++;
-				//color_sensor.on_video_frame(color_frame);
-				rs2_software_sensor_on_video_frame(color_sensor, color_frame, NULL);
+				last_frame[1].timestamp = frame->m_timestamp.tv_sec;
+				last_frame[1].frame_number++;
+				rs2_software_sensor_on_video_frame(sensors[1], last_frame[1], NULL);
 			}
 	}
-		
 }
 
 void rs2::ethernet_device::incomming_server_frames_handler()
