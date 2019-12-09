@@ -100,11 +100,15 @@ namespace rs2
 		
 		void inject_frames_to_sw_device();
 
+		void pull_from_queue(int stream_id);
+
 		rs2_software_video_frame& get_frame();
 
 
 		std::queue<Frame*> depth_frames;
 		std::queue<Frame*> color_frames;
+
+		std::queue<Frame*> frame_queues[2];
 
 		unsigned int frame_queue_max_size = 30;
 		
@@ -115,6 +119,8 @@ namespace rs2
 			
 		std::thread t,t2;
 
+		std::thread inject_threads[2];
+		
 		std::mutex mtx,mtx2;
 		
 		// TODO: modify dynamically 

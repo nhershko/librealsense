@@ -81,12 +81,8 @@ void rs2::ethernet_device::add_frame_to_queue(int type, Frame* raw_frame)
 	{
 		std::mutex m_mtx;
 		const std::lock_guard<std::mutex> lock(m_mtx);
-		if(type==0)
-			this->depth_frames.push(raw_frame);
-		else 
-		{
-			this->color_frames.push(raw_frame);
-		}
+		//TODO: map between type and stream queue
+		this->frame_queues[type].push(raw_frame);
 		frame_number++;
 	}
 	else
@@ -149,37 +145,31 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 		last_frame[i].pixels = pixels_buff[i].data();
 		last_frame[i].deleter = &ethernet_device_deleter;
 		
+
+		inject_threads[i] = std::thread(&rs2::ethernet_device::pull_from_queue,this,st.uid);
+
 		streams.pop();
 	}
+}
 
-	while (is_active)
+void rs2::ethernet_device::pull_from_queue(int stream_index)
+{
+	while(is_active)
 	{
-			if (depth_frames.empty()) {
-				//do nothing 
-			} else {				
-				const std::lock_guard<std::mutex> lock(mtx);
-				Frame* frame = depth_frames.front();
-				depth_frames.pop();
-				memcpy(last_frame[0].pixels, frame->m_buffer, frame->m_size);
-				// delete frame;
-				last_frame[0].timestamp = frame->m_timestamp.tv_sec;
-				last_frame[0].frame_number++;
-				rs2_software_sensor_on_video_frame(sensors[0], last_frame[0], NULL);
-			}
-
-			if (color_frames.empty()) {
-				;//do nothing 
-			} else {				
-				const std::lock_guard<std::mutex> lock(mtx2);
-				Frame* frame = color_frames.front();
-				color_frames.pop();
-				memcpy(last_frame[1].pixels, frame->m_buffer, frame->m_size);
-				// delete frame;
-				last_frame[1].timestamp = frame->m_timestamp.tv_sec;
-				last_frame[1].frame_number++;
-				rs2_software_sensor_on_video_frame(sensors[1], last_frame[1], NULL);
-			}
+		if (frame_queues[stream_index].empty()) {
+			/*no data at quque*/;
+		} else {				
+			const std::lock_guard<std::mutex> lock(mtx);
+			Frame* frame = frame_queues[stream_index].front();
+			frame_queues[stream_index].pop();
+			memcpy(last_frame[stream_index].pixels, frame->m_buffer, frame->m_size);
+			// delete frame;
+			last_frame[stream_index].timestamp = frame->m_timestamp.tv_sec;
+			last_frame[stream_index].frame_number++;
+			rs2_software_sensor_on_video_frame(sensors[stream_index], last_frame[stream_index], NULL);
+		}
 	}
+	std::cout<<"pulling data at stream index " << stream_index <<" is done\n";
 }
 
 void rs2::ethernet_device::incomming_server_frames_handler()
