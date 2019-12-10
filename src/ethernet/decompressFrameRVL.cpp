@@ -48,15 +48,15 @@ void decompressFrameRVL::decompressFrame(unsigned char* buffer, int size, unsign
 	int numPixelsToDecode = size/2;
 	while (numPixelsToDecode)
 	{
-		int zeros = decodeVLE(); // number of zeros
+		int zeros = decodeVLE();
 		numPixelsToDecode -= zeros;
 		for (; zeros; zeros--)
 			*uncompressedBuf2++ = 0;
-		int nonzeros = decodeVLE(); // number of nonzeros
+		int nonzeros = decodeVLE();
 		numPixelsToDecode -= nonzeros;
 		for (; nonzeros; nonzeros--)
 		{
-			int positive = decodeVLE(); // nonzero value
+			int positive = decodeVLE();
 			int delta = (positive >> 1) ^ -(positive & 1);
 			current = previous + delta;
 			*uncompressedBuf2++ = current;
@@ -64,9 +64,11 @@ void decompressFrameRVL::decompressFrame(unsigned char* buffer, int size, unsign
 		}
 	}
 	printf("finish decompression, full size: %lu , compressed size %d \n",size, compressedSize);
+
+	//statistic:
 	fullSizeSum += size;
 	compressedSizeSum += compressedSize;
 	float zipRatio = fullSizeSum/(float)compressedSizeSum;
 	frameCounter++;
-	printf("zip ratio is: %0.2f , frameCounter: %d\n", zipRatio, frameCounter);
+	printf("rvl zip ratio is: %0.2f , frameCounter: %d\n", zipRatio, frameCounter);
 }
