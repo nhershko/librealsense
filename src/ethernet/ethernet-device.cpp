@@ -77,7 +77,7 @@ rs2_device* rs2::ethernet_device::get_device() {
 
 void rs2::ethernet_device::add_frame_to_queue(int type, Frame* raw_frame)
 {
-	if(QUEUE_MAX_SIZE>this->depth_frames.size())
+	if(QUEUE_MAX_SIZE>this->frame_queues[type].size())
 	{
 		std::mutex m_mtx;
 		const std::lock_guard<std::mutex> lock(m_mtx);
@@ -87,7 +87,7 @@ void rs2::ethernet_device::add_frame_to_queue(int type, Frame* raw_frame)
 	}
 	else
 	{
-		std::cout<< "queue is full. dropping frame" << std::endl;
+		std::cout<< "queue is full. dropping frame of type " << type << std::endl;
 	}
 }
 
@@ -122,10 +122,12 @@ rs2_video_stream rs2::ethernet_device::rtsp_stream_to_rs_video_stream(camOE_stre
 
 void rs2::ethernet_device::inject_frames_to_sw_device()
 {
-	//todo:
+	//todo: replace with input from rtsp client
 	std::queue<camOE_stream_profile> streams;
 	streams.push(camOE_stream_profile(stream_type_id::STREAM_DEPTH,{640,480},30));
 	streams.push(camOE_stream_profile(stream_type_id::STREAM_COLOR,{640,480},30));
+
+	inject_threads = new std::thread[streams.size()];
 
 	for (size_t i = 0; i <= streams.size(); i++)
 	{
@@ -138,15 +140,15 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 
 		profiles[i] = rs2_software_sensor_add_video_stream(sensors[i], st, NULL);
 
-		last_frame[i].bpp = 2;
+		last_frame[i].bpp = st.bpp;
 		last_frame[i].profile = profiles[i];
-		last_frame[i].stride = 2 * W;
+		last_frame[i].stride = st.bpp * st.width;
 		pixels_buff[i].resize(last_frame[i].stride * st.height, 0);
 		last_frame[i].pixels = pixels_buff[i].data();
 		last_frame[i].deleter = &ethernet_device_deleter;
 		
 
-		inject_threads[i] = std::thread(&rs2::ethernet_device::pull_from_queue,this,st.uid);
+		inject_threads[i] = std::thread(&rs2::ethernet_device::pull_from_queue,this,streams.front().stream_type());
 
 		streams.pop();
 	}
@@ -202,12 +204,11 @@ void rs2::ethernet_device::start() {
 	is_active = true;
 
 	t = std::thread(&rs2::ethernet_device::incomming_server_frames_handler,this);
-	t2 = std::thread(&rs2::ethernet_device::inject_frames_to_sw_device,this);
+	inject_frames_to_sw_device();
 }
 void rs2::ethernet_device::stop() {
 	if (!is_active)
 		return;
 	is_active = false;
 	t.join();
-	t2.join();
 }

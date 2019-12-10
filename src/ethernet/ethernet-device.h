@@ -35,6 +35,8 @@
   #include<signal.h>
 #endif
 
+#define MAX_STREAMS_NUMBER 4
+
 namespace rs2
 {
 	class software_sensor;
@@ -104,11 +106,7 @@ namespace rs2
 
 		rs2_software_video_frame& get_frame();
 
-
-		std::queue<Frame*> depth_frames;
-		std::queue<Frame*> color_frames;
-
-		std::queue<Frame*> frame_queues[2];
+		std::queue<Frame*> frame_queues[MAX_STREAMS_NUMBER];
 
 		unsigned int frame_queue_max_size = 30;
 		
@@ -119,7 +117,7 @@ namespace rs2
 			
 		std::thread t,t2;
 
-		std::thread inject_threads[2];
+		std::thread* inject_threads;
 		
 		std::mutex mtx,mtx2;
 		
