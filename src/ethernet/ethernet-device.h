@@ -35,7 +35,7 @@
   #include<signal.h>
 #endif
 
-#define MAX_STREAMS_NUMBER 4
+#define MAX_ACTIVE_STREAMS_NUMBER 4
 
 namespace rs2
 {
@@ -78,8 +78,8 @@ namespace rs2
 		#ifdef _WIN32
 		__declspec(dllexport)
 		#endif
-		rs2_intrinsics get_intrinsics();
-		
+		rs2_intrinsics get_stream_sensor_intrinsics(camOE_stream_profile stream);
+
 		#ifdef _WIN32
 		__declspec(dllexport)
 		#endif
@@ -90,9 +90,8 @@ namespace rs2
 		#endif
 		rs2_device* get_device();
 
+		//todo: make it private - once rtp client will be ready
 		void add_frame_to_queue(int type,Frame* frame);
-
-		
 
 	private:
 
@@ -106,7 +105,7 @@ namespace rs2
 
 		rs2_software_video_frame& get_frame();
 
-		std::queue<Frame*> frame_queues[MAX_STREAMS_NUMBER];
+		std::queue<Frame*> frame_queues[MAX_ACTIVE_STREAMS_NUMBER];
 
 		unsigned int frame_queue_max_size = 30;
 		
@@ -115,15 +114,14 @@ namespace rs2
 
 		std::string ip_address;
 			
-		std::thread t,t2;
+		std::thread incomming_frames_thread;
 
 		std::thread* inject_threads;
 		
 		std::mutex mtx,mtx2;
 		
-		// TODO: modify dynamically 
-		rs2_sensor* sensors[2];
-		rs2_stream_profile* profiles[2];
+		rs2_sensor* sensors[MAX_ACTIVE_STREAMS_NUMBER];
+		rs2_stream_profile* profiles[MAX_ACTIVE_STREAMS_NUMBER];
 
 		rs2_device* dev; // Create software-only device
 		Environment* env;

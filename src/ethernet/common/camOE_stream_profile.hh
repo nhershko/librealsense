@@ -1,11 +1,11 @@
 
-typedef enum stream_type_id
+enum stream_type_id
 {
     STREAM_DEPTH,
     STREAM_COLOR,
 };
 
-typedef struct stream_resolution
+struct profile_resolution
 { 
      int width; 
      int hight; 
@@ -14,22 +14,22 @@ typedef struct stream_resolution
 class camOE_stream_profile
 {
     public:
-        camOE_stream_profile(stream_type_id id, stream_resolution res, int fps)
-        :m_stream_type(id),
-        m_stream_res(res),
+        camOE_stream_profile(stream_type_id id, profile_resolution res, int fps)
+        :m_stream_sensor(id),
+        m_profile_res(res),
         m_stream_fps(fps){}
 
         //in case we want to have self-contained sdp parser
         camOE_stream_profile(char* sdp_line);
 
-        int width(){    return m_stream_res.width;  }
-        int hight(){    return m_stream_res.hight;  }
+        int width(){    return m_profile_res.width;  }
+        int hight(){    return m_profile_res.hight;  }
         int fps(){  return m_stream_fps;  }
-        stream_type_id stream_type(){ return m_stream_type; }
+        stream_type_id stream_sensor(){ return m_stream_sensor; }
 
     private:
-        stream_type_id m_stream_type;
-        stream_resolution m_stream_res;
+        stream_type_id m_stream_sensor;
+        profile_resolution m_profile_res;
         int m_stream_fps;
 
 };
