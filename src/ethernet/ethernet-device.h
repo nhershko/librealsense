@@ -12,6 +12,7 @@
 
 
 //RTSP_CLIENT
+#include "common/camOE_stream_profile.hh"
 
 #include "rtsp_client/environment.h"
 #include "rtsp_client/rtspconnectionclient.h"
@@ -33,6 +34,8 @@
   #include <fcntl.h>
   #include<signal.h>
 #endif
+
+#define MAX_ACTIVE_STREAMS_NUMBER 4
 
 namespace rs2
 {
@@ -75,8 +78,8 @@ namespace rs2
 		#ifdef _WIN32
 		__declspec(dllexport)
 		#endif
-		rs2_intrinsics get_intrinsics();
-		
+		rs2_intrinsics get_stream_sensor_intrinsics(camOE_stream_profile stream);
+
 		#ifdef _WIN32
 		__declspec(dllexport)
 		#endif
@@ -87,19 +90,22 @@ namespace rs2
 		#endif
 		rs2_device* get_device();
 
+		//todo: make it private - once rtp client will be ready
 		void add_frame_to_queue(int type,Frame* frame);
 
 	private:
+
+		rs2_video_stream rtsp_stream_to_rs_video_stream(camOE_stream_profile rtsp_stream);
 
 		void incomming_server_frames_handler();
 		
 		void inject_frames_to_sw_device();
 
+		void pull_from_queue(int stream_id);
+
 		rs2_software_video_frame& get_frame();
 
-
-		std::queue<Frame*> depth_frames;
-		std::queue<Frame*> color_frames;
+		std::queue<Frame*> frame_queues[MAX_ACTIVE_STREAMS_NUMBER];
 
 		unsigned int frame_queue_max_size = 30;
 		
@@ -108,21 +114,19 @@ namespace rs2
 
 		std::string ip_address;
 			
-		std::vector<uint8_t> pixels;
-		std::thread t,t2;
+		std::thread incomming_frames_thread;
 
+		std::thread* inject_threads;
+		
 		std::mutex mtx,mtx2;
-		rs2_stream_profile* depth_stream;
-		rs2_stream_profile* color_stream;
-		rs2_software_video_frame depth_frame;
-		rs2_software_video_frame color_frame;
-		rs2_sensor* depth_sensor;
-		rs2_sensor* color_sensor;
+		
+		rs2_sensor* sensors[MAX_ACTIVE_STREAMS_NUMBER];
+		rs2_stream_profile* profiles[MAX_ACTIVE_STREAMS_NUMBER];
 
-		//software_sensor* color_sensor;
 		rs2_device* dev; // Create software-only device
 		Environment* env;
-		
+		rs2_software_video_frame last_frame[2];
+		std::vector<uint8_t> pixels_buff[2];
 };
 
 	class RS_RTSPFrameCallback: public RTSPCallback
