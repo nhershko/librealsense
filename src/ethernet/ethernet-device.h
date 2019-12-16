@@ -17,7 +17,6 @@
 #include "rtsp_client/environment.h"
 #include "rtsp_client/rtspconnectionclient.h"
 #include "rtsp_client/sdpclient.h"
-#include "rtsp_client/mkvclient.h"
 #include "rtsp_client/callbacks.h"
 
 
@@ -39,9 +38,6 @@
 
 namespace rs2
 {
-	class software_sensor;
-	class software_device_info;
-	
 	void ethernet_device_deleter(void* p) {
 
 	}
@@ -149,10 +145,9 @@ namespace rs2
 
 				bool onData(char sink_id, const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) override
 				{
-					//std::cout << "CB_ID " << this->id << "sink id " << std::to_string(sink_id) << " " << size << " ts:" << presentationTime.tv_sec << "." << presentationTime.tv_usec << std::endl;
-					if("96"==std::to_string(sink_id))
+					if(96==sink_id)
 						dev->add_frame_to_queue(0,new Frame((char*)buffer,size,presentationTime));
-					else if ("97"==std::to_string(sink_id))
+					else if (97==sink_id)
 						dev->add_frame_to_queue(1,new Frame((char*)buffer,size,presentationTime));
 					return true;
 				}
