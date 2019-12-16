@@ -46,7 +46,7 @@ target_link_libraries(${PROJECT_NAME}
 	#UsageEnvironment
 	#groupsock
 	#liveMedia
-	${ZLIB}
+	${ZLIB_LIBRARIES}
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC "rtsp_client/*.h")

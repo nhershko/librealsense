@@ -45,7 +45,7 @@ set_property(TARGET rs-server PROPERTY CXX_STANDARD 11)
 
 find_package(ZLIB REQUIRED)
 
-target_link_libraries(rs-server ${DEPENDENCIES} realsense2 ${ZLIB})
+target_link_libraries(rs-server ${DEPENDENCIES} realsense2 ${ZLIB_LIBRARIES})
 
 set_target_properties (rs-server PROPERTIES
     FOLDER Tools
