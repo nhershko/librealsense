@@ -43,11 +43,9 @@ endif()
 
 set_property(TARGET rs-server PROPERTY CXX_STANDARD 11)
 
-target_link_libraries(rs-server ${DEPENDENCIES} realsense2)
+find_package(ZLIB REQUIRED)
 
-# zlib
-find_library(ZLIB_LIB libz PATHS /usr/local/lib/)
-target_link_libraries(rs-server "${ZLIB_LIB}")
+target_link_libraries(rs-server ${DEPENDENCIES} realsense2 ${ZLIB})
 
 set_target_properties (rs-server PROPERTIES
     FOLDER Tools
