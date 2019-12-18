@@ -21,9 +21,13 @@ else()
     endif()
 endif()
 
+
+if(BUILD_ETHERNET_DEVICE)
+    add_subdirectory(ethernet-device)
+endif()
+
 add_subdirectory(hello-realsense)
 add_subdirectory(software-device)
-add_subdirectory(ethernet-device)
 add_subdirectory(capture)
 add_subdirectory(callback)
 add_subdirectory(save-to-disk)

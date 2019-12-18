@@ -11,16 +11,16 @@ struct profile_resolution
      int hight; 
 };
 
-class camOE_stream_profile
+class camOE_stream
 {
     public:
-        camOE_stream_profile(stream_type_id id, profile_resolution res, int fps)
+        camOE_stream(stream_type_id id, profile_resolution res, int fps)
         :m_stream_sensor(id),
         m_profile_res(res),
         m_stream_fps(fps){}
 
         //in case we want to have self-contained sdp parser
-        camOE_stream_profile(char* sdp_line);
+        camOE_stream(char* sdp_line);
 
         int width(){    return m_profile_res.width;  }
         int hight(){    return m_profile_res.hight;  }

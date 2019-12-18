@@ -65,7 +65,7 @@ std::vector<rs2::sensor> rs2::ethernet_device::ethernet_device::query_sensors() 
 }
 
 
-rs2_intrinsics rs2::ethernet_device::get_stream_sensor_intrinsics(camOE_stream_profile stream)
+rs2_intrinsics rs2::ethernet_device::get_stream_sensor_intrinsics(camOE_stream stream)
 {
 	//todo: get intrinsics from rtsp 
 	if (stream.stream_sensor()==0)
@@ -98,7 +98,7 @@ void rs2::ethernet_device::add_frame_to_queue(int type, Frame* raw_frame)
 }
 
 
-rs2_video_stream rs2::ethernet_device::rtsp_stream_to_rs_video_stream(camOE_stream_profile profile)
+rs2_video_stream rs2::ethernet_device::rtsp_stream_to_rs_video_stream(camOE_stream profile)
 {
 	static int streams_count = 0;
 
@@ -127,9 +127,9 @@ rs2_video_stream rs2::ethernet_device::rtsp_stream_to_rs_video_stream(camOE_stre
 void rs2::ethernet_device::inject_frames_to_sw_device()
 {
 	//todo: replace with input from rtsp client
-	std::queue<camOE_stream_profile> streams;
-	streams.push(camOE_stream_profile(stream_type_id::STREAM_DEPTH,{640,480},30));
-	streams.push(camOE_stream_profile(stream_type_id::STREAM_COLOR,{640,480},30));
+	std::queue<camOE_stream> streams;
+	streams.push(camOE_stream(stream_type_id::STREAM_DEPTH,{640,480},30));
+	streams.push(camOE_stream(stream_type_id::STREAM_COLOR,{640,480},30));
 
 	inject_threads = new std::thread[streams.size()];
 
@@ -165,7 +165,7 @@ void rs2::ethernet_device::pull_from_queue(int stream_index)
 		if (frame_queues[stream_index].empty()) {
 			/*no data at quque*/;
 		} else {				
-			const std::lock_guard<std::mutex> lock(mtx);
+			//const std::lock_guard<std::mutex> lock(mtx);
 			Frame* frame = frame_queues[stream_index].front();
 			frame_queues[stream_index].pop();
 			if (stream_index == 0) {

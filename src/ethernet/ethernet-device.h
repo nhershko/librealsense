@@ -12,7 +12,7 @@
 
 
 //RTSP_CLIENT
-#include "common/camOE_stream_profile.hh"
+#include "common/camOE_stream.hh"
 
 #include "rtsp_client/environment.h"
 #include "rtsp_client/rtspconnectionclient.h"
@@ -47,6 +47,7 @@ namespace rs2
 
 	}
 
+	//TODO: expose single function that create ethernet device and returned rs2::sw_device*
 	class ethernet_device : public rs2::software_device
 	{
 		public: 
@@ -79,7 +80,7 @@ namespace rs2
 		#ifdef _WIN32
 		__declspec(dllexport)
 		#endif
-		rs2_intrinsics get_stream_sensor_intrinsics(camOE_stream_profile stream);
+		rs2_intrinsics get_stream_sensor_intrinsics(camOE_stream stream);
 
 		#ifdef _WIN32
 		__declspec(dllexport)
@@ -96,7 +97,7 @@ namespace rs2
 
 	private:
 
-		rs2_video_stream rtsp_stream_to_rs_video_stream(camOE_stream_profile rtsp_stream);
+		rs2_video_stream rtsp_stream_to_rs_video_stream(camOE_stream rtsp_stream);
 
 		void incomming_server_frames_handler();
 		
