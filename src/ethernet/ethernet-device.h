@@ -19,7 +19,8 @@
 #include "rtsp_client/sdpclient.h"
 #include "rtsp_client/callbacks.h"
 
-
+#include "IdecompressFrame.h"
+#include "decompressFrameFactory.h"
 
 #if defined(_WIN32)
   #include <windows.h> 
@@ -64,7 +65,7 @@ namespace rs2
 		#ifdef _WIN32
 		__declspec(dllexport)
 		#endif
-		void start();
+		void start(std::string ip_address);
 
 		#ifdef _WIN32
 		__declspec(dllexport)
@@ -103,6 +104,12 @@ namespace rs2
 
 		std::queue<Frame*> frame_queues[MAX_ACTIVE_STREAMS_NUMBER];
 
+		int fd_color_push;
+		int fd_depth_push;
+
+		int fd_color_pop;
+		int fd_depth_pop;
+
 		unsigned int frame_queue_max_size = 30;
 		
 		int frame_number = 0;
@@ -123,6 +130,8 @@ namespace rs2
 		Environment* env;
 		rs2_software_video_frame last_frame[2];
 		std::vector<uint8_t> pixels_buff[2];
+
+		IdecompressFrame* idecomress;
 };
 
 	class RS_RTSPFrameCallback: public RTSPCallback
@@ -145,10 +154,14 @@ namespace rs2
 
 				bool onData(char sink_id, const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) override
 				{
-					if(96==sink_id)
+					// std::cout << "CB_ID " << this->id << "sink id " << std::to_string(sink_id) << " " << size << " ts:" << presentationTime.tv_sec << "." << presentationTime.tv_usec << std::endl;
+					if (sink_id == 96) {
+						// std::cout << "color\n";
 						dev->add_frame_to_queue(0,new Frame((char*)buffer,size,presentationTime));
-					else if (97==sink_id)
+					} else {
+						// std::cout << "depth\n";
 						dev->add_frame_to_queue(1,new Frame((char*)buffer,size,presentationTime));
+					}
 					return true;
 				}
 

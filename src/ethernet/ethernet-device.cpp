@@ -1,9 +1,17 @@
 #include "ethernet-device.h"
+#include "IdecompressFrame.h"
+#include "decompressFrameFactory.h"
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 int frame_number = 0;
 std::chrono::high_resolution_clock::time_point last;
 
-std::vector<uint8_t> pixels;
+std::vector<uint8_t> depth_pixels;
+std::vector<uint8_t> color_pixels;
 std::thread t;
 
 const int W = 640;
@@ -26,12 +34,11 @@ void sig_handler(int signo)
 rs2::ethernet_device::ethernet_device()
 {
 	dev = rs2_create_software_device(NULL);
-	
+	idecomress = decompressFrameFactory::create(zipMethod::gzip);
 }
 
 rs2::ethernet_device::ethernet_device(std::string url) : ethernet_device()
 {
-	ip_address = url;
 }
 
 rs2::ethernet_device::~ethernet_device()
@@ -161,7 +168,13 @@ void rs2::ethernet_device::pull_from_queue(int stream_index)
 			const std::lock_guard<std::mutex> lock(mtx);
 			Frame* frame = frame_queues[stream_index].front();
 			frame_queues[stream_index].pop();
-			memcpy(last_frame[stream_index].pixels, frame->m_buffer, frame->m_size);
+			if (stream_index == 0) {
+				// depth
+				idecomress->decompressFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(last_frame[stream_index].pixels));
+			} else {
+				// other -> color
+				memcpy(last_frame[stream_index].pixels, frame->m_buffer, frame->m_size);
+			}
 			// delete frame;
 			last_frame[stream_index].timestamp = frame->m_timestamp.tv_sec;
 			last_frame[stream_index].frame_number++;
@@ -195,10 +208,12 @@ void rs2::ethernet_device::incomming_server_frames_handler()
 
 }
 
-void rs2::ethernet_device::start() {
+void rs2::ethernet_device::start(std::string url) {
 	if (is_active)
 		return;
 	is_active = true;
+
+	ip_address = url;
 
 	incomming_frames_thread = std::thread(&rs2::ethernet_device::incomming_server_frames_handler,this);
 	inject_frames_to_sw_device();

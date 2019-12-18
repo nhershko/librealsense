@@ -1,0 +1,35 @@
+#pragma once
+
+#include <cassert>
+#include <iostream>
+#include <cstdint>
+#include <cstring>
+#include <zlib.h>
+#include "compressFrameGzip.h"
+
+
+int compressFrameGzip::compressFrame(unsigned char* buffer, int size, unsigned char* compressedBuf)
+{
+		z_stream strm;
+		memset(compressedBuf, 0, size);//?
+		strm.zalloc = Z_NULL;
+		strm.zfree = Z_NULL;
+		strm.opaque = Z_NULL;
+		int windowsBits = 15;
+		int GZIP_ENCODING = 16;
+		strm.next_in = (Bytef *)buffer;
+		strm.avail_in =  size;
+		strm.next_out = (Bytef *)compressedBuf + sizeof(unsigned int);
+		strm.avail_out = size;
+
+		int z_result = deflateInit2 (&strm, Z_DEFAULT_COMPRESSION, Z_DEFLATED,windowsBits | GZIP_ENCODING, 8, Z_DEFAULT_STRATEGY);
+		z_result = deflate(&strm, Z_FINISH);
+		assert(z_result != Z_STREAM_ERROR && z_result != Z_BUF_ERROR && z_result == Z_STREAM_END);//fix condition 
+		deflateEnd(&strm);
+		unsigned int compressedSize = strm.total_out;
+		printf("finish compression with GZIP, full size: %u, compressed size: %lu\n",size, compressedSize );	
+		memcpy(compressedBuf, &compressedSize, sizeof(unsigned int));
+		// for(int i=0; i<100 ; ++i)
+    	// 	std::cout << std::hex << (int)compressedBuf[i] << " ";
+		return compressedSize;
+}

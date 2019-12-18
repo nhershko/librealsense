@@ -36,11 +36,12 @@ using namespace rs400;
 
 
 
-ethernet_device remote_device("10.12.144.74:8554");
+ethernet_device remote_device("0.0.0.0:8554");
 
 void add_remote_device(context& ctx, std::string address) 
 {
-	remote_device.start();
+	std::cout << "Connecting to " << address << "\n";
+	remote_device.start(address);
 	std::shared_ptr<rs2_context> rsctx = ctx.operator std::shared_ptr<rs2_context>();
 	rs2_context_add_software_device(rsctx.get(), remote_device.get_device(), NULL);
 }
@@ -277,7 +278,14 @@ int main(int argc, const char** argv) try
 
     std::vector<device> connected_devs;
     std::mutex m;
-	add_remote_device(ctx, "127.0.0.1");
+
+    if (argc == 1) {
+	std::cout << "No camera address supplied. Exiting.\n";
+	exit(1);
+    } else {
+	add_remote_device(ctx, argv[1]);
+    }
+
     window.on_file_drop = [&](std::string filename)
     {
         
