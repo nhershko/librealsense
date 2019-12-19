@@ -12,12 +12,11 @@
 
 
 //RTSP_CLIENT
-#include "common/camOE_stream_profile.hh"
+#include "common/camOE_stream.hh"
 
 #include "rtsp_client/environment.h"
 #include "rtsp_client/rtspconnectionclient.h"
 #include "rtsp_client/sdpclient.h"
-#include "rtsp_client/mkvclient.h"
 #include "rtsp_client/callbacks.h"
 
 #include "IdecompressFrame.h"
@@ -40,13 +39,11 @@
 
 namespace rs2
 {
-	class software_sensor;
-	class software_device_info;
-	
 	void ethernet_device_deleter(void* p) {
 
 	}
 
+	//TODO: expose single function that create ethernet device and returned rs2::sw_device*
 	class ethernet_device : public rs2::software_device
 	{
 		public: 
@@ -79,7 +76,7 @@ namespace rs2
 		#ifdef _WIN32
 		__declspec(dllexport)
 		#endif
-		rs2_intrinsics get_stream_sensor_intrinsics(camOE_stream_profile stream);
+		rs2_intrinsics get_stream_sensor_intrinsics(camOE_stream stream);
 
 		#ifdef _WIN32
 		__declspec(dllexport)
@@ -96,7 +93,7 @@ namespace rs2
 
 	private:
 
-		rs2_video_stream rtsp_stream_to_rs_video_stream(camOE_stream_profile rtsp_stream);
+		rs2_video_stream rtsp_stream_to_rs_video_stream(camOE_stream rtsp_stream);
 
 		void incomming_server_frames_handler();
 		
@@ -159,11 +156,9 @@ namespace rs2
 				bool onData(char sink_id, const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) override
 				{
 					// std::cout << "CB_ID " << this->id << "sink id " << std::to_string(sink_id) << " " << size << " ts:" << presentationTime.tv_sec << "." << presentationTime.tv_usec << std::endl;
-					// if("96"==std::to_string(sink_id))
 					if (sink_id == 96) {
 						// std::cout << "color\n";
 						dev->add_frame_to_queue(0,new Frame((char*)buffer,size,presentationTime));
-					// else if ("97"==std::to_string(sink_id))
 					} else {
 						// std::cout << "depth\n";
 						dev->add_frame_to_queue(1,new Frame((char*)buffer,size,presentationTime));
