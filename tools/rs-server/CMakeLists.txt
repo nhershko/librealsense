@@ -47,6 +47,10 @@ find_package(ZLIB REQUIRED)
 
 target_link_libraries(rs-server ${DEPENDENCIES} realsense2 ${ZLIB_LIBRARIES})
 
+if(COMPRESS_FRAMES)
+    add_definitions(-DCOMPRESS_FRAMES)
+endif()
+
 set_target_properties (rs-server PROPERTIES
     FOLDER Tools
 )

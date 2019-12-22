@@ -57,6 +57,10 @@ target_link_libraries(${PROJECT_NAME}
 	${ZLIB_LIBRARIES}
 )
 
+if(COMPRESS_FRAMES)
+    add_definitions(-DCOMPRESS_FRAMES)
+endif()
+
 target_include_directories(${PROJECT_NAME} PUBLIC "rtsp_client/*.h")
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${LIVE}/groupsock/include ${LIVE}/liveMedia/include  ${LIVE}/UsageEnvironment/include ${LIVE}/BasicUsageEnvironment/include inc)

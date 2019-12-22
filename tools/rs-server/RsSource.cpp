@@ -103,7 +103,9 @@ void RsDeviceSource::doGetNextFrame()
 void RsDeviceSource::deliverRSFrame()
 {
 */
+#ifdef COMPRESS_FRAMES
   IcompressFrame* iCompress =  compressFrameFactory::create(zipMethod::gzip);
+#endif
   if (!isCurrentlyAwaitingData())
   {
     envir() << "isCurrentlyAwaitingData returned false"<<fParams.sensorID<<"\n";
@@ -127,21 +129,16 @@ void RsDeviceSource::deliverRSFrame()
   gettimeofday(&fPresentationTime, NULL); // If you have a more accurate time - e.g., from an encoder - then use that instead.
   //// memmove(fTo, frame.get_data(), fFrameSize);
   //// unsigned char b[640*480*2];
+#ifdef COMPRESS_FRAMES
    if(fParams.sensorID == 0) 
    {
-#if 0
-       unsigned char compressedBuf[fFrameSize];
-       // memset(fbuf, 0, fFrameSize);
-       unsigned int newSize = iCompress->compressFrame(fbuf, fFrameSize, compressedBuf);
-       envir() << "Compression income " << fFrameSize << ", outcome " << newSize << "\n";
-       // memmove(fTo, compressedBuf, fFrameSize);
-       memmove(fTo, compressedBuf, newSize + sizeof(unsigned int));
-#else
        iCompress->compressFrame(fbuf, fFrameSize, fTo);
-#endif
    } else {
+#endif
        memmove(fTo, fbuf, 640*480*2);
+#ifdef COMPRESS_FRAMES
    }
+#endif
   // After delivering the data, inform the reader that it is now available:
   FramedSource::afterGetting(this);
 }
