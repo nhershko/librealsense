@@ -33,15 +33,15 @@ int compressFrameRVL::compressFrame(unsigned char* buffer, int size, unsigned ch
 	{
 		int zeros = 0, nonzeros = 0;
 		for (; (buffer2 != end) && !*buffer2; buffer2++, zeros++);
-		EncodeVLE(zeros); // number of zeros
+		EncodeVLE(zeros);
 		for (short* p = buffer2; (p != end) && *p++; nonzeros++);
-		EncodeVLE(nonzeros); // number of nonzeros
+		EncodeVLE(nonzeros);
 		for (int i = 0; i < nonzeros; i++)
 		{
 			short current = *buffer2++;
 			int delta = current - previous;
 			int positive = (delta << 1) ^ (delta >> 31);
-			EncodeVLE(positive); // nonzero value
+			EncodeVLE(positive);
 			previous = current;
 		}
 	}
@@ -50,7 +50,5 @@ int compressFrameRVL::compressFrame(unsigned char* buffer, int size, unsigned ch
 	int compressedSize = int((char*)pBuffer - (char*)pHead);
 	printf("finish compression with RVL, full size: %u, compressed size: %lu\n",size, compressedSize);	
 	memcpy(compressedBuf, &compressedSize, sizeof(unsigned int));
-	// for(int i=0; i<100 ; ++i)
-    // 	std::cout << std::hex << (int)compressedBuf[i] << " ";
-	return compressedSize; // num bytes
+	return compressedSize;
 }

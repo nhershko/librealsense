@@ -45,7 +45,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 
 # target_link_libraries(${PROJECT_NAME} ${DEPENDENCIES})
 
-find_library(ZLIB_LIB libz PATHS /usr/local/lib/)
+find_package(ZLIB REQUIRED)
 
 target_link_libraries(${PROJECT_NAME} 
     PRIVATE ${DEPENDENCIES}
@@ -54,7 +54,7 @@ target_link_libraries(${PROJECT_NAME}
 	#UsageEnvironment
 	#groupsock
 	#liveMedia
-	${ZLIB_LIB}
+	${ZLIB_LIBRARIES}
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC "rtsp_client/*.h")
