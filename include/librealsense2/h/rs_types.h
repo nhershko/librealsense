@@ -173,6 +173,7 @@ typedef enum rs2_extension
     RS2_EXTENSION_UPDATE_DEVICE,
     RS2_EXTENSION_L500_DEPTH_SENSOR,
     RS2_EXTENSION_TM2_SENSOR,
+    RS2_EXTENSION_AUTO_CALIBRATED_DEVICE,
     RS2_EXTENSION_COUNT
 } rs2_extension;
 const char* rs2_extension_type_to_string(rs2_extension type);
@@ -237,6 +238,7 @@ typedef struct rs2_devices_changed_callback rs2_devices_changed_callback;
 typedef struct rs2_notification rs2_notification;
 typedef struct rs2_notifications_callback rs2_notifications_callback;
 typedef void (*rs2_notification_callback_ptr)(rs2_notification*, void*);
+typedef void(*rs2_software_device_destruction_callback_ptr)(void*);
 typedef void (*rs2_devices_changed_callback_ptr)(rs2_device_list*, rs2_device_list*, void*);
 typedef void (*rs2_frame_callback_ptr)(rs2_frame*, void*);
 typedef void (*rs2_frame_processor_callback_ptr)(rs2_frame*, rs2_source*, void*);

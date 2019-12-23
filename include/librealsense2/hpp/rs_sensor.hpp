@@ -242,6 +242,33 @@ namespace rs2
         }
 
         /**
+        * Retrieves the list of stream profiles currently streaming on the sensor.
+        * \return list of stream profiles that given sensor is streaming
+        */
+        std::vector<stream_profile> get_active_streams() const
+        {
+            std::vector<stream_profile> results{};
+
+            rs2_error* e = nullptr;
+            std::shared_ptr<rs2_stream_profile_list> list(
+                rs2_get_active_streams(_sensor.get(), &e),
+                rs2_delete_stream_profiles_list);
+            error::handle(e);
+
+            auto size = rs2_get_stream_profiles_count(list.get(), &e);
+            error::handle(e);
+
+            for (auto i = 0; i < size; i++)
+            {
+                stream_profile profile(rs2_get_stream_profile(list.get(), i, &e));
+                error::handle(e);
+                results.push_back(profile);
+            }
+
+            return results;
+        }
+
+        /**
         * get the recommended list of filters by the sensor
         * \return   list of filters that recommended by sensor
         */
@@ -452,7 +479,7 @@ namespace rs2
         /**
          * Load relocalization map onto device. Only one relocalization map can be imported at a time;
          * any previously existing map will be overwritten.
-         * The imported map exists simultaneously with the map created during the most tracking session after start(),
+         * The imported map exists simultaneously with the map created during the most recent tracking session after start(),
          * and they are merged after the imported map is relocalized.
          * This operation must be done before start().
          * \param[in] lmap_buf map data as a binary blob
