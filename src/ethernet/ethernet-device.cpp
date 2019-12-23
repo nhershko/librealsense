@@ -34,7 +34,9 @@ void sig_handler(int signo)
 rs2::ethernet_device::ethernet_device()
 {
 	dev = rs2_create_software_device(NULL);
+#ifdef COMPRESSION
 	idecomress = decompressFrameFactory::create(zipMethod::gzip);
+#endif
 }
 
 rs2::ethernet_device::ethernet_device(std::string url) : ethernet_device()
@@ -168,7 +170,7 @@ void rs2::ethernet_device::pull_from_queue(int stream_index)
 			//const std::lock_guard<std::mutex> lock(mtx);
 			Frame* frame = frame_queues[stream_index].front();
 			frame_queues[stream_index].pop();
-#ifdef COMPRESS_FRAMES			
+#ifdef COMPRESSION			
 			if (stream_index == 0) {
 				// depth
 				idecomress->decompressFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(last_frame[stream_index].pixels));
@@ -176,7 +178,7 @@ void rs2::ethernet_device::pull_from_queue(int stream_index)
 				// other -> color
 #endif
 				memcpy(last_frame[stream_index].pixels, frame->m_buffer, frame->m_size);
-#ifdef COMPRESS_FRAMES
+#ifdef COMPRESSION
 			}
 #endif
 			// delete frame;

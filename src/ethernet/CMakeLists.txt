@@ -57,8 +57,8 @@ target_link_libraries(${PROJECT_NAME}
 	${ZLIB_LIBRARIES}
 )
 
-if(COMPRESS_FRAMES)
-    add_definitions(-DCOMPRESS_FRAMES)
+if(COMPRESSION)
+    add_definitions(-DCOMPRESSION)
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC "rtsp_client/*.h")
