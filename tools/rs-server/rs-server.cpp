@@ -30,20 +30,28 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <liveMedia.hh>
 #include <BasicUsageEnvironment.hh>
 #include <GroupsockHelper.hh>
-
+#include <signal.h>
 #include "RsSource.hh"
 
+int w1 = 1280;//1280;
+int h1 = 720;//720;
+int w2 = 640;//1280;
+int h2 = 480;//720;
 UsageEnvironment *env;
 rs2::device selected_device;
 RsDeviceSource *devSource1;
 RsDeviceSource *devSource2;
 RawVideoRTPSink *videoSink1;
 RawVideoRTPSink *videoSink2;
+RTSPServer *rtspServer;
 
 void play(); // forward
+void sigint_handler(int sig);
 
 int main(int argc, char **argv)
 {
+  signal(SIGINT,sigint_handler);
+
   // Begin by setting up our usage environment:
   TaskScheduler *scheduler = BasicTaskScheduler::createNew();
   env = BasicUsageEnvironment::createNew(*scheduler);
@@ -75,8 +83,9 @@ int main(int argc, char **argv)
   rtcpGroupsock1.multicastSendOnly(); // we're a SSM source
 
   // Create a 'H265 Video RTP' sink from the RTP 'groupsock':
-  OutPacketBuffer::maxSize = 640 * 480 * 2;
-  videoSink1 = RawVideoRTPSink::createNew(*env, &rtpGroupsock1, 96, 480, 640, 8, "YCbCr-4:2:2");
+  
+  OutPacketBuffer::maxSize = 1280 * 720 * 4;
+  videoSink1 = RawVideoRTPSink::createNew(*env, &rtpGroupsock1, 96, h1, w1, 8, "YCbCr-4:2:2");
 
   RTCPInstance *rtcp1 = RTCPInstance::createNew(*env, &rtcpGroupsock1,
                                                 estimatedSessionBandwidth, CNAME,
@@ -97,8 +106,7 @@ int main(int argc, char **argv)
   rtcpGroupsock2.multicastSendOnly(); // we're a SSM source
 
   // Create a 'H265 Video RTP' sink from the RTP 'groupsock':
-  //OutPacketBuffer::maxSize = 640*480*1;
-  videoSink2 = RawVideoRTPSink::createNew(*env, &rtpGroupsock2, 97, 480, 640, 8, "YCbCr-4:2:2");
+  videoSink2 = RawVideoRTPSink::createNew(*env, &rtpGroupsock2, 97, h2, w2, 8, "YCbCr-4:2:2");
 
   RTCPInstance *rtcp2 = RTCPInstance::createNew(*env, &rtcpGroupsock2,
                                                 estimatedSessionBandwidth, CNAME,
@@ -106,7 +114,7 @@ int main(int argc, char **argv)
                                                 True);
   // Note: This starts RTCP running automatically
 
-  RTSPServer *rtspServer = RTSPServer::createNew(*env, 8554);
+  rtspServer = RTSPServer::createNew(*env, 8554);
   if (rtspServer == NULL)
   {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
@@ -174,8 +182,8 @@ void play()
     selected_device = devices[0];
   }
   
-  RSDeviceParameters params1(640, 480, 2, 0, 30);
-  RSDeviceParameters params2(640, 480, 2, 1, 30);
+  RSDeviceParameters params1(w1, h1, 2, 0, 30);
+  RSDeviceParameters params2(w2, h2, 2, 1, 30);
   devSource1 = RsDeviceSource::createNew(*env, params1, selected_device); 
   if (devSource1 == NULL)
   {
@@ -191,4 +199,21 @@ void play()
     exit(1);
   }
   videoSink2->startPlaying(*devSource2, afterPlaying2, videoSink2);
+}
+
+void sigint_handler(int sig)
+{
+  if (videoSink1!= NULL)
+  {
+    videoSink1->stopPlaying();
+  }
+  Medium::close(devSource1);
+  
+  if (videoSink2!= NULL)
+  {
+    videoSink2->stopPlaying();
+  }
+  Medium::close(devSource2);
+  Medium::close(rtspServer);
+  exit(sig);
 }
