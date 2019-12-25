@@ -27,17 +27,13 @@ public:
   virtual void close();
 
 protected:
-    
-
+  
 // TODO: deside about protection level
 public:
   StreamClientState scs;
   std::vector<Profile> supportedProfiles;
 
-  //IcamOErtsp moshe = factory(typeof(camOERTSPClient));
-
 private:
-    //void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString);
     camOERTSPClient(UsageEnvironment& env, char const* rtspURL,
 		int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum);
     // called only by createNew();
