@@ -88,14 +88,13 @@ private:
 
 private:
   RSDeviceParameters fParams;
-  rs2::frame frame;
   rs2::device selected_device;
   rs2::sensor selected_sensor;
   std::mutex m;
   std::condition_variable cv;
   bool isWaitingFrame;
 
-  unsigned char fbuf[640*480*2];
+  unsigned char* fbuf;
 };
 
 #endif
