@@ -1,11 +1,12 @@
 #ifndef _CAM_OE_RTSP_CLIENT_H
 #define _CAM_OE_RTSP_CLIENT_H
 
-#include "Profile.h"
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
 #include "StreamClientState.h"
 #include "IcamOERtsp.h"
+
+#include <librealsense2/hpp/rs_internal.hpp>
 
 #include <vector>
 
@@ -20,8 +21,8 @@ public:
 
 
 // IcamOERtsp functions
-  virtual std::vector<Profile> queryProfiles();
-  virtual int addProfile(Profile);
+  virtual std::vector<rs2_video_stream> queryProfiles();
+  virtual int addProfile(rs2_video_stream);
   virtual void start();
   virtual void stop();
   virtual void close();
@@ -31,7 +32,7 @@ protected:
 // TODO: deside about protection level
 public:
   StreamClientState scs;
-  std::vector<Profile> supportedProfiles;
+  std::vector<rs2_video_stream> supportedProfiles;
 
 private:
     camOERTSPClient(UsageEnvironment& env, char const* rtspURL,

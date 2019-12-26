@@ -10,13 +10,13 @@ int main()
     // myProfiles = rtspWrapper.queryProfiles();
     // //std::cout << "Size: " << myProfiles.size();
     IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.145.82:8554/testStream", "myClient");
-    std::vector<Profile> myProfiles;
+    std::vector<rs2_video_stream> myProfiles;
     ((camOERTSPClient*)camOErtspInstance)->initFunc();
     myProfiles = camOErtspInstance->queryProfiles();
     std::cout << "Size = " << myProfiles.size() << "\n";
     for (int i =  0; i < myProfiles.size(); i++)
     {
-    std::cout << "Profile " << i << ": " << "width = " << myProfiles[i].width << " height = " << myProfiles[i].hieght << "\n";
+    std::cout << "Profile " << i << ": " << "width = " << myProfiles[i].width << " height = " << myProfiles[i].height << "\n";
     }
     std::cout << "After!!!\n";
 

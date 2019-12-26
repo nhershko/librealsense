@@ -2,9 +2,6 @@
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
 
-// TODO: change to lrs class
-#include "Profile.h"
-
 #include <iostream>
 #include <thread>
 #include <condition_variable>
@@ -52,12 +49,12 @@ void camOERTSPClient::sendDescribe()
     this->envir() << "in sendDescribe After wait\n"; 
 }
 
-std::vector<Profile> camOERTSPClient::queryProfiles()
+std::vector<rs2_video_stream> camOERTSPClient::queryProfiles()
 {
     this->sendDescribe();  
     return this->supportedProfiles;
 }
-int camOERTSPClient::addProfile(Profile)
+int camOERTSPClient::addProfile(rs2_video_stream)
 {
 
 }
@@ -120,8 +117,11 @@ void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultS
     const char* strHeightVal = scs.subsession->attrVal_str("height");
     int width = strWidthVal != NULL ? std::stoi(strWidthVal) : 0;
     int height = strHeightVal != NULL ? std::stoi(strHeightVal) : 0;
-    Profile* p = new Profile(height,width);
-    ((camOERTSPClient*)rtspClient)->supportedProfiles.push_back(*p);
+    // Profile* p = new Profile(height,width);
+    rs2_video_stream videoStream;
+    videoStream.width = width;
+    videoStream.height = height;
+    ((camOERTSPClient*)rtspClient)->supportedProfiles.push_back(videoStream);
     scs.subsession = scs.iter->next();
     // TODO: when to delete p?
   }
