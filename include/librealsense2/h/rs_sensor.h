@@ -80,6 +80,11 @@ typedef enum rs2_format
     RS2_FORMAT_Y10BPACK        , /**< 16-bit per-pixel grayscale image unpacked from 10 bits per pixel packed ([8:8:8:8:2222]) grey-scale image. The data is unpacked to LSB and padded with 6 zero bits */
     RS2_FORMAT_DISTANCE        , /**< 32-bit float-point depth distance value.  */
     RS2_FORMAT_MJPEG           , /**< Bitstream encoding for video in which an image of each frame is encoded as JPEG-DIB   */
+    RS2_FORMAT_Y8I             , /**< 8-bit per pixel interleaved. 8-bit left, 8-bit right.  */
+    RS2_FORMAT_Y12I            , /**< 12-bit per pixel interleaved. 12-bit left, 12-bit right. Each pixel is stored in a 24-bit word in little-endian order. */
+    RS2_FORMAT_INZI            , /**< multi-planar Depth 16bit + IR 10bit.  */
+    RS2_FORMAT_INVI            , /**< 8-bit IR stream.  */
+    RS2_FORMAT_W10             , /**< Grey-scale image as a bit-packed array. 4 pixel data stream taking 5 bytes */
     RS2_FORMAT_COUNT             /**< Number of enumeration values. Not a valid input: intended to be used in for-loops. */
 } rs2_format;
 const char* rs2_format_to_string(rs2_format format);
@@ -311,11 +316,19 @@ const char* rs2_get_notification_serialized_data(rs2_notification* notification,
 
 /**
 * check if physical subdevice is supported
-* \param[in] device  input RealSense device
+* \param[in] sensor  input RealSense subdevice
 * \param[out] error  if non-null, receives any error that occurs during this call, otherwise, errors are ignored
 * \return            list of stream profiles that given subdevice can provide, should be released by rs2_delete_profiles_list
 */
-rs2_stream_profile_list* rs2_get_stream_profiles(rs2_sensor* device, rs2_error** error);
+rs2_stream_profile_list* rs2_get_stream_profiles(rs2_sensor* sensor, rs2_error** error);
+
+/**
+* check if physical subdevice is supported
+* \param[in] sensor  input RealSense subdevice
+* \param[out] error  if non-null, receives any error that occurs during this call, otherwise, errors are ignored
+* \return            list of stream profiles that given subdevice is currently streaming, should be released by rs2_delete_profiles_list
+*/
+rs2_stream_profile_list* rs2_get_active_streams(rs2_sensor* sensor, rs2_error** error);
 
 /**
 * Get pointer to specific stream profile
