@@ -33,8 +33,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <signal.h>
 #include "RsSource.hh"
 
-int w1 = 1280;//1280;
-int h1 = 720;//720;
+int w1 = 640;//1280;
+int h1 = 480;//720;
 int w2 = 640;//1280;
 int h2 = 480;//720;
 UsageEnvironment *env;
