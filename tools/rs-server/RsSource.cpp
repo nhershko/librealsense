@@ -144,7 +144,7 @@ int RsDeviceSource::get_stream_id()
         }
         else if(fParams.sensorID == 1)
         {
-          f = RS2_FORMAT_Y16;
+          f = RS2_FORMAT_YUYV;
         }
         else
         {
