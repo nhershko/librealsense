@@ -16,13 +16,13 @@ public:
     static IcamOERtsp* getRtspClient(char const* rtspURL,
 				  char const* applicationName = NULL,
 				  portNumBits tunnelOverHTTPPortNum = 0);
-    void sendDescribe();
+    void describe();
     void initFunc();
 
 
 // IcamOERtsp functions
-  virtual std::vector<rs2_video_stream> queryProfiles();
-  virtual int addProfile(rs2_video_stream);
+  virtual std::vector<rs2_video_stream> queryStreams();
+  virtual int addStream(rs2_video_stream);
   virtual void start();
   virtual void stop();
   virtual void close();
