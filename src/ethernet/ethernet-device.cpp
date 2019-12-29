@@ -49,6 +49,11 @@ rs2::ethernet_device::~ethernet_device()
 	rs2_delete_device(dev);
 }
 
+int rs2::ethernet_device::arrived_frame_counter()
+{
+	return frame_number;
+}
+
 std::vector<rs2::sensor> rs2::ethernet_device::ethernet_device::query_sensors() const
 {
 	std::cout << "Mock ethernet device querry";
@@ -196,7 +201,7 @@ void rs2::ethernet_device::pull_from_queue(int stream_index)
 
 void rs2::ethernet_device::incomming_server_frames_handler()
 {
-	Environment env(stop_flag);
+	env = new Environment(stop_flag);
 
 	// default value
 	int  timeout = 10;
@@ -207,11 +212,10 @@ void rs2::ethernet_device::incomming_server_frames_handler()
 	RS_RTSPFrameCallback rs_cb(this, output);
 	rs_cb.id=0;
 
-	RTSPConnection rtsp_client = RTSPConnection(env, &rs_cb, url.c_str(), timeout, rtptransport);
+	RTSPConnection rtsp_client = RTSPConnection(*env, &rs_cb, url.c_str(), timeout, rtptransport);
 
 	std::cout << "Start mainloop" << std::endl;
-	env.mainloop();
-
+	env->mainloop();
 }
 
 void rs2::ethernet_device::start(std::string url) {
@@ -225,6 +229,8 @@ void rs2::ethernet_device::start(std::string url) {
 	inject_frames_to_sw_device();
 }
 void rs2::ethernet_device::stop() {
+	//env->stop();
+	sig_handler(SIGINT);
 	is_active = false;
 	incomming_frames_thread.join();
 }

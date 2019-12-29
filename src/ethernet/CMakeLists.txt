@@ -17,18 +17,10 @@ file(GLOB ETHERNET_SOURCES
  "*.h"
  "*.cpp"
  "rtsp_client/*.cpp"
-<<<<<<< HEAD
- "common/*.hh"
-  ${LIVE}/groupsock/*.c* 
-  ${LIVE}/liveMedia/*.c* 
-  ${LIVE}/UsageEnvironment/*.c* 
-  ${LIVE}/BasicUsageEnvironment/*.c* 
-=======
  ${LIVE}/groupsock/*.c* 
  ${LIVE}/liveMedia/*.c* 
  ${LIVE}/UsageEnvironment/*.c* 
  ${LIVE}/BasicUsageEnvironment/*.c* 
->>>>>>> apuzhevi_compress
 )
 
 add_library(${PROJECT_NAME} SHARED ${ETHERNET_SOURCES})
