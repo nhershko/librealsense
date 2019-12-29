@@ -115,12 +115,12 @@ private:
 
 int main(int argc, char * argv[]) try
 {
-
+    std::string address = argv[1];
     //CI agent address
-	rs2::ethernet_device dev("10.12.144.64"); // Create software-only device
+	rs2::ethernet_device dev(address); // Create software-only device
 	//auto sensors = dev.query_sensors();
     //std::cout << "got sensors list from ethernet device. count is: " << sensors.size() << std::endl;
-    dev.start("10.12.144.64:8554");
+    dev.start(address+":8554");
     sleep(5);
     dev.stop();
     
