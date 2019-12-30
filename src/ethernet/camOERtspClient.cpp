@@ -113,11 +113,11 @@ void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultS
   scs.iter = new MediaSubsessionIterator(*scs.session);
   scs.subsession = scs.iter->next();
   while (scs.subsession != NULL) {
+    // Get more data from the SDP string 
     const char* strWidthVal = scs.subsession->attrVal_str("width");
     const char* strHeightVal = scs.subsession->attrVal_str("height");
     int width = strWidthVal != NULL ? std::stoi(strWidthVal) : 0;
     int height = strHeightVal != NULL ? std::stoi(strHeightVal) : 0;
-    // Profile* p = new Profile(height,width);
     rs2_video_stream videoStream;
     videoStream.width = width;
     videoStream.height = height;
