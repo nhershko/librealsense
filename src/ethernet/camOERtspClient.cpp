@@ -38,7 +38,7 @@ void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultStri
 void continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString);
 void setupSubsession(MediaSubsession* subsession, RTSPClient* rtspClient);
 
-void camOERTSPClient::sendDescribe()
+void camOERTSPClient::describe()
 {
     this->sendDescribeCommand(continueAfterDESCRIBE);
     this->envir() << "in sendDescribe after sending command\n";
@@ -49,12 +49,12 @@ void camOERTSPClient::sendDescribe()
     this->envir() << "in sendDescribe After wait\n"; 
 }
 
-std::vector<rs2_video_stream> camOERTSPClient::queryProfiles()
+std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
 {
-    this->sendDescribe();  
+    this->describe();  
     return this->supportedProfiles;
 }
-int camOERTSPClient::addProfile(rs2_video_stream)
+int camOERTSPClient::addStream(rs2_video_stream)
 {
 
 }

@@ -1,5 +1,5 @@
-#ifndef _STREM_CLIENT_STATE_H
-#define _STREM_CLIENT_STATE_H
+#ifndef _STREAM_CLIENT_STATE_H
+#define _STREAM_CLIENT_STATE_H
 
 #include "liveMedia.hh"
 
@@ -27,4 +27,4 @@ public:
   MediaSubsession* subsession;
 };
 
-#endif // _STREM_CLIENT_STATE_H
+#endif // _STREAM_CLIENT_STATE_H
