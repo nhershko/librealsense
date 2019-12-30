@@ -115,12 +115,28 @@ private:
 
 int main(int argc, char * argv[]) try
 {
+    std::string address = argv[1];
+    //CI agent address
+	rs2::ethernet_device dev(address); // Create software-only device
+	//auto sensors = dev.query_sensors();
+    //std::cout << "got sensors list from ethernet device. count is: " << sensors.size() << std::endl;
+    dev.start(address+":8554");
+    sleep(5);
+    dev.stop();
+    
+    if (dev.arrived_frame_counter()>170)
+    {
+        std::cout << "PASSED: got " << dev.arrived_frame_counter() << " frames " << std::endl;
+        exit(EXIT_SUCCESS);
+    }
+    else
+    {
+        std::cout << "FALIED: got " << dev.arrived_frame_counter() << " frames. Expected at least 170. " << std::endl;
+        exit(EXIT_FAILURE);
+    }
 
-	rs2::ethernet_device dev; // Create software-only device
-	auto sensors = dev.query_sensors();
-
-	std::cout << "got sensors list from ethernet device. count is: " << sensors.size() << std::endl;
-
+    dev.~ethernet_device();
+    
 	/*
 
 	rs2::ethernet_device bla;
