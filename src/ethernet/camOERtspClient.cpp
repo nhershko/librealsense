@@ -49,14 +49,22 @@ void camOERTSPClient::describe()
     this->envir() << "in sendDescribe After wait\n"; 
 }
 
+void camOERTSPClient::setup(rs2_video_stream stream)
+{
+    MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
+    this->sendSetupCommand(*subsession, continueAfterSETUP, False, REQUEST_STREAMING_OVER_TCP);
+}
+
 std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
 {
     this->describe();  
     return this->supportedProfiles;
 }
-int camOERTSPClient::addStream(rs2_video_stream)
+int camOERTSPClient::addStream(rs2_video_stream stream)
 {
-
+  this->setup(stream);
+  // TODO: return error code
+  return 0;
 }
 void camOERTSPClient::start()
 {
@@ -110,6 +118,7 @@ void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultS
       break;
     }
 
+  int stream_counter = 0;
   scs.iter = new MediaSubsessionIterator(*scs.session);
   scs.subsession = scs.iter->next();
   while (scs.subsession != NULL) {
@@ -121,6 +130,10 @@ void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultS
     rs2_video_stream videoStream;
     videoStream.width = width;
     videoStream.height = height;
+    videoStream.uid = stream_counter;
+    // TODO: update width and height in subsession?
+    ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, MediaSubsession*>(videoStream.uid, scs.subsession));
+    stream_counter++;
     ((camOERTSPClient*)rtspClient)->supportedProfiles.push_back(videoStream);
     scs.subsession = scs.iter->next();
     // TODO: when to delete p?
@@ -146,5 +159,5 @@ void setupSubsession(MediaSubsession* subsession, RTSPClient* rtspClient)
 
 void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString) {
   UsageEnvironment& env = rtspClient->envir(); // alias
-  env << "continueAfterSETUP" << "\n";
+  env << "continueAfterSETUP " << resultCode << " " << resultString <<"\n";
 }
