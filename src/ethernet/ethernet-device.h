@@ -88,6 +88,8 @@ namespace rs2
 		#endif
 		rs2_device* get_device();
 
+		int arrived_frame_counter();
+
 		//todo: make it private - once rtp client will be ready
 		void add_frame_to_queue(int type,Frame* frame);
 
