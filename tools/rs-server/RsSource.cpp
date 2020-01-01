@@ -104,7 +104,8 @@ void RsDeviceSource::deliverRSFrame()
 {
 */
 #ifdef COMPRESSION
-  IcompressFrame* iCompress =  compressFrameFactory::create(zipMethod::gzip);
+  IcompressFrame* iCompressColor =  compressFrameFactory::create(zipMethod::gzip);
+  IcompressFrame* iCompressDepth =  compressFrameFactory::create(zipMethod::gzip);
 #endif
   if (!isCurrentlyAwaitingData())
   {
@@ -127,12 +128,13 @@ void RsDeviceSource::deliverRSFrame()
     fFrameSize = newFrameSize;
   }
   gettimeofday(&fPresentationTime, NULL); // If you have a more accurate time - e.g., from an encoder - then use that instead.
-  //// memmove(fTo, frame.get_data(), fFrameSize);
-  //// unsigned char b[640*480*2];
 #ifdef COMPRESSION
    if(fParams.sensorID == 0) 
    {
-       iCompress->compressFrame(fbuf, fFrameSize, fTo);
+      iCompressDepth->compressDepthFrame(fbuf, fFrameSize, fTo);
+   } else if(fParams.sensorID == 1) 
+   {
+      iCompressColor->compressColorFrame(fbuf, fFrameSize, fTo);
    } else {
 #endif
        memmove(fTo, fbuf, 640*480*2);
