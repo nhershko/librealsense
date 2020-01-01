@@ -16,7 +16,10 @@ int main()
         std::cout << "Profile " << i << ": " << "width = " << myProfiles[i].width << " height = " << myProfiles[i].height << "\n";
     }
 
-    camOErtspInstance->addStream(myProfiles[1]);
+    int res = camOErtspInstance->addStream(myProfiles[0]);
+    std::cout << "After setup. res = " << res << "\n";
+    camOErtspInstance->start();
+    std::cout << "After play.\n";
 
     return 0;
 }
