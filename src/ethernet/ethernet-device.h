@@ -134,7 +134,8 @@ namespace rs2
 		rs2_software_video_frame last_frame[2];
 		std::vector<uint8_t> pixels_buff[2];
 
-		IdecompressFrame* idecomress;
+		IdecompressFrame* iDecomressColor;
+		IdecompressFrame* iDecomressDepth;
 };
 
 	class RS_RTSPFrameCallback: public RTSPCallback

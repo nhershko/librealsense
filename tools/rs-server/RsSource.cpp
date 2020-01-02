@@ -101,7 +101,8 @@ void RsDeviceSource::doGetNextFrame()
 void RsDeviceSource::deliverRSFrame()
 {
 #ifdef COMPRESSION
-  IcompressFrame* iCompress =  compressFrameFactory::create(zipMethod::gzip);
+  IcompressFrame* iCompressColor =  compressFrameFactory::create(zipMethod::gzip);
+  IcompressFrame* iCompressDepth =  compressFrameFactory::create(zipMethod::gzip);
 #endif
   if (!isCurrentlyAwaitingData())
   {
@@ -124,7 +125,10 @@ void RsDeviceSource::deliverRSFrame()
 #ifdef COMPRESSION
    if(fParams.sensorID == 0) 
    {
-       iCompress->compressFrame(fbuf, fFrameSize, fTo);
+      iCompressDepth->compressDepthFrame(fbuf, fFrameSize, fTo);
+   } else if(fParams.sensorID == 1) 
+   {
+      iCompressColor->compressColorFrame(fbuf, fFrameSize, fTo);
    } else {
 #endif
        memmove(fTo, fbuf, fFrameSize);
