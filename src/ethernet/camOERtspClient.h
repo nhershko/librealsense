@@ -9,6 +9,7 @@
 #include <librealsense2/hpp/rs_internal.hpp>
 
 #include <vector>
+#include <map>
 
 class camOERTSPClient: public RTSPClient, IcamOERtsp
 {
@@ -17,12 +18,14 @@ public:
 				  char const* applicationName = NULL,
 				  portNumBits tunnelOverHTTPPortNum = 0);
     void describe();
+    void setup(rs2_video_stream stream);
     void initFunc();
+
 
 
 // IcamOERtsp functions
   virtual std::vector<rs2_video_stream> queryStreams();
-  virtual int addStream(rs2_video_stream);
+  virtual int addStream(rs2_video_stream stream);
   virtual void start();
   virtual void stop();
   virtual void close();
@@ -33,6 +36,7 @@ protected:
 public:
   StreamClientState scs;
   std::vector<rs2_video_stream> supportedProfiles;
+  std::map<int, MediaSubsession*> subsessionMap;
 
 private:
     camOERTSPClient(UsageEnvironment& env, char const* rtspURL,

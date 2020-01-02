@@ -39,6 +39,8 @@
 
 #define MAX_ACTIVE_STREAMS_NUMBER 4
 
+#define SENSORS_NUMBER 4
+
 namespace rs2
 {
 	void ethernet_device_deleter(void* p) {
@@ -138,7 +140,7 @@ namespace rs2
 
 		IdecompressFrame* idecomress;
 
-		IcamOERtsp* rtsp_client;
+		IcamOERtsp* rtsp_clients[SENSORS_NUMBER] = {NULL};
 };
 
 	class RS_RTSPFrameCallback: public RTSPCallback

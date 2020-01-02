@@ -32,6 +32,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <GroupsockHelper.hh>
 #include <signal.h>
 #include "RsSource.hh"
+#include "RsMediaSubsession.h"
 
 int w1 = 640;//1280;
 int h1 = 480;//720;
@@ -56,110 +57,62 @@ int main(int argc, char **argv)
   TaskScheduler *scheduler = BasicTaskScheduler::createNew();
   env = BasicUsageEnvironment::createNew(*scheduler);
 
-  // Create 'groupsocks' for RTP and RTCP:
-  struct in_addr destinationAddress;
-  destinationAddress.s_addr = chooseRandomIPv4SSMAddress(*env);
-  // Note: This is a multicast address.  If you wish instead to stream
-  // using unicast, then you should use the "testOnDemandRTSPServer"
-  // test program - not this test program - as a model.
-
-  // Create (and start) a 'RTCP instance' for this RTP sink:
-  const unsigned estimatedSessionBandwidth = 18500; // in kbps; for RTCP b/w share
-  const unsigned maxCNAMElen = 100;
-  unsigned char CNAME[maxCNAMElen + 1];
-  gethostname((char *)CNAME, maxCNAMElen);
-  CNAME[maxCNAMElen] = '\0'; // just in case
-
-  const unsigned short rtpPortNum1 = 18888;
-  const unsigned short rtcpPortNum1 = rtpPortNum1 + 1;
-  const unsigned char ttl = 255;
-
-  const Port rtpPort1(rtpPortNum1);
-  const Port rtcpPort1(rtcpPortNum1);
-
-  Groupsock rtpGroupsock1(*env, destinationAddress, rtpPort1, ttl);
-  rtpGroupsock1.multicastSendOnly(); // we're a SSM source
-  Groupsock rtcpGroupsock1(*env, destinationAddress, rtcpPort1, ttl);
-  rtcpGroupsock1.multicastSendOnly(); // we're a SSM source
-  
-  OutPacketBuffer::maxSize = 1280 * 720 * 4;
-  videoSink1 = RawVideoRTPSink::createNew(*env, &rtpGroupsock1, 96, h1, w1, 8, "YCbCr-4:2:2");
-
-  RTCPInstance *rtcp1 = RTCPInstance::createNew(*env, &rtcpGroupsock1,
-                                                estimatedSessionBandwidth, CNAME,
-                                                videoSink1, NULL /* we're a server */,
-                                                True /* we're a SSM source */);
-  // Note: This starts RTCP running automatically
-
-  const unsigned short rtpPortNum2 = 18886;
-  const unsigned short rtcpPortNum2 = rtpPortNum2 + 1;
-  //const unsigned char ttl = 255;
-
-  const Port rtpPort2(rtpPortNum2);
-  const Port rtcpPort2(rtcpPortNum2);
-
-  Groupsock rtpGroupsock2(*env, destinationAddress, rtpPort2, ttl);
-  rtpGroupsock2.multicastSendOnly(); // we're a SSM source
-  Groupsock rtcpGroupsock2(*env, destinationAddress, rtcpPort2, ttl);
-  rtcpGroupsock2.multicastSendOnly(); // we're a SSM source
-
-  // Create a 'H265 Video RTP' sink from the RTP 'groupsock':
-  videoSink2 = RawVideoRTPSink::createNew(*env, &rtpGroupsock2, 97, h2, w2, 8, "YCbCr-4:2:2");
-
-  RTCPInstance *rtcp2 = RTCPInstance::createNew(*env, &rtcpGroupsock2,
-                                                estimatedSessionBandwidth, CNAME,
-                                                videoSink2, NULL,
-                                                True);
-  // Note: This starts RTCP running automatically
-
   rtspServer = RTSPServer::createNew(*env, 8554);
   if (rtspServer == NULL)
   {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);
   }
-  ServerMediaSession *sms = ServerMediaSession::createNew(*env, "unicast", "",
+
+  rs2::context ctx;
+
+  // Using the context we can get all connected devices in a device list
+  rs2::device_list devices = ctx.query_devices();
+  std::string name; 
+  
+
+  if (devices.size() == 0)
+  {
+    rs2::device_hub device_hub(ctx);
+    selected_device = device_hub.wait_for_device();
+  }
+  else
+  {
+    *env << "Found " << devices.size() << " cameras\n";
+    selected_device = devices[0];
+  }
+  
+
+
+  ServerMediaSession *sms_depth = ServerMediaSession::createNew(*env, "depth", "",
                                                           "Session streamed by \"testH265VideoStreamer\"",
                                                           True);
-  sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink1, rtcp1));
-  sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink2, rtcp2));
-  rtspServer->addServerMediaSession(sms);
+  RSDeviceParameters params1(w1, h1, 2, 0, 30);
+  RSDeviceParameters params2(w2, h2, 2, 1, 30);
+  sms_depth->addSubsession(RsMediaSubsession::createNew(*env,  params1, selected_device, RS2_FORMAT_Z16));
+  rtspServer->addServerMediaSession(sms_depth);
 
-  char *url = rtspServer->rtspURL(sms);
-  *env << "Play this stream using the URL \"" << url << "\"\n";
-  delete[] url;
+  char *url_depth = rtspServer->rtspURL(sms_depth);
+  *env << "Play depth stream using the URL \"" << url_depth << "\"\n";
 
-  // Start the streaming:
-  *env << "Beginning streaming...\n";
-  play();
+  ServerMediaSession *sms_color = ServerMediaSession::createNew(*env, "color", "",
+                                                          "Session streamed by \"testH265VideoStreamer\"",
+                                                          True);
+  sms_color->addSubsession(RsMediaSubsession::createNew(*env,  params2, selected_device, RS2_FORMAT_RGB8));
+  rtspServer->addServerMediaSession(sms_color);
+
+  char *url_color = rtspServer->rtspURL(sms_color);
+  *env << "Play color stream using the URL \"" << url_color << "\"\n";
+  
+  delete[] url_depth;
+  delete[] url_color;
 
   env->taskScheduler().doEventLoop(); // does not return
 
   return 0; // only to prevent compiler warning
 }
 
-void afterPlaying1(void * /*clientData*/)
-{
-  *env << "...done reading from file\n";
-  videoSink1->stopPlaying();
-  Medium::close(devSource1);
-  // Note that this also closes the input file that this source read from.
-
-  // Start playing once again:
-  play();
-}
-
-void afterPlaying2(void * /*clientData*/)
-{
-  *env << "...done reading from file\n";
-  videoSink2->stopPlaying();
-  Medium::close(devSource2);
-  // Note that this also closes the input file that this source read from.
-
-  // Start playing once again:
-  play();
-}
-
+/*
 void play()
 {
   rs2::context ctx;
@@ -197,21 +150,12 @@ void play()
     exit(1);
   }
   videoSink2->startPlaying(*devSource2, afterPlaying2, videoSink2);
-}
+}*/
+
+
 
 void sigint_handler(int sig)
 {
-  if (videoSink1!= NULL)
-  {
-    videoSink1->stopPlaying();
-  }
-  Medium::close(devSource1);
-  
-  if (videoSink2!= NULL)
-  {
-    videoSink2->stopPlaying();
-  }
-  Medium::close(devSource2);
   Medium::close(rtspServer);
   exit(sig);
 }

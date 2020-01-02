@@ -45,8 +45,11 @@ rs2::ethernet_device::ethernet_device(std::string url) : ethernet_device()
 {
 	this->ip_address = url;
 	
-	rtsp_client = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/unicast").c_str(),"ethernet_device");
-	((camOERTSPClient*)rtsp_client)->initFunc();
+	rtsp_clients[rs2_stream::RS2_STREAM_DEPTH-1] = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/depth").c_str(),"ethernet_device");
+	((camOERTSPClient*)rtsp_clients[rs2_stream::RS2_STREAM_DEPTH-1])->initFunc();
+
+	rtsp_clients[rs2_stream::RS2_STREAM_COLOR-1] = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/color").c_str(),"ethernet_device");
+	((camOERTSPClient*)rtsp_clients[rs2_stream::RS2_STREAM_COLOR-1])->initFunc();
 }
 
 rs2::ethernet_device::~ethernet_device()
@@ -63,8 +66,16 @@ int rs2::ethernet_device::arrived_frame_counter()
 std::vector<rs2_video_stream> rs2::ethernet_device::query_sensors() 
 {
 	std::cout << "Mock ethernet device querry";
-	
-	std::vector<rs2_video_stream> streams = rtsp_client->queryStreams();
+	std::vector<rs2_video_stream> streams;
+
+	for (size_t i = 0; i < SENSORS_NUMBER; i++)
+	{
+		if (rtsp_clients[i]==NULL)
+			continue;
+		std::vector<rs2_video_stream> sensor_streams = rtsp_clients[i]->queryStreams();
+		for (size_t j = 0; j < sensor_streams.size() ; j++)
+			streams.insert(streams.end(),sensor_streams[j]);
+	}
 
 	/*
 	TODO: use rtsp client
@@ -142,18 +153,19 @@ rs2_video_stream rs2::ethernet_device::rtsp_stream_to_rs_video_stream(camOE_stre
 void rs2::ethernet_device::inject_frames_to_sw_device()
 {
 
-	auto _stream = rtsp_client->queryStreams();
+	auto streams = this->query_sensors();//rtsp_client->queryStreams();
 
 	//todo: replace with input from rtsp client
+	/*
 	std::queue<camOE_stream> streams;
 	streams.push(camOE_stream(stream_type_id::STREAM_DEPTH,{640,480},30));
 	streams.push(camOE_stream(stream_type_id::STREAM_COLOR,{640,480},30));
-
+	*/
 	inject_threads = new std::thread[streams.size()];
 
-	for (size_t i = 0; i <= _stream.size(); i++)
+	for (size_t i = 0; i < streams.size(); i++)
 	{
-		rs2_video_stream st = _stream[i];//rtsp_stream_to_rs_video_stream(streams.front());
+		rs2_video_stream st = streams[i];//rtsp_stream_to_rs_video_stream(streams.front());
 		
 		if (st.type==RS2_STREAM_DEPTH)
 			sensors[i] = rs2_software_device_add_sensor(dev, "Depth (Remote)", NULL);
@@ -162,15 +174,17 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 
 		profiles[i] = rs2_software_sensor_add_video_stream(sensors[i], st, NULL);
 
-		last_frame[i].bpp = st.bpp;
+		//TODO: hard coded bpp - need to be added to subsession object
+		int BPP =2;
+		last_frame[i].bpp = BPP;
 		last_frame[i].profile = profiles[i];
-		last_frame[i].stride = st.bpp * st.width;
+		last_frame[i].stride = BPP * st.width;
 		pixels_buff[i].resize(last_frame[i].stride * st.height, 0);
 		last_frame[i].pixels = pixels_buff[i].data();
 		last_frame[i].deleter = &ethernet_device_deleter;
 		
-
-		inject_threads[i] = std::thread(&rs2::ethernet_device::pull_from_queue,this,streams.front().stream_sensor());
+		//quese array is 0 based so setting type -1 as address
+		inject_threads[i] = std::thread(&rs2::ethernet_device::pull_from_queue,this,streams[i].type-1);
 
 		//streams.pop();
 	}
@@ -219,11 +233,13 @@ void rs2::ethernet_device::incomming_server_frames_handler()
 	int rtptransport = RTSPConnection::RTPUDPUNICAST;
 	int  logLevel = 255;
 	std::string output;
-	std::string url = "rtsp://" + ip_address + "/unicast"; //"rtsp://10.12.144.74:8554/unicast";
+	
+	std::string url_depth = "rtsp://" + ip_address + "/depth"; //"rtsp://10.12.144.74:8554/unicast";
 	RS_RTSPFrameCallback rs_cb(this, output);
-	rs_cb.id=0;
+	RTSPConnection depth_rtsp_client = RTSPConnection(*env, &rs_cb, url_depth.c_str(), timeout, rtptransport);
 
-	RTSPConnection rtsp_client = RTSPConnection(*env, &rs_cb, url.c_str(), timeout, rtptransport);
+	std::string url_color = "rtsp://" + ip_address + "/color"; //"rtsp://10.12.144.74:8554/unicast";
+	RTSPConnection color_rtsp_client = RTSPConnection(*env, &rs_cb, url_color.c_str(), timeout, rtptransport);
 
 	std::cout << "Start mainloop" << std::endl;
 	env->mainloop();

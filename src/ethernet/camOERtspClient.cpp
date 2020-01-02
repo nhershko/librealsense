@@ -26,8 +26,9 @@ camOERTSPClient::camOERTSPClient(UsageEnvironment& env, char const* rtspURL,
 camOERTSPClient::~camOERTSPClient() {
 }
 
+// TODO: should we have seperate mutex for each command?
 std::condition_variable cv;
-std::mutex describe_mtx;
+std::mutex command_mtx;
 bool describe_done = false;
 
 // Forward function definitions:
@@ -38,29 +39,45 @@ void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultStri
 void continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString);
 void setupSubsession(MediaSubsession* subsession, RTSPClient* rtspClient);
 
-void camOERTSPClient::describe()
+std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
 {
     this->sendDescribeCommand(continueAfterDESCRIBE);
     this->envir() << "in sendDescribe after sending command\n";
     // wait for continueAfterDESCRIBE to finish
-    std::unique_lock<std::mutex> lck(describe_mtx);
+    std::unique_lock<std::mutex> lck(command_mtx);
     cv.wait(lck); 
 
-    this->envir() << "in sendDescribe After wait\n"; 
-}
-
-std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
-{
-    this->describe();  
+    this->envir() << "in sendDescribe After wait\n";   
     return this->supportedProfiles;
 }
-int camOERTSPClient::addStream(rs2_video_stream)
+int camOERTSPClient::addStream(rs2_video_stream stream)
 {
+  MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
 
+
+  if (subsession != NULL) {
+     if (!subsession->initiate()) {
+       this->envir() << "Failed to initiate the subsession \n";
+      
+      } else {
+      this->envir()  << "Initiated the subsession \n";;
+
+      // Continue setting up this subsession, by sending a RTSP "SETUP" command:
+      this->sendSetupCommand(*subsession, continueAfterSETUP, False, REQUEST_STREAMING_OVER_TCP);  
+      // wait for continueAfterSETUP to finish
+      std::unique_lock<std::mutex> lck(command_mtx);
+      cv.wait(lck);  
+      }
+  }
+  // TODO: return error code
+  return 0;
 }
 void camOERTSPClient::start()
 {
-
+  this->sendPlayCommand(*this->scs.session, continueAfterPLAY);
+  // wait for continueAfterPLAY to finish
+  std::unique_lock<std::mutex> lck(command_mtx);
+  cv.wait(lck); 
 }
 void camOERTSPClient::stop()
 {
@@ -110,6 +127,7 @@ void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultS
       break;
     }
 
+  int stream_counter = 0;
   scs.iter = new MediaSubsessionIterator(*scs.session);
   scs.subsession = scs.iter->next();
   while (scs.subsession != NULL) {
@@ -121,12 +139,31 @@ void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultS
     rs2_video_stream videoStream;
     videoStream.width = width;
     videoStream.height = height;
+    videoStream.uid = stream_counter;
+   
+    std::string url_str = rtspClient->url();
+    // Remove last "/"
+    url_str = url_str.substr(0, url_str.size()-1);
+    std::size_t stream_name_index = url_str.find_last_of("/") + 1;
+    std::string stream_name = url_str.substr(stream_name_index, url_str.size());
+    if (stream_name.compare("depth") == 0)
+    {
+      videoStream.type = RS2_STREAM_DEPTH;
+    }
+    else if((stream_name.compare("color") == 0))
+    {
+      videoStream.type = RS2_STREAM_COLOR;
+    }
+
+    // TODO: update width and height in subsession?
+    ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, MediaSubsession*>(videoStream.uid, scs.subsession));
+    stream_counter++;
     ((camOERTSPClient*)rtspClient)->supportedProfiles.push_back(videoStream);
     scs.subsession = scs.iter->next();
     // TODO: when to delete p?
   }
 
-    std::unique_lock<std::mutex> lck(describe_mtx);
+    std::unique_lock<std::mutex> lck(command_mtx);
     cv.notify_one();
 
     return;
@@ -137,14 +174,19 @@ void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultS
   //shutdownStream(rtspClient);
 }
 
-void setupSubsession(MediaSubsession* subsession, RTSPClient* rtspClient)
-{
-  UsageEnvironment& env = rtspClient->envir(); // alias
-  env <<  "Setting up subsession:  " << subsession->codecName() <<  "\n"; 
-  rtspClient->sendSetupCommand(*subsession, continueAfterSETUP, False, REQUEST_STREAMING_OVER_TCP);
-}
-
 void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString) {
   UsageEnvironment& env = rtspClient->envir(); // alias
-  env << "continueAfterSETUP" << "\n";
+  env << "continueAfterSETUP " << resultCode << " " << resultString <<"\n";
+
+  std::unique_lock<std::mutex> lck(command_mtx);
+  cv.notify_one();
+}
+
+void continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString)
+{
+  UsageEnvironment& env = rtspClient->envir(); // alias
+  env << "continueAfterPLAY " << resultCode << " " << resultString <<"\n";
+  std::unique_lock<std::mutex> lck(command_mtx);
+  cv.notify_one();
+
 }
