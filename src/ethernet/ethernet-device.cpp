@@ -1,6 +1,7 @@
 #include "ethernet-device.h"
 #include "IdecompressFrame.h"
 #include "decompressFrameFactory.h"
+#include "camOERtspClient.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -37,10 +38,15 @@ rs2::ethernet_device::ethernet_device()
 #ifdef COMPRESSION
 	idecomress = decompressFrameFactory::create(zipMethod::gzip);
 #endif
+
 }
 
 rs2::ethernet_device::ethernet_device(std::string url) : ethernet_device()
 {
+	this->ip_address = url;
+	
+	rtsp_client = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/unicast").c_str(),"ethernet_device");
+	((camOERTSPClient*)rtsp_client)->initFunc();
 }
 
 rs2::ethernet_device::~ethernet_device()
@@ -54,21 +60,23 @@ int rs2::ethernet_device::arrived_frame_counter()
 	return frame_number;
 }
 
-std::vector<rs2::sensor> rs2::ethernet_device::ethernet_device::query_sensors() const
+std::vector<rs2_video_stream> rs2::ethernet_device::query_sensors() 
 {
 	std::cout << "Mock ethernet device querry";
 	
+	std::vector<rs2_video_stream> streams = rtsp_client->queryStreams();
+
 	/*
 	TODO: use rtsp client
 	std::vector<stream_profile> rtsp_profiles = rtsp_client.query_streams();
 	std::vector<rs2_video_stream> ethernet_devie_streams = rtsp_stream_to_rs_video_stream(rtsp_profiles);
 	*/
 
-	std::vector<rs2::sensor> sensors;
+	//std::vector<rs2::sensor> sensors;
 	//TODO: get device sensors via network
-	rs2::sensor mock_sensor;
-	sensors.push_back(mock_sensor);
-	return sensors;
+	//rs2::sensor mock_sensor;
+	//sensors.push_back(mock_sensor);
+	return streams;
 }
 
 
@@ -133,6 +141,9 @@ rs2_video_stream rs2::ethernet_device::rtsp_stream_to_rs_video_stream(camOE_stre
 
 void rs2::ethernet_device::inject_frames_to_sw_device()
 {
+
+	auto _stream = rtsp_client->queryStreams();
+
 	//todo: replace with input from rtsp client
 	std::queue<camOE_stream> streams;
 	streams.push(camOE_stream(stream_type_id::STREAM_DEPTH,{640,480},30));
@@ -140,11 +151,11 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 
 	inject_threads = new std::thread[streams.size()];
 
-	for (size_t i = 0; i <= streams.size(); i++)
+	for (size_t i = 0; i <= _stream.size(); i++)
 	{
-		rs2_video_stream st = rtsp_stream_to_rs_video_stream(streams.front());
+		rs2_video_stream st = _stream[i];//rtsp_stream_to_rs_video_stream(streams.front());
 		
-		if (streams.front().stream_sensor()==0)
+		if (st.type==RS2_STREAM_DEPTH)
 			sensors[i] = rs2_software_device_add_sensor(dev, "Depth (Remote)", NULL);
 		else 
 			sensors[i] = rs2_software_device_add_sensor(dev, "Color (Remote)", NULL);
@@ -161,7 +172,7 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 
 		inject_threads[i] = std::thread(&rs2::ethernet_device::pull_from_queue,this,streams.front().stream_sensor());
 
-		streams.pop();
+		//streams.pop();
 	}
 }
 

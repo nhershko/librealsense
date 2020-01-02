@@ -19,6 +19,8 @@
 #include "rtsp_client/sdpclient.h"
 #include "rtsp_client/callbacks.h"
 
+#include "camOERtspClient.h"
+
 #include "IdecompressFrame.h"
 #include "decompressFrameFactory.h"
 
@@ -81,7 +83,7 @@ namespace rs2
 		#ifdef _WIN32
 		__declspec(dllexport)
 		#endif
-		virtual std::vector<sensor> query_sensors() const override;
+		virtual std::vector<rs2_video_stream> query_sensors();
 
 		#ifdef _WIN32
 		__declspec(dllexport)
@@ -135,6 +137,8 @@ namespace rs2
 		std::vector<uint8_t> pixels_buff[2];
 
 		IdecompressFrame* idecomress;
+
+		IcamOERtsp* rtsp_client;
 };
 
 	class RS_RTSPFrameCallback: public RTSPCallback
