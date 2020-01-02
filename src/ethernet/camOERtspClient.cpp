@@ -140,6 +140,21 @@ void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultS
     videoStream.width = width;
     videoStream.height = height;
     videoStream.uid = stream_counter;
+   
+    std::string url_str = rtspClient->url();
+    // Remove last "/"
+    url_str = url_str.substr(0, url_str.size()-1);
+    std::size_t stream_name_index = url_str.find_last_of("/") + 1;
+    std::string stream_name = url_str.substr(stream_name_index, url_str.size());
+    if (stream_name.compare("depth") == 0)
+    {
+      videoStream.type = RS2_STREAM_DEPTH;
+    }
+    else if((stream_name.compare("color") == 0))
+    {
+      videoStream.type = RS2_STREAM_COLOR;
+    }
+
     // TODO: update width and height in subsession?
     ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, MediaSubsession*>(videoStream.uid, scs.subsession));
     stream_counter++;

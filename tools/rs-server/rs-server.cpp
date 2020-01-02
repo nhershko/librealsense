@@ -84,21 +84,28 @@ int main(int argc, char **argv)
   
 
 
-  ServerMediaSession *sms = ServerMediaSession::createNew(*env, "unicast", "",
+  ServerMediaSession *sms_depth = ServerMediaSession::createNew(*env, "depth", "",
                                                           "Session streamed by \"testH265VideoStreamer\"",
                                                           True);
   RSDeviceParameters params1(w1, h1, 2, 0, 30);
   RSDeviceParameters params2(w2, h2, 2, 1, 30);
-  sms->addSubsession(RsMediaSubsession::createNew(*env,  params1, selected_device, RS2_FORMAT_Z16));
-  sms->addSubsession(RsMediaSubsession::createNew(*env,  params2, selected_device, RS2_FORMAT_YUYV));
-  rtspServer->addServerMediaSession(sms);
+  sms_depth->addSubsession(RsMediaSubsession::createNew(*env,  params1, selected_device, RS2_FORMAT_Z16));
+  rtspServer->addServerMediaSession(sms_depth);
 
-  char *url = rtspServer->rtspURL(sms);
-  *env << "Play this stream using the URL \"" << url << "\"\n";
-  delete[] url;
+  char *url_depth = rtspServer->rtspURL(sms_depth);
+  *env << "Play depth stream using the URL \"" << url_depth << "\"\n";
 
-  // Start the streaming:
-  *env << "Beginning streaming...\n";
+  ServerMediaSession *sms_color = ServerMediaSession::createNew(*env, "color", "",
+                                                          "Session streamed by \"testH265VideoStreamer\"",
+                                                          True);
+  sms_color->addSubsession(RsMediaSubsession::createNew(*env,  params2, selected_device, RS2_FORMAT_RGB8));
+  rtspServer->addServerMediaSession(sms_color);
+
+  char *url_color = rtspServer->rtspURL(sms_color);
+  *env << "Play color stream using the URL \"" << url_color << "\"\n";
+  
+  delete[] url_depth;
+  delete[] url_color;
 
   env->taskScheduler().doEventLoop(); // does not return
 
