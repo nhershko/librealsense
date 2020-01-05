@@ -5,6 +5,7 @@
 
 int main()
 {
+    int res = 0;
     IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.145.82:8554/depth", "myClient");
     //IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.144.35:8554/unicast", "myClient");
     std::vector<rs2_video_stream> myProfiles;
@@ -28,11 +29,28 @@ int main()
         std::cout << "Profile " << i << ": " << "width = " << myProfiles2[i].width << " height = " << myProfiles2[i].height << " sensor id = " << myProfiles2[i].type <<"\n";
     }
 
-
-    int res = camOErtspInstance->addStream(myProfiles[0]);
+    res = camOErtspInstance->addStream(myProfiles[0]);
     std::cout << "After setup. res = " << res << "\n";
-    camOErtspInstance->start();
-     std::cout << "After play.\n";
+    //res = camOErtspInstance->stop(myProfiles[0]);
+    //std::cout << "After stop. res = " << res << "\n";
+    res = camOErtspInstance->start();
+    std::cout << "After start. res = " << res << "\n";
+    res = camOErtspInstance->stop();
+    std::cout << "After stop. res = " << res << "\n";
+    //res = camOErtspInstance->stop(myProfiles[0]);
+    //std::cout << "After stop. res = " << res << "\n";
+    
+    res = camOErtspInstance->close();
+    std::cout << "After close. res = " << res << "\n";
+
+
+//  camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.145.82:8554/depth", "myClient");
+ //((camOERTSPClient*)camOErtspInstance)->initFunc();
+ //    myProfiles = camOErtspInstance->queryStreams();
+//     res = camOErtspInstance->addStream(myProfiles[0]);
+//     std::cout << "After setup. res = " << res << "\n";
+//     res = camOErtspInstance->start();
+//     std::cout << "After start. res = " << res << "\n";
 
     return 0;
 }
