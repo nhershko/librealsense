@@ -65,16 +65,22 @@ int rs2::ethernet_device::arrived_frame_counter()
 
 std::vector<rs2_video_stream> rs2::ethernet_device::query_sensors() 
 {
-	std::cout << "Mock ethernet device querry";
+	std::cout << "Querry Sensors\n";
 	std::vector<rs2_video_stream> streams;
 
+	int stream_uid=0;
 	for (size_t i = 0; i < SENSORS_NUMBER; i++)
 	{
 		if (rtsp_clients[i]==NULL)
 			continue;
 		std::vector<rs2_video_stream> sensor_streams = rtsp_clients[i]->queryStreams();
 		for (size_t j = 0; j < sensor_streams.size() ; j++)
-			streams.insert(streams.end(),sensor_streams[j]);
+		{
+		sensor_streams[j].uid = stream_uid;
+		streams.insert(streams.end(),sensor_streams[j]);
+		stream_uid++;
+		}
+			
 	}
 
 	/*
@@ -153,7 +159,7 @@ rs2_video_stream rs2::ethernet_device::rtsp_stream_to_rs_video_stream(camOE_stre
 void rs2::ethernet_device::inject_frames_to_sw_device()
 {
 
-	auto streams = this->query_sensors();//rtsp_client->queryStreams();
+	available_streams = this->query_sensors();//rtsp_client->queryStreams();
 
 	//todo: replace with input from rtsp client
 	/*
@@ -161,11 +167,11 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 	streams.push(camOE_stream(stream_type_id::STREAM_DEPTH,{640,480},30));
 	streams.push(camOE_stream(stream_type_id::STREAM_COLOR,{640,480},30));
 	*/
-	inject_threads = new std::thread[streams.size()];
+	inject_threads = new std::thread[available_streams.size()];
 
-	for (size_t i = 0; i < streams.size(); i++)
+	for (size_t i = 0; i < available_streams.size(); i++)
 	{
-		rs2_video_stream st = streams[i];//rtsp_stream_to_rs_video_stream(streams.front());
+		rs2_video_stream st = available_streams[i];//rtsp_stream_to_rs_video_stream(streams.front());
 		
 		if (st.type==RS2_STREAM_DEPTH)
 			sensors[i] = rs2_software_device_add_sensor(dev, "Depth (Remote)", NULL);
@@ -175,16 +181,15 @@ void rs2::ethernet_device::inject_frames_to_sw_device()
 		profiles[i] = rs2_software_sensor_add_video_stream(sensors[i], st, NULL);
 
 		//TODO: hard coded bpp - need to be added to subsession object
-		int BPP =2;
-		last_frame[i].bpp = BPP;
+		last_frame[i].bpp = st.bpp;
 		last_frame[i].profile = profiles[i];
-		last_frame[i].stride = BPP * st.width;
+		last_frame[i].stride = st.bpp * st.width;
 		pixels_buff[i].resize(last_frame[i].stride * st.height, 0);
 		last_frame[i].pixels = pixels_buff[i].data();
 		last_frame[i].deleter = &ethernet_device_deleter;
 		
 		//quese array is 0 based so setting type -1 as address
-		inject_threads[i] = std::thread(&rs2::ethernet_device::pull_from_queue,this,streams[i].type-1);
+		inject_threads[i] = std::thread(&rs2::ethernet_device::pull_from_queue,this,available_streams[i].type-1);
 
 		//streams.pop();
 	}
@@ -229,7 +234,7 @@ void rs2::ethernet_device::incomming_server_frames_handler()
 	env = new Environment(stop_flag);
 
 	// default value
-	int  timeout = 10;
+	int  timeout = 100;
 	int rtptransport = RTSPConnection::RTPUDPUNICAST;
 	int  logLevel = 255;
 	std::string output;
@@ -238,8 +243,18 @@ void rs2::ethernet_device::incomming_server_frames_handler()
 	RS_RTSPFrameCallback rs_cb(this, output);
 	RTSPConnection depth_rtsp_client = RTSPConnection(*env, &rs_cb, url_depth.c_str(), timeout, rtptransport);
 
+
+	auto a= &depth_rtsp_client;
+
 	std::string url_color = "rtsp://" + ip_address + "/color"; //"rtsp://10.12.144.74:8554/unicast";
 	RTSPConnection color_rtsp_client = RTSPConnection(*env, &rs_cb, url_color.c_str(), timeout, rtptransport);
+	//RTSPConnection								  (Environment& env, Callback* callback, const char* rtspURL, int timeout, int rtptransport, int verbosityLevel) 
+	//RTSPClientConnection(RTSPConnection& connection, Environment& env, Callback* callback, const char* rtspURL, int timeout, int rtptransport, int verbosityLevel = 0);
+	auto client = RTSPConnection::RTSPClientConnection(depth_rtsp_client,*env,&rs_cb,url_depth.c_str(),timeout,rtptransport);
+
+
+
+	//rtsp_clients[0]->addStream(available_streams[0]);
 
 	std::cout << "Start mainloop" << std::endl;
 	env->mainloop();
@@ -252,8 +267,19 @@ void rs2::ethernet_device::start(std::string url) {
 
 	ip_address = url;
 
-	incomming_frames_thread = std::thread(&rs2::ethernet_device::incomming_server_frames_handler,this);
 	inject_frames_to_sw_device();
+	
+	//sleep(5);
+	incomming_frames_thread = std::thread(&rs2::ethernet_device::incomming_server_frames_handler,this);
+
+	for (size_t i = 0; i < SENSORS_NUMBER; i++)
+	{
+		if (rtsp_clients[i]==NULL)
+			continue;
+		rtsp_clients[i]->addStream(available_streams[i]);
+		rtsp_clients[i]->start();
+	}
+	
 }
 void rs2::ethernet_device::stop() {
 	//env->stop();

@@ -111,6 +111,8 @@ namespace rs2
 
 		std::queue<Frame*> frame_queues[MAX_ACTIVE_STREAMS_NUMBER];
 
+		std::vector<rs2_video_stream> available_streams;
+
 		int fd_color_push;
 		int fd_depth_push;
 
