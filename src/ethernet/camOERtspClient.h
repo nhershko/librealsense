@@ -39,6 +39,12 @@ public:
   std::vector<rs2_video_stream> supportedProfiles;
   std::map<int, MediaSubsession*> subsessionMap;
   int commandResultCode;
+  static void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString);
+  static void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString);
+  static void continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString);
+  static void continueAfterTEARDOWN(RTSPClient* rtspClient, int resultCode, char* resultString);
+  static void continueAfterPAUSE(RTSPClient* rtspClient, int resultCode, char* resultString);
+
 
 private:
     camOERTSPClient(UsageEnvironment& env, char const* rtspURL,

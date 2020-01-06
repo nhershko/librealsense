@@ -38,8 +38,7 @@ int main()
     res = camOErtspInstance->stop();
     std::cout << "After stop. res = " << res << "\n";
     //res = camOErtspInstance->stop(myProfiles[0]);
-    //std::cout << "After stop. res = " << res << "\n";
-    
+    //std::cout << "After stop. res = " << res << "\n";  
     res = camOErtspInstance->close();
     std::cout << "After close. res = " << res << "\n";
 
