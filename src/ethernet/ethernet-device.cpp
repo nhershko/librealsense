@@ -250,7 +250,7 @@ void rs2::ethernet_device::incomming_server_frames_handler()
 	RTSPConnection color_rtsp_client = RTSPConnection(*env, &rs_cb, url_color.c_str(), timeout, rtptransport);
 	//RTSPConnection								  (Environment& env, Callback* callback, const char* rtspURL, int timeout, int rtptransport, int verbosityLevel) 
 	//RTSPClientConnection(RTSPConnection& connection, Environment& env, Callback* callback, const char* rtspURL, int timeout, int rtptransport, int verbosityLevel = 0);
-	auto client = RTSPConnection::RTSPClientConnection(depth_rtsp_client,*env,&rs_cb,url_depth.c_str(),timeout,rtptransport);
+	//auto client = RTSPConnection::RTSPClientConnection(depth_rtsp_client,*env,&rs_cb,url_depth.c_str(),timeout,rtptransport);
 
 
 
