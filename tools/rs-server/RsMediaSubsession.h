@@ -21,7 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <liveMedia.hh>
 
 #ifndef _RS_MEDIA_SUBSESSION_HH
-#define _RS_SUBSESSION_HH
+#define _RS_MEDIA_SUBSESSION_HH
 
 #ifndef _ON_DEMAND_SERVER_MEDIA_SUBSESSION_HH
 #include "OnDemandServerMediaSubsession.hh"
@@ -33,9 +33,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class RsMediaSubsession: public OnDemandServerMediaSubsession {
   public:
-   static RsMediaSubsession* createNew(UsageEnvironment& env,  RSDeviceParameters p, rs2::device& selected_device, rs2_format f);
+   static RsMediaSubsession* createNew(UsageEnvironment& env,   rs2::video_stream_profile &video_stream_profile/*, rs2::frame_queue &queue*/);
+   rs2::frame_queue& get_frame_queue();
+   rs2::video_stream_profile get_stream_profile();
 protected: // we're a virtual base class
-  RsMediaSubsession(UsageEnvironment& env,  RSDeviceParameters p, rs2::device& selected_device, rs2_format f);//rs2::stream_profile* stream);
+  RsMediaSubsession(UsageEnvironment& env,   rs2::video_stream_profile &video_stream_profile/*, rs2::frame_queue &queue*/);//rs2::stream_profile* stream);
   virtual ~RsMediaSubsession();
   virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
 					      unsigned& estBitrate);
@@ -45,9 +47,8 @@ protected: // we're a virtual base class
 
 
 private:
-   RSDeviceParameters params;
-   rs2::device device;
+   rs2::video_stream_profile videoStreamProfile;
+   rs2::frame_queue frameQueue;
    int pixelSize;
-   rs2_format format;
 };
-#endif
+#endif//_RS_MEDIA_SUBSESSION_HH

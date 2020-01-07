@@ -33,6 +33,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <signal.h>
 #include "RsSource.hh"
 #include "RsMediaSubsession.h"
+#include "RsCamera.h"
+#include "RsRTSPServer.hh"
+#include "RsServerMediaSession.h"
 
 int w1 = 640;//1280;
 int h1 = 480;//720;
@@ -45,107 +48,71 @@ RsDeviceSource *devSource2;
 RawVideoRTPSink *videoSink1;
 RawVideoRTPSink *videoSink2;
 RTSPServer *rtspServer;
+RsCamera cam;
+std::vector<RsSensor> sensors;
+std::map<int, rs2::frame_queue> depth_queues;
 
 void play(); // forward
 void sigint_handler(int sig);
 
 int main(int argc, char **argv)
 {
-  signal(SIGINT,sigint_handler);
+  signal(SIGINT, sigint_handler);
 
   // Begin by setting up our usage environment:
   TaskScheduler *scheduler = BasicTaskScheduler::createNew();
   env = BasicUsageEnvironment::createNew(*scheduler);
 
-  rtspServer = RTSPServer::createNew(*env, 8554);
+  rtspServer = RsRTSPServer::createNew(*env, 8554);
   if (rtspServer == NULL)
   {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);
   }
 
-  rs2::context ctx;
-
-  // Using the context we can get all connected devices in a device list
-  rs2::device_list devices = ctx.query_devices();
-  std::string name; 
-  
-
-  if (devices.size() == 0)
-  {
-    rs2::device_hub device_hub(ctx);
-    selected_device = device_hub.wait_for_device();
-  }
-  else
-  {
-    *env << "Found " << devices.size() << " cameras\n";
-    selected_device = devices[0];
-  }
-  
-
-
-  ServerMediaSession *sms = ServerMediaSession::createNew(*env, "unicast", "",
-                                                          "Session streamed by \"testH265VideoStreamer\"",
+  sensors = cam.getSensors();
+  int sensorIndex =0;//TODO::to remove
+  for (auto sensor:sensors)
+  {    
+    RsServerMediaSession *sms = RsServerMediaSession::createNew(*env,sensor, sensor.get_sensor_name().data(), "",
+                                                          "Session streamed by \"realsense streamer\"",
                                                           True);
-  RSDeviceParameters params1(w1, h1, 2, 0, 30);
-  RSDeviceParameters params2(w2, h2, 2, 1, 30);
-  sms->addSubsession(RsMediaSubsession::createNew(*env,  params1, selected_device, RS2_FORMAT_Z16));
-  sms->addSubsession(RsMediaSubsession::createNew(*env,  params2, selected_device, RS2_FORMAT_YUYV));
-  rtspServer->addServerMediaSession(sms);
+    int index = 0;
+    for (auto stream:sensor.getStreamProfiles())
+    {
+      if (sensorIndex==0 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_Z16 && stream.fps() == 30)
+      {
+        //depth_queues[index] = rs2::frame_queue(CAPACITY, true);
+        sms->addSubsession(RsMediaSubsession::createNew(*env,  stream/*,depth_queues[index]*/));
+      }
+      else  if (sensorIndex==0 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_RGB8 && stream.fps() == 30)
+      {
+         sms->addSubsession(RsMediaSubsession::createNew(*env,  stream/*,depth_queues[index]*/));
+      }
+      else if (sensorIndex==1 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_YUYV && stream.fps() == 30)
+      {
+        //depth_queues[index] = rs2::frame_queue(CAPACITY, true);
+        sms->addSubsession(RsMediaSubsession::createNew(*env,  stream/*, depth_queues[index]*/));
+      }       
+      index++;
+    }
+    
+   /* if (sensor.open(depth_queues)==EXIT_SUCCESS)//todo::to move to rsmediasession
+    {
+      sensor.start(depth_queues);
+    }*/
+    rtspServer->addServerMediaSession(sms);
+    char *url = rtspServer->rtspURL(sms);
+    *env << "Play this stream using the URL \"" << url << "\"\n";
+    delete[] url;
+    sensorIndex++;
+  }
 
-  char *url = rtspServer->rtspURL(sms);
-  *env << "Play this stream using the URL \"" << url << "\"\n";
-  delete[] url;
-
-  // Start the streaming:
-  *env << "Beginning streaming...\n";
 
   env->taskScheduler().doEventLoop(); // does not return
 
   return 0; // only to prevent compiler warning
 }
-
-/*
-void play()
-{
-  rs2::context ctx;
-
-  // Using the context we can get all connected devices in a device list
-  rs2::device_list devices = ctx.query_devices();
-  std::string name; 
-  
-
-  if (devices.size() == 0)
-  {
-    rs2::device_hub device_hub(ctx);
-    selected_device = device_hub.wait_for_device();
-  }
-  else
-  {
-    *env << "Found " << devices.size() << " cameras\n";
-    selected_device = devices[0];
-  }
-  
-  RSDeviceParameters params1(w1, h1, 2, 0, 30);
-  RSDeviceParameters params2(w2, h2, 2, 1, 30);
-  devSource1 = RsDeviceSource::createNew(*env, params1, selected_device); 
-  if (devSource1 == NULL)
-  {
-    *env << "Unable to read from device source\n";
-    exit(1);
-  }
-  videoSink1->startPlaying(*devSource1, afterPlaying1, videoSink1);
-
-  devSource2 = RsDeviceSource::createNew(*env, params2, selected_device); 
-  if (devSource2 == NULL)
-  {
-    *env << "Unable to read from device source\n";
-    exit(1);
-  }
-  videoSink2->startPlaying(*devSource2, afterPlaying2, videoSink2);
-}*/
-
-
 
 void sigint_handler(int sig)
 {
