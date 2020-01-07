@@ -99,7 +99,7 @@ std::string RsSensor::get_sensor_name()
 RsCamera::RsCamera()
 {
 	//get RS device
-	std::cerr << "No device connected, please connect a RealSense device" << std::endl;
+	std::cerr << "RsCamera constructor" << std::endl;
 	// The context represents the current platform with respect to connected devices
 	rs2::context ctx;
 	rs2::device_list devices = ctx.query_devices();
@@ -124,4 +124,5 @@ RsCamera::RsCamera()
 
 RsCamera::~RsCamera()
 {
+	std::cerr << "RsCamera destructor" << std::endl;
 }
