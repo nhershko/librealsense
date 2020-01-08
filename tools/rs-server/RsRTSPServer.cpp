@@ -151,10 +151,7 @@ int RsRTSPServer::RsRTSPClientSession::openRsCamera()
           
           streamProfiles[profile_indx] = ((RsMediaSubsession*)(fStreamStates[i].subsession))->get_frame_queue();
           rs2::frame f;
-          while (streamProfiles[profile_indx].poll_for_frame(&f))
-          {
-            envir() <<"dequeue from queue\n";
-          }
+          while (streamProfiles[profile_indx].poll_for_frame(&f));
       }  
     }
     ((RsServerMediaSession*)fOurServerMediaSession)->openRsCamera(streamProfiles);//TODO:: to check if this is indeed RsServerMediaSession
@@ -169,10 +166,7 @@ int RsRTSPServer::RsRTSPClientSession::closeRsCamera()
       {
           int profile_indx = ((RsServerMediaSession*)fOurServerMediaSession)->getRsSensor().getStreamProfileIndex(((RsMediaSubsession*)(fStreamStates[i].subsession))->get_stream_profile());
           rs2::frame f;
-          while (streamProfiles[profile_indx].poll_for_frame(&f))
-          {
-            envir() <<"dequeue from queue\n";
-          }
+          while (streamProfiles[profile_indx].poll_for_frame(&f));
       }  
     }
 }

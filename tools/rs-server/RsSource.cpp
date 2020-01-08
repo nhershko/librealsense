@@ -84,12 +84,12 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
   }
   gettimeofday(&fPresentationTime, NULL); // If you have a more accurate time - e.g., from an encoder - then use that instead.
 #ifdef COMPRESSION
-   if(stream_profile->stream_type == RS2_STREAM_DEPTH) 
+   if(stream_profile->stream_type() == RS2_STREAM_DEPTH) 
    {
-      iCompressDepth->compressDepthFrame(frame->get_data(), fFrameSize, fTo);
-   } else if(stream_profile->stream_type == RS2_STREAM_COLOR) 
+      iCompressDepth->compressDepthFrame((unsigned char*)frame->get_data(), fFrameSize, fTo);
+   } else if(stream_profile->stream_type() == RS2_STREAM_COLOR) 
    {
-      iCompressColor->compressColorFrame(frame->get_data(), fFrameSize, fTo);
+      iCompressColor->compressColorFrame((unsigned char*)frame->get_data(), fFrameSize, fTo);
    } else {
 #endif
     //envir() << "got new frame: frame size is " << fFrameSize <<  "stream type is is " << stream_profile->stream_type() << "stream resolution is" <<  stream_profile->width() << "," << stream_profile->height() << "\n";
