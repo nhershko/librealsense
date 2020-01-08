@@ -98,7 +98,7 @@ int main(int argc, char **argv)
   ServerMediaSession *sms_color = ServerMediaSession::createNew(*env, "color", "",
                                                           "Session streamed by \"testH265VideoStreamer\"",
                                                           True);
-  sms_color->addSubsession(RsMediaSubsession::createNew(*env,  params2, selected_device, RS2_FORMAT_RGB8));
+  sms_color->addSubsession(RsMediaSubsession::createNew(*env,  params2, selected_device, RS2_FORMAT_YUYV));
   rtspServer->addServerMediaSession(sms_color);
 
   char *url_color = rtspServer->rtspURL(sms_color);

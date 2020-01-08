@@ -1,4 +1,6 @@
 #include "camOERtspClient.h"
+#include "camOESink.h"
+
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
 
@@ -40,6 +42,9 @@ bool describe_done = false;
 //void continueAfterTEARDOWN(RTSPClient* rtspClient, int resultCode, char* resultString);
 //void continueAfterPAUSE(RTSPClient* rtspClient, int resultCode, char* resultString);
 
+void subsessionAfterPlaying(void* clientData); // called when a stream's subsession (e.g., audio or video substream) ends
+void subsessionByeHandler(void* clientData, char const* reason);
+
 std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
 {
   // TODO - handle in a function
@@ -62,25 +67,48 @@ int camOERTSPClient::addStream(rs2_video_stream stream)
 {
   MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
 
-
   if (subsession != NULL) {
      if (!subsession->initiate()) {
-       this->envir() << "Failed to initiate the subsession \n";
-      
-      } else {
-      this->envir()  << "Initiated the subsession \n";;
+        this->envir() << "Failed to initiate the subsession \n";
+        
+        } else {
+        this->envir()  << "Initiated the subsession \n";;
+        
 
-      // Continue setting up this subsession, by sending a RTSP "SETUP" command:
-      unsigned res = this->sendSetupCommand(*subsession, this->continueAfterSETUP, False, REQUEST_STREAMING_OVER_TCP); 
-      if (res == 0)
-      {
-        // An error occurred (continueAfterSETUP was already called)
+        // Continue setting up this subsession, by sending a RTSP "SETUP" command:
+        unsigned res = this->sendSetupCommand(*subsession, this->continueAfterSETUP, False, REQUEST_STREAMING_OVER_TCP); 
+        if (res == 0)
+        {
+          // An error occurred (continueAfterSETUP was already called)
+          return this->commandResultCode;
+        } 
+        // wait for continueAfterSETUP to finish
+        std::unique_lock<std::mutex> lck(command_mtx);
+        cv.wait(lck); 
+        
+        if (this->commandResultCode == 0)
+        {
+          // TODO: change size according to BPP
+          //
+          subsession->sink = camOESink::createNew(this->envir(), *subsession, stream.width*stream.height*2, this->url());
+        // perhaps use your own custom "MediaSink" subclass instead
+          if (subsession->sink == NULL) {
+            this->envir() << "Failed to create a data sink for the subsession: " << this->envir().getResultMsg() << "\n";
+            // TODO: define error
+            this->commandResultCode = -1;
+            return this->commandResultCode;
+          }
+
+        this->envir()  << "Created a data sink for the subsession\n";
+        subsession->miscPtr = this; // a hack to let subsession handler functions get the "RTSPClient" from the subsession 
+        subsession->sink->startPlaying(*(subsession->readSource()),
+                  subsessionAfterPlaying, subsession);
+        // Also set a handler to be called if a RTCP "BYE" arrives for this subsession:
+        if (subsession->rtcpInstance() != NULL) {
+          subsession->rtcpInstance()->setByeWithReasonHandler(subsessionByeHandler, subsession);
+          }
+        }
         return this->commandResultCode;
-      } 
-      // wait for continueAfterSETUP to finish
-      std::unique_lock<std::mutex> lck(command_mtx);
-      cv.wait(lck); 
-      return this->commandResultCode; 
       }
   }
   // TODO: return error - setup failed
@@ -182,7 +210,8 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       break;
     }
 
-  int stream_counter = 0;
+
+  static int stream_counter = 0;
   scs.iter = new MediaSubsessionIterator(*scs.session);
   scs.subsession = scs.iter->next();
   while (scs.subsession != NULL) {
@@ -231,8 +260,10 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
 
 void camOERTSPClient::continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString) {
   UsageEnvironment& env = rtspClient->envir(); // alias
+  StreamClientState& scs = ((camOERTSPClient*)rtspClient)->scs; // alias
   env << "continueAfterSETUP " << resultCode << " " << resultString <<"\n";
   ((camOERTSPClient*)rtspClient)->commandResultCode = resultCode;
+
   std::unique_lock<std::mutex> lck(command_mtx);
   cv.notify_one();
 }
@@ -263,4 +294,16 @@ void camOERTSPClient::continueAfterPAUSE(RTSPClient* rtspClient, int resultCode,
   ((camOERTSPClient*)rtspClient)->commandResultCode = resultCode;
   std::unique_lock<std::mutex> lck(command_mtx);
   cv.notify_one();
+}
+
+// TODO: implementation
+void subsessionAfterPlaying(void* clientData)
+{
+  MediaSubsession* subsession = (MediaSubsession*)clientData;
+  RTSPClient* rtspClient = (RTSPClient*)(subsession->miscPtr);
+  rtspClient->envir() << "subsessionAfterPlaying\n";
+}
+void subsessionByeHandler(void* clientData, char const* reason)
+{
+
 }
