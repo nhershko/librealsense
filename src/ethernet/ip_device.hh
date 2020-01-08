@@ -20,13 +20,11 @@ class ip_device
         #endif
         static rs2::software_device create_ip_device(std::string ip_address);
 
-        ~ip_device()
-        {
-            sw_device_status_check.join();
-
-        }
-
+        ~ip_device();
+        
     private:
+
+        volatile bool is_device_alive;
     
         std::string ip_address;
 
@@ -40,10 +38,8 @@ class ip_device
 
         ip_device(std::string ip_address, rs2::software_device sw_device);
 
-        ip_device();
-
         bool init_device_data();
-        
+
         void polling_state_loop();
 
         void update_sensor_stream(int sensor_index,std::vector<rs2::stream_profile> updated_streams);
@@ -52,18 +48,18 @@ class ip_device
         rs2_software_video_frame last_frame[MAX_ACTIVE_STREAMS];
         // pixels data 
         std::vector<uint8_t> pixels_buff[MAX_ACTIVE_STREAMS];
-        
 
         //rtp/rtsp protocol
+
+        // => describe 
+        std::vector<rs2_video_stream> query_server_streams();
+
+/*
         void tear_down();
         void start();
         void stop();
         void describe();
-
-        //camOERTSPClient rtsp_client;
-
-
-
+*/
     };
 
 

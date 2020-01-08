@@ -151,14 +151,20 @@ void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultS
     if (stream_name.compare("depth") == 0)
     {
       videoStream.type = RS2_STREAM_DEPTH;
+      //nhershko: hard coded 
+      videoStream.fmt = RS2_FORMAT_Z16;
     }
     else if((stream_name.compare("color") == 0))
     {
       videoStream.type = RS2_STREAM_COLOR;
+      //nhershko: hard coded 
+      videoStream.fmt = RS2_FORMAT_YUYV;
     }
 
     //nhershko: hard coded fixes
     videoStream.bpp=2;
+    videoStream.fps=30;
+    
 
 
     // TODO: update width and height in subsession?
