@@ -19,6 +19,8 @@
 #include "rtsp_client/sdpclient.h"
 #include "rtsp_client/callbacks.h"
 
+#include "camOERtspClient.h"
+
 #include "IdecompressFrame.h"
 #include "decompressFrameFactory.h"
 
@@ -36,6 +38,8 @@
 #endif
 
 #define MAX_ACTIVE_STREAMS_NUMBER 4
+
+#define SENSORS_NUMBER 4
 
 namespace rs2
 {
@@ -81,7 +85,7 @@ namespace rs2
 		#ifdef _WIN32
 		__declspec(dllexport)
 		#endif
-		virtual std::vector<sensor> query_sensors() const override;
+		virtual std::vector<rs2_video_stream> query_sensors();
 
 		#ifdef _WIN32
 		__declspec(dllexport)
@@ -106,6 +110,8 @@ namespace rs2
 		rs2_software_video_frame& get_frame();
 
 		std::queue<Frame*> frame_queues[MAX_ACTIVE_STREAMS_NUMBER];
+
+		std::vector<rs2_video_stream> available_streams;
 
 		int fd_color_push;
 		int fd_depth_push;
@@ -134,8 +140,9 @@ namespace rs2
 		rs2_software_video_frame last_frame[2];
 		std::vector<uint8_t> pixels_buff[2];
 
-		IdecompressFrame* iDecomressColor;
-		IdecompressFrame* iDecomressDepth;
+		IdecompressFrame* idecomress;
+
+		IcamOERtsp* rtsp_clients[SENSORS_NUMBER] = {NULL};
 };
 
 	class RS_RTSPFrameCallback: public RTSPCallback

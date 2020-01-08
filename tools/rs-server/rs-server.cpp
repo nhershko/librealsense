@@ -73,10 +73,19 @@ int main(int argc, char **argv)
   sensors = cam.getSensors();
   int sensorIndex =0;//TODO::to remove
   for (auto sensor:sensors)
-  {    
-    RsServerMediaSession *sms = RsServerMediaSession::createNew(*env,sensor, sensor.get_sensor_name().data(), "",
+  {   
+    if(sensorIndex==0)
+    {
+     RsServerMediaSession *sms = RsServerMediaSession::createNew(*env,sensor, "depth"/*sensor.get_sensor_name().data()*/, "",
                                                           "Session streamed by \"realsense streamer\"",
                                                           True);
+    }
+    else
+    {
+      RsServerMediaSession *sms = RsServerMediaSession::createNew(*env,sensor, "color"/*sensor.get_sensor_name().data()*/, "",
+                                                          "Session streamed by \"realsense streamer\"",
+                                                          True);
+    }
     int index = 0;
     for (auto stream:sensor.getStreamProfiles())
     {
@@ -103,7 +112,6 @@ int main(int argc, char **argv)
     delete[] url;
     sensorIndex++;
   }
-
 
   env->taskScheduler().doEventLoop(); // does not return
 
