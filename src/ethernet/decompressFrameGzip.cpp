@@ -24,7 +24,7 @@ void  decompressFrameGzip::decompressFrame(unsigned char* buffer, int size, unsi
 	int windowsBits = 15;
 	int GZIP_ENCODING = 16;
 	memcpy(&compressedSize, buffer,sizeof(unsigned int));
-	assert(compressedSize < size);
+	//assert(compressedSize < size);
 	strm.zalloc = Z_NULL;
 	strm.zfree = Z_NULL;
 	strm.opaque = Z_NULL;

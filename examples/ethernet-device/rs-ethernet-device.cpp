@@ -120,8 +120,8 @@ int main(int argc, char * argv[]) try
 	rs2::ethernet_device dev(address); // Create software-only device
 	//auto sensors = dev.query_sensors();
     //std::cout << "got sensors list from ethernet device. count is: " << sensors.size() << std::endl;
-    dev.start(address+":8554");
-    sleep(5);
+    dev.start(address);
+    sleep(25);
     dev.stop();
     
     if (dev.arrived_frame_counter()>170)
