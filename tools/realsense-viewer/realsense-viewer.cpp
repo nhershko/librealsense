@@ -45,7 +45,7 @@ using namespace rs400;
 
 void add_remote_device(context& ctx, std::string address) 
 {
-    software_device sw_dev = ip_device::create_ip_device("10.12.144.74");
+    software_device sw_dev = ip_device::create_ip_device(address);
     //std::shared_ptr<rs2_context> rsctx = ctx.operator std::shared_ptr<rs2_context>();
 
 
