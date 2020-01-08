@@ -30,21 +30,21 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class RsServerMediaSession: public ServerMediaSession {
 public:
   static RsServerMediaSession* createNew(UsageEnvironment& env,
-               RsSensor sensor,
+               RsSensor& sensor,
 				       char const* streamName = NULL,
 				       char const* info = NULL,
 				       char const* description = NULL,
 				       Boolean isSSM = False,
 				       char const* miscSDPLines = NULL);
-  RsSensor getRsSensor();
-  //std::vector<rs2::stream_profile> getStreamProfiles();
+  RsSensor& getRsSensor();
   int openRsCamera(std::map<int, rs2::frame_queue> &streamProfiles);
+  void closeRsCamera();
 
 
 
 
 protected:
-  RsServerMediaSession(UsageEnvironment& env,RsSensor sensor, char const* streamName,
+  RsServerMediaSession(UsageEnvironment& env,RsSensor& sensor, char const* streamName,
 		     char const* info, char const* description,
 		     Boolean isSSM, char const* miscSDPLines);
   // called only by "createNew()"

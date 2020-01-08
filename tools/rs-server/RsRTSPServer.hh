@@ -67,6 +67,7 @@ public:
 					 char const* fullRequestStr);
 
     int openRsCamera();
+    int closeRsCamera();
 
   protected:
     //RsRTSPServer& fOurRsRTSPServer; // same as ::fOurServer

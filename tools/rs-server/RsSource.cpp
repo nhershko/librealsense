@@ -36,7 +36,7 @@ RsDeviceSource::createNew(UsageEnvironment &env, rs2::video_stream_profile &vide
 
 RsDeviceSource::RsDeviceSource(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile, rs2::frame_queue &queue): FramedSource(env)
 {
-  envir() << "RsDeviceSource constructor\n";
+  //envir() << "RsDeviceSource constructor\n";
   frames_queue = &queue;
   stream_profile = &video_stream_profile;
 }

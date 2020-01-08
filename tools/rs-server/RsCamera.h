@@ -9,6 +9,7 @@ class RsSensor
 {
 public:
 	RsSensor(rs2::sensor sensor);
+	~RsSensor();
 	int open(std::map<int, rs2::frame_queue> &stream_profiles_queues);
 	int start(std::map<int, rs2::frame_queue> &stream_profiles_queues);
 	rs2::sensor &getRsSensor() { return m_sensor; }

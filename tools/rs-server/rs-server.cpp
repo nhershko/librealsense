@@ -97,10 +97,6 @@ int main(int argc, char **argv)
       index++;
     }
     
-   /* if (sensor.open(depth_queues)==EXIT_SUCCESS)//todo::to move to rsmediasession
-    {
-      sensor.start(depth_queues);
-    }*/
     rtspServer->addServerMediaSession(sms);
     char *url = rtspServer->rtspURL(sms);
     *env << "Play this stream using the URL \"" << url << "\"\n";

@@ -54,10 +54,15 @@ RsRTSPServer::~RsRTSPServer(){}
 
 RsRTSPServer::RsRTSPClientConnection
 ::RsRTSPClientConnection(RTSPServer& ourServer, int clientSocket, struct sockaddr_in clientAddr)
-  :RTSPClientConnection(ourServer, clientSocket, clientAddr){
-}
+  :RTSPClientConnection(ourServer, clientSocket, clientAddr)
+  {
+    //envir() << "RsRTSPClientConnection  constructor" << this <<"\n";
+  }
 
-RsRTSPServer::RsRTSPClientConnection::~RsRTSPClientConnection(){}
+RsRTSPServer::RsRTSPClientConnection::~RsRTSPClientConnection()
+{
+  //envir() << "RsRTSPClientConnection  destructor" << this <<"\n";
+}
 
 
 ////////// RsRTSPServer::RsRTSPClientSession implementation //////////
@@ -119,13 +124,16 @@ void RsRTSPServer::RsRTSPClientSession
   }
   
   if (strcmp(cmdName, "TEARDOWN") == 0) {
+    envir() << "TEARDOWN \n";
     handleCmd_TEARDOWN(ourClientConnection, subsession);
-  } else if (strcmp(cmdName, "PLAY") == 0) {
-    
+  } else if (strcmp(cmdName, "PLAY") == 0) {  
+    envir() << "PLAY \n";
     openRsCamera();
     handleCmd_PLAY(ourClientConnection, subsession, fullRequestStr);
   } else if (strcmp(cmdName, "PAUSE") == 0) {
-    handleCmd_PAUSE(ourClientConnection, subsession);
+    envir() << "PAUSE \n";
+     handleCmd_PAUSE(ourClientConnection, subsession);
+     closeRsCamera();
   } else if (strcmp(cmdName, "GET_PARAMETER") == 0) {
     handleCmd_GET_PARAMETER(ourClientConnection, subsession, fullRequestStr);
   } else if (strcmp(cmdName, "SET_PARAMETER") == 0) {
@@ -140,10 +148,33 @@ int RsRTSPServer::RsRTSPClientSession::openRsCamera()
       if (fStreamStates[i].subsession != NULL) 
       {
           int profile_indx = ((RsServerMediaSession*)fOurServerMediaSession)->getRsSensor().getStreamProfileIndex(((RsMediaSubsession*)(fStreamStates[i].subsession))->get_stream_profile());
+          
           streamProfiles[profile_indx] = ((RsMediaSubsession*)(fStreamStates[i].subsession))->get_frame_queue();
+          rs2::frame f;
+          while (streamProfiles[profile_indx].poll_for_frame(&f))
+          {
+            envir() <<"dequeue from queue\n";
+          }
       }  
     }
     ((RsServerMediaSession*)fOurServerMediaSession)->openRsCamera(streamProfiles);//TODO:: to check if this is indeed RsServerMediaSession
+}
+
+int RsRTSPServer::RsRTSPClientSession::closeRsCamera()
+{
+    ((RsServerMediaSession*)fOurServerMediaSession)->closeRsCamera();//TODO:: to check if this is indeed RsServerMediaSession
+    for (int i = 0; i < fNumStreamStates; ++i) 
+    {
+      if (fStreamStates[i].subsession != NULL) 
+      {
+          int profile_indx = ((RsServerMediaSession*)fOurServerMediaSession)->getRsSensor().getStreamProfileIndex(((RsMediaSubsession*)(fStreamStates[i].subsession))->get_stream_profile());
+          rs2::frame f;
+          while (streamProfiles[profile_indx].poll_for_frame(&f))
+          {
+            envir() <<"dequeue from queue\n";
+          }
+      }  
+    }
 }
 
 GenericMediaServer::ClientConnection*

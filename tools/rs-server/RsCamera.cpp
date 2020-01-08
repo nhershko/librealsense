@@ -6,6 +6,7 @@
 
 RsSensor::RsSensor(rs2::sensor sensor)
 {
+	//std::cerr << "RsSensor constructor" << std::endl;
 	m_sensor = sensor;
 	for (rs2::stream_profile stream_profile : m_sensor.get_stream_profiles())
 	{
@@ -14,6 +15,11 @@ RsSensor::RsSensor(rs2::sensor sensor)
 			m_stream_profiles.push_back(stream_profile.as<rs2::video_stream_profile>());
 		}
 	}
+}
+
+RsSensor::~RsSensor()
+{
+	//std::cerr << "RsSensor destructor" << std::endl;
 }
 
 int RsSensor::open(std::map<int, rs2::frame_queue> &stream_profiles_queues)

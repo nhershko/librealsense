@@ -27,7 +27,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 ////////// ServerMediaSession //////////
 
 RsServerMediaSession* RsServerMediaSession
-::createNew(UsageEnvironment& env, RsSensor sensor,
+::createNew(UsageEnvironment& env, RsSensor& sensor,
 	    char const* streamName, char const* info,
 	    char const* description, Boolean isSSM, char const* miscSDPLines) {
   return new RsServerMediaSession(env, sensor, streamName, info, description,
@@ -39,7 +39,7 @@ static char const* const libNameStr = "LIVE555 Streaming Media v";
 char const* const libVersionStr = LIVEMEDIA_LIBRARY_VERSION_STRING;
 
 RsServerMediaSession::RsServerMediaSession(UsageEnvironment& env,
-               RsSensor sensor,
+               RsSensor& sensor,
 				       char const* streamName,
 				       char const* info,
 				       char const* description,
@@ -56,6 +56,7 @@ RsServerMediaSession::~RsServerMediaSession() {
 
 int RsServerMediaSession::openRsCamera( std::map<int, rs2::frame_queue> &streamProfiles)
 {
+    envir() << "openRsCamera  \n";
     int status = rsSensor.open(streamProfiles);
     if (status == EXIT_SUCCESS)
     {
@@ -64,15 +65,18 @@ int RsServerMediaSession::openRsCamera( std::map<int, rs2::frame_queue> &streamP
     else
     {
       return status;
-    }
-    
+    }    
 }
-RsSensor RsServerMediaSession::getRsSensor()
+
+void RsServerMediaSession::closeRsCamera()
+{
+    envir() << "closeRsCamera  \n";
+    rsSensor.getRsSensor().stop();
+    rsSensor.getRsSensor().close();
+}
+
+
+RsSensor& RsServerMediaSession::getRsSensor()
 {
   return rsSensor;
 }
-/*
-std::map<int, rs2::frame_queue> RsServerMediaSession::getStreamProfiles()
-{
-  return streamProfiles;
-}*/

@@ -44,6 +44,7 @@ RsMediaSubsession::~RsMediaSubsession() {
 
 rs2::frame_queue& RsMediaSubsession::get_frame_queue()
 {
+   envir() << "RsMediaSubsession get_frame_queue \n";
   return frameQueue;
 }
 
@@ -54,7 +55,7 @@ rs2::frame_queue& RsMediaSubsession::get_frame_queue()
 
 FramedSource* RsMediaSubsession::createNewStreamSource(unsigned /*clientSessionId*/, unsigned& estBitrate) {
   estBitrate = 5000; // kbps, estimate //TODO:: to calculate the right value
- 
+  envir() << "RsMediaSubsession createNewStreamSource \n";
   return RsDeviceSource::createNew(envir(), videoStreamProfile, frameQueue); 
 }
 
@@ -62,34 +63,29 @@ RTPSink* RsMediaSubsession
 ::createNewRTPSink(Groupsock* rtpGroupsock,
 		   unsigned char rtpPayloadTypeIfDynamic,
 		   FramedSource* /*inputSource*/) {
+  envir() << "RsMediaSubsession createNewRTPSink \n";
+
   switch (videoStreamProfile.format())
   {            
   case  RS2_FORMAT_RGB8: 
   {
       pixelSize = 3;
-       return  RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "RGB");
-       
-      // break;           
+      return  RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "RGB");         
   }           
   case  RS2_FORMAT_BGR8: 
   {
     pixelSize = 3;
-       return RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "BGR");
-       
-       //break;           
+    return RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "BGR");          
   }
   case  RS2_FORMAT_RGBA8:  
   {
     pixelSize = 3;
-       return RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "RGBA");
-       
-       //break;           
+    return RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "RGBA");       
   }         
   case  RS2_FORMAT_BGRA8: 
   {
     pixelSize = 3;
-       return RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "BGRA");
-       //break;           
+    return RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "BGRA");        
   }       
   case  RS2_FORMAT_Z16:   
   case  RS2_FORMAT_Y16:             
@@ -97,14 +93,12 @@ RTPSink* RsMediaSubsession
   case  RS2_FORMAT_YUYV:  
   {
       pixelSize = 2;
-       return RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "YCbCr-4:2:2");
-      // break;           
+      return RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "YCbCr-4:2:2");         
   }
   default:
      pixelSize = 0;
      break;
   }    
-
   return NULL;
 }
 
