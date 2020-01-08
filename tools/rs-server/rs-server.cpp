@@ -74,15 +74,16 @@ int main(int argc, char **argv)
   int sensorIndex =0;//TODO::to remove
   for (auto sensor:sensors)
   {   
+    RsServerMediaSession *sms;
     if(sensorIndex==0)
     {
-     RsServerMediaSession *sms = RsServerMediaSession::createNew(*env,sensor, "depth"/*sensor.get_sensor_name().data()*/, "",
+       sms = RsServerMediaSession::createNew(*env,sensor, "depth"/*sensor.get_sensor_name().data()*/, "",
                                                           "Session streamed by \"realsense streamer\"",
                                                           True);
     }
     else
     {
-      RsServerMediaSession *sms = RsServerMediaSession::createNew(*env,sensor, "color"/*sensor.get_sensor_name().data()*/, "",
+       sms = RsServerMediaSession::createNew(*env,sensor, "color"/*sensor.get_sensor_name().data()*/, "",
                                                           "Session streamed by \"realsense streamer\"",
                                                           True);
     }
