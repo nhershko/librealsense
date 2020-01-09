@@ -5,9 +5,9 @@
 
 FILE* myFile;
 
-void myFrameCallBack(u_int8_t* buf, unsigned int size)
+void myFrameCallBack(u_int8_t* buf, unsigned int size, struct timeval presentationTime)
 {
-    std::cout << "myFrameCallBack. size = " << size << "buf = " << buf << "\n";
+    std::cout << "myFrameCallBack. size = " << size << " time (sec) = " << presentationTime.tv_sec << "\n";
     fwrite(buf, size, 1, myFile);
 }
 

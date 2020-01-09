@@ -63,7 +63,7 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   envir() << "********* frame ************\n";
   if (fFrameCallBack != NULL)
   {
-    fFrameCallBack(fReceiveBuffer, frameSize);
+    fFrameCallBack(fReceiveBuffer, frameSize, presentationTime);
   }
   else
   {

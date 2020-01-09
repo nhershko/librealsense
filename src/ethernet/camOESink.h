@@ -5,7 +5,7 @@
 #include "BasicUsageEnvironment.hh"
 
 // TODO: think where to put this declaration 
-typedef void (*frame_call_back)(u_int8_t*, unsigned int);
+typedef void (*frame_call_back)(u_int8_t*, unsigned int, struct timeval);
 
 class camOESink : public MediaSink {
 public:
