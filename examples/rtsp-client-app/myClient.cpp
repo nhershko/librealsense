@@ -11,9 +11,17 @@ void myFrameCallBack(u_int8_t* buf, unsigned int size, struct timeval presentati
     fwrite(buf, size, 1, myFile);
 }
 
+/*
+void myFrameCallBack2(unsigned char*buffer,ssize_t size, struct timeval presentationTime)
+{
+    std::cout << "myFrameCallBack. size = " << size << " time (sec) = " << presentationTime.tv_sec << "\n";
+    fwrite(buf, size, 1, myFile);
+}
+*/
+
 int main()
 {
-
+/*
     myFile = fopen("myFile.bin", "ab");
 
     int res = 0;
@@ -68,6 +76,7 @@ int main()
 //     std::cout << "After setup. res = " << res << "\n";
 //     res = camOErtspInstance->start();
 //     std::cout << "After start. res = " << res << "\n";
-
+*/
     return 0;
+
 }

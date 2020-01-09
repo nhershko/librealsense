@@ -3,9 +3,13 @@
 
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
+#include <functional>
+#include "rtp_callback.hh"
 
 // TODO: think where to put this declaration 
 typedef void (*frame_call_back)(u_int8_t*, unsigned int, struct timeval);
+
+
 
 class camOESink : public MediaSink {
 public:
@@ -14,6 +18,8 @@ public:
                   int bufferSize, // identifies the kind of data that's being received
 			      char const* streamId = NULL); // identifies the stream itself (optional)
     void setFrameCallback(frame_call_back callback);
+    
+    void set_callback(rtp_callback* callback);
 
 private:
   camOESink(UsageEnvironment& env, MediaSubsession& subsession, int bufferSize, char const* streamId);
@@ -38,6 +44,8 @@ private:
   char* fStreamId;
   FILE* fp;
   frame_call_back fFrameCallBack;
+
+  rtp_callback* m_rtp_callback;
 };
 
 #endif // CAM_OE_SINK_H

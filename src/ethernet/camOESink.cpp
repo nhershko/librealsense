@@ -40,7 +40,7 @@ void camOESink::afterGettingFrame(void* clientData, unsigned frameSize, unsigned
 }
 
 // If you don't want to see debugging output for each received frame, then comment out the following line:
-#define DEBUG_PRINT_EACH_RECEIVED_FRAME 1
+#define DEBUG_PRINT_EACH_RECEIVED_FRAME 0
 
 void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes,
 				  struct timeval presentationTime, unsigned /*durationInMicroseconds*/) {
@@ -61,9 +61,12 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   envir() << "\n";
 #endif
   envir() << "********* frame ************\n";
-  if (fFrameCallBack != NULL)
+  //if (fFrameCallBack != NULL)
+  if (this->m_rtp_callback != NULL)
   {
-    fFrameCallBack(fReceiveBuffer, frameSize, presentationTime);
+    //fFrameCallBack(fReceiveBuffer, frameSize, presentationTime);
+    this->m_rtp_callback->on_frame_callback(fReceiveBuffer, frameSize, presentationTime);
+    //frame_callback(fReceiveBuffer, frameSize, presentationTime);
   }
   else
   {
@@ -90,5 +93,10 @@ Boolean camOESink::continuePlaying() {
 void camOESink::setFrameCallback(frame_call_back callback)
 {
   fFrameCallBack = callback;
+}
+
+void camOESink::set_callback(rtp_callback* callback)
+{
+  this->m_rtp_callback = callback;
 }
 

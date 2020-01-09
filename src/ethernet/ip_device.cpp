@@ -62,9 +62,11 @@ bool ip_device::init_device_data()
         else 
             sensor_name = "Color (Remote)";
 			
-        rs2::software_sensor tmp_sensor= sw_dev.add_sensor(sensor_name);
+        rs2::software_sensor tmp_sensor = sw_dev.add_sensor(sensor_name);
+        //sensors[st.type-1] = sw_dev.add_sensor(sensor_name);
 
         rs2::stream_profile profile = tmp_sensor.add_video_stream(st,i==0);
+        //rs2::stream_profile profile = sensors[st.type-1].add_video_stream(st,i==0);
 
 		last_frame[i].bpp = st.bpp;
 		last_frame[i].profile = profile;
@@ -99,7 +101,6 @@ void ip_device::polling_state_loop()
                 {
 
                 }
-
             }
             
             usleep(1000);
@@ -124,11 +125,13 @@ void ip_device::update_sensor_stream(int sensor_index,std::vector<rs2::stream_pr
         st.width = vst.width();
         st.height = vst.height();
 
-        std::cout << "Starting new stream" << st.type << "  " << st.fps << "\n" ;
         
-        rtsp_clients[sensor_index]->addStream(st);
-        rtsp_clients[sensor_index]->start();
+
+        rtp_callback* callback_obj = new rtp_callback(st.uid, &frame_queues[sensor_index],&queue_locks[sensor_index]);
+
+        rtsp_clients[sensor_index]->addStream(st,callback_obj);
     }
+    rtsp_clients[sensor_index]->start();
 }
 
 rs2::software_device ip_device::create_ip_device(std::string ip_address)
@@ -143,6 +146,43 @@ rs2::software_device ip_device::create_ip_device(std::string ip_address)
     ip_dev->sw_dev.register_info(rs2_camera_info::RS2_CAMERA_INFO_SERIAL_NUMBER,"12345678");
     // return sw device 
     return sw_dev;
+}
+
+void ip_device::inject_depth_loop()
+{
+/*
+    while (1)
+    {
+        if (this->frame_queues[0].empty()) {
+	
+		} else {				
+			//const std::lock_guard<std::mutex> lock(mtx);
+			Tmp_Frame* frame = frame_queues[0].front();
+			frame_queues[0].pop();
+#ifdef COMPRESSION			
+			if (stream_index == 0) {
+				// depth
+				idecomress->decompressFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(last_frame[stream_index].pixels));
+			} else {
+				// other -> color
+#endif
+				memcpy(last_frame[0].pixels, frame->m_buffer, frame->m_size);
+#ifdef COMPRESSION
+			}
+#endif
+			// delete frame;
+			last_frame[0].timestamp = frame->m_timestamp.tv_sec;
+			last_frame[0].frame_number++;
+            sensors[0].on_video_frame(last_frame[0]);
+		}
+	}
+	while(!frame_queues[0].empty())
+	{
+		frame_queues[0].pop();
+	}
+	std::cout<<"pulling data at stream index " << 0 <<" is done\n";
+    }
+  */  
 }
 
 

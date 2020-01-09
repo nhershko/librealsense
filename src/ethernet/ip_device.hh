@@ -6,6 +6,8 @@
 #include "camOERtspClient.h"
 #include "software-device.h"
 
+#include "rtp_callback.hh"
+
 #define MAX_ACTIVE_STREAMS 4
 
 #define SENSORS_NUMBER 2
@@ -30,11 +32,17 @@ class ip_device
 
         std::map<int, int> active_stream_per_sensor;
 
+        std::queue<Tmp_Frame*> frame_queues[MAX_ACTIVE_STREAMS];
+
+        std::mutex queue_locks[MAX_ACTIVE_STREAMS];
+
         IcamOERtsp* rtsp_clients[SENSORS_NUMBER] = {NULL};
         
         rs2::software_device sw_dev;
 
         std::thread sw_device_status_check;
+
+        std::thread inject_depth;
 
         ip_device(std::string ip_address, rs2::software_device sw_device);
 
@@ -42,7 +50,12 @@ class ip_device
 
         void polling_state_loop();
 
+        void inject_depth_loop();
+
         void update_sensor_stream(int sensor_index,std::vector<rs2::stream_profile> updated_streams);
+
+        // sensors
+        //rs2::software_sensor sensors[SENSORS_NUMBER];
 
         // frame data buffers
         rs2_software_video_frame last_frame[MAX_ACTIVE_STREAMS];
@@ -53,6 +66,8 @@ class ip_device
 
         // => describe 
         std::vector<rs2_video_stream> query_server_streams();
+
+        void add_frame_to_queue(Tmp_Frame* frame);
 
 /*
         void tear_down();

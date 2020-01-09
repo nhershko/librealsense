@@ -17,6 +17,7 @@ file(GLOB ETHERNET_SOURCES
  "*.hh"
  "*.h"
  "*.cpp"
+ "rtp_callback.cpp"
  "rtsp_client/*.cpp"
  ${LIVE}/groupsock/*.c* 
  ${LIVE}/liveMedia/*.c* 
