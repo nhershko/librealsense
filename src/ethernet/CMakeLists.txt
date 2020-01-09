@@ -17,18 +17,11 @@ file(GLOB ETHERNET_SOURCES
  "*.h"
  "*.cpp"
  "rtsp_client/*.cpp"
-<<<<<<< HEAD
  "common/*.hh"
   ${LIVE}/groupsock/*.c* 
   ${LIVE}/liveMedia/*.c* 
   ${LIVE}/UsageEnvironment/*.c* 
   ${LIVE}/BasicUsageEnvironment/*.c* 
-=======
- ${LIVE}/groupsock/*.c* 
- ${LIVE}/liveMedia/*.c* 
- ${LIVE}/UsageEnvironment/*.c* 
- ${LIVE}/BasicUsageEnvironment/*.c* 
->>>>>>> apuzhevi_compress
 )
 
 add_library(${PROJECT_NAME} SHARED ${ETHERNET_SOURCES})
@@ -46,6 +39,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 # target_link_libraries(${PROJECT_NAME} ${DEPENDENCIES})
 
 find_package(ZLIB REQUIRED)
+find_package(JPEG REQUIRED)
 
 target_link_libraries(${PROJECT_NAME} 
     PRIVATE ${DEPENDENCIES}
@@ -55,6 +49,7 @@ target_link_libraries(${PROJECT_NAME}
 	#groupsock
 	#liveMedia
 	${ZLIB_LIBRARIES}
+	${JPEG_LIBRARIES}
 )
 
 if(COMPRESSION)

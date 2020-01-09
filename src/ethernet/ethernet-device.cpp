@@ -35,7 +35,7 @@ rs2::ethernet_device::ethernet_device()
 {
 	dev = rs2_create_software_device(NULL);
 #ifdef COMPRESSION
-	iDecomressColor = decompressFrameFactory::create(zipMethod::gzip);
+	iDecomressColor = decompressFrameFactory::create(zipMethod::Jpeg);
 	iDecomressDepth = decompressFrameFactory::create(zipMethod::gzip);
 #endif
 }

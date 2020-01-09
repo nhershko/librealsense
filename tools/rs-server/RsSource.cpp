@@ -104,7 +104,7 @@ void RsDeviceSource::deliverRSFrame()
 {
 */
 #ifdef COMPRESSION
-  IcompressFrame* iCompressColor =  compressFrameFactory::create(zipMethod::gzip);
+  IcompressFrame* iCompressColor =  compressFrameFactory::create(zipMethod::Jpeg);
   IcompressFrame* iCompressDepth =  compressFrameFactory::create(zipMethod::gzip);
 #endif
   if (!isCurrentlyAwaitingData())
