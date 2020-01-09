@@ -17,20 +17,20 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession, int buf
   url_str = url_str.substr(0, url_str.size()-1);
   std::size_t stream_name_index = url_str.find_last_of("/") + 1;
   std::string stream_name = url_str.substr(stream_name_index, url_str.size());
-  if (stream_name.compare("depth") == 0)
+  /*if (stream_name.compare("depth") == 0)
   {
     fp = fopen("file_depth.bin", "ab");
   }
   else if((stream_name.compare("color") == 0))
   {
     fp = fopen("file_rgb.bin", "ab");
-  }
+  }*/
 }
 
 camOESink::~camOESink() {
   delete[] fReceiveBuffer;
   delete[] fStreamId;
-  fclose(fp);
+  //fclose(fp);
 }
 
 void camOESink::afterGettingFrame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
@@ -61,7 +61,17 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   envir() << "\n";
 #endif
   envir() << "********* frame ************\n";
-  fwrite(fReceiveBuffer, frameSize, 1, fp);
+  if (fFrameCallBack != NULL)
+  {
+    fFrameCallBack(fReceiveBuffer, frameSize);
+  }
+  else
+  {
+    // TODO: error, no call back
+    envir() << "Frame call back is NULL\n";
+  }
+  
+  //fwrite(fReceiveBuffer, frameSize, 1, fp);
   // Then continue, to request the next frame of data:
   continuePlaying();
 }
@@ -75,5 +85,10 @@ Boolean camOESink::continuePlaying() {
                         afterGettingFrame, this,
                         onSourceClosure, this);
   return True;
+}
+
+void camOESink::setFrameCallback(frame_call_back callback)
+{
+  fFrameCallBack = callback;
 }
 

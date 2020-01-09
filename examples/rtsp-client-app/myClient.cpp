@@ -3,8 +3,19 @@
 #include <iostream>
 #include <unistd.h>
 
+FILE* myFile;
+
+void myFrameCallBack(u_int8_t* buf, unsigned int size)
+{
+    std::cout << "myFrameCallBack. size = " << size << "buf = " << buf << "\n";
+    fwrite(buf, size, 1, myFile);
+}
+
 int main()
 {
+
+    myFile = fopen("myFile.bin", "ab");
+
     int res = 0;
     IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.145.82:8554/depth", "myClient");
     //IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.144.35:8554/unicast", "myClient");
@@ -29,20 +40,19 @@ int main()
         std::cout << "Profile " << i << ": " << "width = " << myProfiles2[i].width << " height = " << myProfiles2[i].height << " sensor id = " << myProfiles2[i].type << " UID = " << myProfiles2[i].uid << "\n";
     }
 
-    res = camOErtspInstance->addStream(myProfiles[0]);
+    res = camOErtspInstance->addStream(myProfiles[0], &myFrameCallBack);
     std::cout << "After setup. res = " << res << "\n";
-    //res = camOErtspInstance->stop(myProfiles[0]);
-    //std::cout << "After stop. res = " << res << "\n";
     res = camOErtspInstance->start();
     std::cout << "After start. res = " << res << "\n";
     
-    res = camOErtspInstance2->addStream(myProfiles2[0]);
-    std::cout << "After setup. res = " << res << "\n";
+   // res = camOErtspInstance2->addStream(myProfiles2[0]);
+    //std::cout << "After setup. res = " << res << "\n";
     //res = camOErtspInstance->stop(myProfiles[0]);
     //std::cout << "After stop. res = " << res << "\n";
-    res = camOErtspInstance2->start();
-    std::cout << "After start. res = " << res << "\n";
+    //res = camOErtspInstance2->start();
+    //std::cout << "After start. res = " << res << "\n";
     sleep(5);
+    fclose(myFile);
     //res = camOErtspInstance->stop();
     //std::cout << "After stop. res = " << res << "\n";
     //res = camOErtspInstance->stop(myProfiles[0]);

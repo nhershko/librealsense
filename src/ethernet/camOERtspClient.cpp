@@ -63,7 +63,7 @@ std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
     this->envir() << "in sendDescribe After wait\n";   
     return this->supportedProfiles;
 }
-int camOERTSPClient::addStream(rs2_video_stream stream)
+int camOERTSPClient::addStream(rs2_video_stream stream, frame_call_back frameCallBack)
 {
   MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
 
@@ -101,6 +101,7 @@ int camOERTSPClient::addStream(rs2_video_stream stream)
 
         this->envir()  << "Created a data sink for the subsession\n";
         subsession->miscPtr = this; // a hack to let subsession handler functions get the "RTSPClient" from the subsession 
+        ((camOESink*)(subsession->sink))->setFrameCallback(frameCallBack);
         subsession->sink->startPlaying(*(subsession->readSource()),
                   subsessionAfterPlaying, subsession);
         // Also set a handler to be called if a RTCP "BYE" arrives for this subsession:
