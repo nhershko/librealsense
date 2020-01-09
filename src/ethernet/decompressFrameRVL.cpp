@@ -37,7 +37,7 @@ int decompressFrameRVL::decodeVLE()
 	return value;
 }
 
-void decompressFrameRVL::decompressFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf) 
+void decompressFrameRVL::decompressDepthFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf) 
 {
 	short* uncompressedBuf2 = (short*)uncompressedBuf;
 	pBuffer = (int*)buffer + 1;

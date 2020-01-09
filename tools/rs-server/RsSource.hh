@@ -36,65 +36,26 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <mutex>
 #include <condition_variable>
 
-// The following class can be used to define specific encoder parameters
-class RSDeviceParameters : public DeviceParameters
-{
-public:
-  RSDeviceParameters() //:DeviceParameters()
-  {
-  }
-  RSDeviceParameters(int width, int height, int bitPerPixel, int sensorId, int framePerSecond)
-  {
-    w = width;
-    h = height;
-    bpp = bitPerPixel;
-    sensorID = sensorId;
-    fps = framePerSecond;
-  }
-  RSDeviceParameters(RSDeviceParameters &params) //:DeviceParameters()
-  {
-    w = params.w;
-    h = params.h;
-    bpp = params.bpp;
-    sensorID = params.sensorID;
-    fps = params.fps;
-  }
-
-  //private:
-  int w, h, bpp, sensorID, fps;
-};
 
 class RsDeviceSource : public FramedSource
 {
 public:
-  static RsDeviceSource *createNew(UsageEnvironment &env, RSDeviceParameters deviceParams, rs2::device selectedDevice);
-
-public:
-  RSDeviceParameters getParams() { return fParams; };
+  static RsDeviceSource *createNew(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile, rs2::frame_queue &queue);
 
 protected:
-  RsDeviceSource(UsageEnvironment &env, RSDeviceParameters deviceParams, rs2::device selectedDevice);
-  virtual ~RsDeviceSource();
+  RsDeviceSource(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile, rs2::frame_queue &queue);
 
 private:
   virtual void doGetNextFrame();
-  int get_stream_id();
   //virtual void doStopGettingFrames(); // optional
-  void frameCallback(rs2::frame frame);
 
 private:
-  static void deliverRSFrame0(void *clientData);
-  void deliverRSFrame();
+  void deliverRSFrame(rs2::frame *frame);
 
 private:
-  RSDeviceParameters fParams;
-  rs2::device selected_device;
-  rs2::sensor selected_sensor;
-  std::mutex m;
-  std::condition_variable cv;
-  bool isWaitingFrame;
+  rs2::frame_queue* frames_queue;
+  rs2::video_stream_profile* stream_profile;
 
-  unsigned char* fbuf;
 };
 
 #endif

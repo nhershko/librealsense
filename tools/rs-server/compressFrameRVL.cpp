@@ -22,7 +22,7 @@ int compressFrameRVL::EncodeVLE(int value)
 	} while (value);
 }
 
-int compressFrameRVL::compressFrame(unsigned char* buffer, int size, unsigned char* compressedBuf) 
+int compressFrameRVL::compressDepthFrame(unsigned char* buffer, int size, unsigned char* compressedBuf) 
 {
 	short * buffer2 = (short *)buffer;
 	int * pHead =  pBuffer = (int*)compressedBuf + 1;
