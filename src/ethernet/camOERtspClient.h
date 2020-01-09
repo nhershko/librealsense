@@ -25,10 +25,11 @@ public:
 
 // IcamOERtsp functions
   virtual std::vector<rs2_video_stream> queryStreams();
-  virtual int addStream(rs2_video_stream stream);
-  virtual void start();
-  virtual void stop();
-  virtual void close();
+  virtual int addStream(rs2_video_stream stream, frame_call_back frameCallBack);
+  virtual int start();
+  virtual int stop(rs2_video_stream stream);
+  virtual int stop();
+  virtual int close();
 
 protected:
   
@@ -37,6 +38,13 @@ public:
   StreamClientState scs;
   std::vector<rs2_video_stream> supportedProfiles;
   std::map<int, MediaSubsession*> subsessionMap;
+  int commandResultCode;
+  static void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString);
+  static void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString);
+  static void continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString);
+  static void continueAfterTEARDOWN(RTSPClient* rtspClient, int resultCode, char* resultString);
+  static void continueAfterPAUSE(RTSPClient* rtspClient, int resultCode, char* resultString);
+
 
 private:
     camOERTSPClient(UsageEnvironment& env, char const* rtspURL,
