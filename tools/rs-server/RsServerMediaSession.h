@@ -25,7 +25,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #define _RS_SERVER_MEDIA_SESSION_HH
 
 #include "ServerMediaSession.hh"
-#include "RsCamera.h"
+#include "RsCamera.hh"
 
 class RsServerMediaSession: public ServerMediaSession {
 public:
@@ -37,7 +37,7 @@ public:
 				       Boolean isSSM = False,
 				       char const* miscSDPLines = NULL);
   RsSensor& getRsSensor();
-  int openRsCamera(std::map<int, rs2::frame_queue> &streamProfiles);
+  int openRsCamera(std::unordered_map<long long int, rs2::frame_queue> &streamProfiles);
   void closeRsCamera();
 
 

@@ -56,12 +56,12 @@ RsRTSPServer::RsRTSPClientConnection
 ::RsRTSPClientConnection(RTSPServer& ourServer, int clientSocket, struct sockaddr_in clientAddr)
   :RTSPClientConnection(ourServer, clientSocket, clientAddr)
   {
-    //envir() << "RsRTSPClientConnection  constructor" << this <<"\n";
+    envir() << "RsRTSPClientConnection  constructor" << this <<"\n";
   }
 
 RsRTSPServer::RsRTSPClientConnection::~RsRTSPClientConnection()
 {
-  //envir() << "RsRTSPClientConnection  destructor" << this <<"\n";
+  envir() << "RsRTSPClientConnection  destructor" << this <<"\n";
 }
 
 
@@ -147,11 +147,10 @@ int RsRTSPServer::RsRTSPClientSession::openRsCamera()
     {
       if (fStreamStates[i].subsession != NULL) 
       {
-          int profile_indx = ((RsServerMediaSession*)fOurServerMediaSession)->getRsSensor().getStreamProfileIndex(((RsMediaSubsession*)(fStreamStates[i].subsession))->get_stream_profile());
-          
-          streamProfiles[profile_indx] = ((RsMediaSubsession*)(fStreamStates[i].subsession))->get_frame_queue();
+          long long int profile_key = ((RsServerMediaSession*)fOurServerMediaSession)->getRsSensor().getStreamProfileKey(((RsMediaSubsession*)(fStreamStates[i].subsession))->get_stream_profile());
+          streamProfiles[profile_key] = ((RsMediaSubsession*)(fStreamStates[i].subsession))->get_frame_queue();
           rs2::frame f;
-          while (streamProfiles[profile_indx].poll_for_frame(&f));
+          while (streamProfiles[profile_key].poll_for_frame(&f));
       }  
     }
     ((RsServerMediaSession*)fOurServerMediaSession)->openRsCamera(streamProfiles);//TODO:: to check if this is indeed RsServerMediaSession
@@ -164,9 +163,9 @@ int RsRTSPServer::RsRTSPClientSession::closeRsCamera()
     {
       if (fStreamStates[i].subsession != NULL) 
       {
-          int profile_indx = ((RsServerMediaSession*)fOurServerMediaSession)->getRsSensor().getStreamProfileIndex(((RsMediaSubsession*)(fStreamStates[i].subsession))->get_stream_profile());
+          long long int profile_key = ((RsServerMediaSession*)fOurServerMediaSession)->getRsSensor().getStreamProfileKey(((RsMediaSubsession*)(fStreamStates[i].subsession))->get_stream_profile());
           rs2::frame f;
-          while (streamProfiles[profile_indx].poll_for_frame(&f));
+          while (streamProfiles[profile_key].poll_for_frame(&f));
       }  
     }
 }

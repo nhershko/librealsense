@@ -19,6 +19,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // on demand, from a file.
 // Implementation
 #include "RsMediaSubsession.h"
+#include "RsMediaSubsession.h"
+#include "RsRawVideoRTPSink.h"
 //#include <librealsense2/h/rs_sensor.h>
 
 #define CAPACITY 100
@@ -70,22 +72,22 @@ RTPSink* RsMediaSubsession
   case  RS2_FORMAT_RGB8: 
   {
       pixelSize = 3;
-      return  RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "RGB");         
+      return  RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "RGB");         
   }           
   case  RS2_FORMAT_BGR8: 
   {
     pixelSize = 3;
-    return RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "BGR");          
+    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "BGR");          
   }
   case  RS2_FORMAT_RGBA8:  
   {
     pixelSize = 3;
-    return RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "RGBA");       
+    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "RGBA");       
   }         
   case  RS2_FORMAT_BGRA8: 
   {
     pixelSize = 3;
-    return RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "BGRA");        
+    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "BGRA");        
   }       
   case  RS2_FORMAT_Z16:   
   case  RS2_FORMAT_Y16:             
@@ -93,7 +95,7 @@ RTPSink* RsMediaSubsession
   case  RS2_FORMAT_YUYV:  
   {
       pixelSize = 2;
-      return RawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "YCbCr-4:2:2");         
+      return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "YCbCr-4:2:2");         
   }
   default:
      pixelSize = 0;
