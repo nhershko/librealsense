@@ -6,6 +6,18 @@
 #include <memory>
 #include <mutex>
 
+
+class rs_callback
+{
+    public:
+        
+        void virtual on_frame(unsigned char*buffer,ssize_t size, struct timeval presentationTime)=0;
+        
+        //void virtual on_error(int code, std::string message)=0;
+        
+        //void virtual on_messege(std::string message)=0;
+};
+
 struct Tmp_Frame
 {
 	Tmp_Frame(char* buffer, int size,  struct timeval timestamp) : m_buffer(buffer), m_size(size), m_timestamp(timestamp) {};
@@ -18,7 +30,7 @@ struct Tmp_Frame
 	struct timeval m_timestamp;
 };
 
-class rtp_callback
+class rtp_callback : public rs_callback
 {
 
 private:
@@ -40,7 +52,7 @@ public:
     }
     ~rtp_callback();
 
-    void on_frame_callback(unsigned char*buffer,ssize_t size, struct timeval presentationTime);
+    void on_frame(unsigned char*buffer,ssize_t size, struct timeval presentationTime);
 
     int arrived_frames(){   return arrive_frames_counter;   }
 };

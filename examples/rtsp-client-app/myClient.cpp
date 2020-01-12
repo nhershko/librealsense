@@ -1,5 +1,6 @@
 #include "IcamOERtsp.h"
 #include "camOERtspClient.h"
+#include "rtp_callback.hh"
 #include <iostream>
 #include <unistd.h>
 
@@ -19,13 +20,36 @@ void myFrameCallBack2(unsigned char*buffer,ssize_t size, struct timeval presenta
 }
 */
 
+
+class my_callback : public rs_callback
+{
+private:
+
+    std::string app_name;
+    /* data */
+public:
+    my_callback(std::string app_name)
+    {
+        this->app_name = app_name;
+    };
+    
+    ~my_callback();
+
+    void on_frame(unsigned char*buffer,ssize_t size, struct timeval presentationTime)
+    {
+        printf("[%s] %ld.%06ld got frame. data size: %zu \n",this->app_name.c_str(), presentationTime.tv_sec, presentationTime.tv_usec, size);
+    }
+};
+
+
+
 int main()
 {
-/*
+
     myFile = fopen("myFile.bin", "ab");
 
     int res = 0;
-    IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.145.82:8554/depth", "myClient");
+    IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.144.74:8554/depth", "myClient");
     //IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.144.35:8554/unicast", "myClient");
     std::vector<rs2_video_stream> myProfiles;
     ((camOERTSPClient*)camOErtspInstance)->initFunc();
@@ -37,7 +61,7 @@ int main()
     }
 
 
-    IcamOERtsp* camOErtspInstance2 = camOERTSPClient::getRtspClient("rtsp://10.12.145.82:8554/color", "myClient");
+    IcamOERtsp* camOErtspInstance2 = camOERTSPClient::getRtspClient("rtsp://10.12.144.74:8554/color", "myClient");
     //IcamOERtsp* camOErtspInstance2 = camOERTSPClient::getRtspClient("rtsp://10.12.144.35:8554/unicast", "myClient");
     std::vector<rs2_video_stream> myProfiles2;
     ((camOERTSPClient*)camOErtspInstance2)->initFunc();
@@ -48,9 +72,12 @@ int main()
         std::cout << "Profile " << i << ": " << "width = " << myProfiles2[i].width << " height = " << myProfiles2[i].height << " sensor id = " << myProfiles2[i].type << " UID = " << myProfiles2[i].uid << "\n";
     }
 
-    res = camOErtspInstance->addStream(myProfiles[0], &myFrameCallBack);
+    camOErtspInstance2->addStream(myProfiles2[0],new my_callback("mycolor"));
+    camOErtspInstance2->start();
+
+    //res = camOErtspInstance->addStream(myProfiles[0], new my_callback("myclient"));
     std::cout << "After setup. res = " << res << "\n";
-    res = camOErtspInstance->start();
+    //res = camOErtspInstance->start();
     std::cout << "After start. res = " << res << "\n";
     
    // res = camOErtspInstance2->addStream(myProfiles2[0]);
@@ -76,7 +103,6 @@ int main()
 //     std::cout << "After setup. res = " << res << "\n";
 //     res = camOErtspInstance->start();
 //     std::cout << "After start. res = " << res << "\n";
-*/
     return 0;
 
 }

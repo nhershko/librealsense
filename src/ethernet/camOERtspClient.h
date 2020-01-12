@@ -25,7 +25,7 @@ public:
 
 // IcamOERtsp functions
   virtual std::vector<rs2_video_stream> queryStreams();
-  virtual int addStream(rs2_video_stream stream, rtp_callback* frameCallBack);
+  virtual int addStream(rs2_video_stream stream, rs_callback* frameCallBack);
   virtual int start();
   virtual int stop(rs2_video_stream stream);
   virtual int stop();

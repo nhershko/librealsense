@@ -1,6 +1,11 @@
 #include "ip_device.hh"
 #include <librealsense2/rs.hpp>
 
+void ip_device_deleter(void* p) 
+{
+
+}
+
 ip_device::~ip_device()
 {
     is_device_alive = false;
@@ -13,6 +18,10 @@ ip_device::ip_device(std::string ip_address, rs2::software_device sw_device)
     this->ip_address = ip_address;
     this->sw_dev = sw_device;
     this->is_device_alive = true;
+
+    #ifdef COMPRESSION
+	idecomress = decompressFrameFactory::create(zipMethod::gzip);
+    #endif
 
     rtsp_clients[rs2_stream::RS2_STREAM_DEPTH-1] = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/depth").c_str(),"ethernet_device");
 	((camOERTSPClient*)rtsp_clients[rs2_stream::RS2_STREAM_DEPTH-1])->initFunc();
@@ -63,18 +72,21 @@ bool ip_device::init_device_data()
             sensor_name = "Color (Remote)";
 			
         rs2::software_sensor tmp_sensor = sw_dev.add_sensor(sensor_name);
-        //sensors[st.type-1] = sw_dev.add_sensor(sensor_name);
+        sensors[st.type-1] = new rs2::software_sensor(tmp_sensor);
 
-        rs2::stream_profile profile = tmp_sensor.add_video_stream(st,i==0);
-        //rs2::stream_profile profile = sensors[st.type-1].add_video_stream(st,i==0);
+        //rs2::stream_profile profile = tmp_sensor.add_video_stream(st,i==0);
+        profiles[st.type-1] = sensors[st.type-1]->add_video_stream(st,i==0);
+        std::cout << "create profile at: " << st.type-1 << std::endl;
 
-		last_frame[i].bpp = st.bpp;
-		last_frame[i].profile = profile;
-		last_frame[i].stride = st.bpp * st.width;
-		pixels_buff[i].resize(last_frame[i].stride * st.height, 0);
-		last_frame[i].pixels = pixels_buff[i].data();
-		last_frame[i].deleter = {};//&ethernet_device_deleter;
+		last_frame[st.type-1].bpp = st.bpp;
+		last_frame[st.type-1].profile = profiles[st.type-1];
+		last_frame[st.type-1].stride = st.bpp * st.width;
+		pixels_buff[st.type-1].resize(last_frame[st.type-1].stride * st.height, 0);
+		last_frame[st.type-1].pixels = pixels_buff[st.type-1].data();
+		last_frame[st.type-1].deleter = ip_device_deleter;
 		
+        std::cout << "initiate last frame: " << st.type-1 <<std::endl;
+
 		//quese array is 0 based so setting type -1 as address
 		//inject_threads[i] = std::thread(&rs2::ethernet_device::pull_from_queue,this,available_streams[i].type-1);
 	}
@@ -88,6 +100,7 @@ void ip_device::polling_state_loop()
         {
             //TODO: consider using sensor id as vector id (indexer)
             std::vector<rs2::sensor> sensors = this->sw_dev.query_sensors();
+            //for eahc sensor check the size of active streams
             for (size_t i = 0; i < sensors.size(); i++)
             {
                 auto current_active_streams = sensors[i].get_active_streams();
@@ -99,7 +112,7 @@ void ip_device::polling_state_loop()
                 }
                 else
                 {
-
+                    //std::cout<<"sensor: " << i << " have not changed.\n";
                 }
             }
             
@@ -125,13 +138,16 @@ void ip_device::update_sensor_stream(int sensor_index,std::vector<rs2::stream_pr
         st.width = vst.width();
         st.height = vst.height();
 
-        
+        std::cout << "adding stream for sensor index: " << sensor_index << " uid: " << st.uid << " \n" ;
 
-        rtp_callback* callback_obj = new rtp_callback(st.uid, &frame_queues[sensor_index],&queue_locks[sensor_index]);
-
-        rtsp_clients[sensor_index]->addStream(st,callback_obj);
+        rtp_callbacks[sensor_index] = 
+            new rtp_callback(st.uid,&frame_queues[sensor_index],&queue_locks[sensor_index]);
+        rtsp_clients[sensor_index]->addStream(st,rtp_callbacks[sensor_index]);
     }
     rtsp_clients[sensor_index]->start();
+    std::cout << "stream started for sensor index: " << sensor_index << "  \n" ;
+
+    inject_frames_thread = std::thread(&ip_device::inject_frames_loop,this,0);
 }
 
 rs2::software_device ip_device::create_ip_device(std::string ip_address)
@@ -147,33 +163,48 @@ rs2::software_device ip_device::create_ip_device(std::string ip_address)
     // return sw device 
     return sw_dev;
 }
-
-void ip_device::inject_depth_loop()
+std::mutex mtx1;
+void ip_device::inject_frames_loop(int stream_index)
 {
-/*
     while (1)
     {
-        if (this->frame_queues[0].empty()) {
-	
-		} else {				
-			//const std::lock_guard<std::mutex> lock(mtx);
-			Tmp_Frame* frame = frame_queues[0].front();
-			frame_queues[0].pop();
+        std::lock_guard<std::mutex> lock(mtx1);
+        if (this->frame_queues[stream_index].empty()) 
+        {
+	        //std::cout<<"queue is NOT empty\n";
+		} 
+        else 
+        {				
+			queue_locks[stream_index].lock();
+            Tmp_Frame* frame = frame_queues[stream_index].front();
+			frame_queues[stream_index].pop();
+            queue_locks[stream_index].unlock();
+          
+
 #ifdef COMPRESSION			
-			if (stream_index == 0) {
+			if (true) {
 				// depth
-				idecomress->decompressFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(last_frame[stream_index].pixels));
+				idecomress->decompressFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(last_frame[0].pixels));
 			} else {
 				// other -> color
 #endif
-				memcpy(last_frame[0].pixels, frame->m_buffer, frame->m_size);
+				memcpy(last_frame[stream_index].pixels, frame->m_buffer, frame->m_size);
 #ifdef COMPRESSION
 			}
 #endif
+            
+            
 			// delete frame;
-			last_frame[0].timestamp = frame->m_timestamp.tv_sec;
-			last_frame[0].frame_number++;
-            sensors[0].on_video_frame(last_frame[0]);
+			last_frame[stream_index].timestamp = frame->m_timestamp.tv_sec;
+
+			last_frame[stream_index].frame_number++;
+
+            sensors[stream_index]->on_video_frame(last_frame[stream_index]);
+            /*
+            
+            */
+            std::cout<<"added frame from type " << stream_index << "to sensor ptr " << sensors[stream_index] << " \n";
+            //exit(0);
 		}
 	}
 	while(!frame_queues[0].empty())
@@ -181,8 +212,6 @@ void ip_device::inject_depth_loop()
 		frame_queues[0].pop();
 	}
 	std::cout<<"pulling data at stream index " << 0 <<" is done\n";
-    }
-  */  
 }
 
 

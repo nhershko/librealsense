@@ -19,7 +19,7 @@ public:
 			      char const* streamId = NULL); // identifies the stream itself (optional)
     void setFrameCallback(frame_call_back callback);
     
-    void set_callback(rtp_callback* callback);
+    void set_callback(rs_callback* callback);
 
 private:
   camOESink(UsageEnvironment& env, MediaSubsession& subsession, int bufferSize, char const* streamId);
@@ -45,7 +45,7 @@ private:
   FILE* fp;
   frame_call_back fFrameCallBack;
 
-  rtp_callback* m_rtp_callback;
+  rs_callback* m_rtp_callback;
 };
 
 #endif // CAM_OE_SINK_H

@@ -25,6 +25,9 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession, int buf
   {
     fp = fopen("file_rgb.bin", "ab");
   }*/
+
+  envir() << "create new sink";
+
 }
 
 camOESink::~camOESink() {
@@ -64,9 +67,7 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   //if (fFrameCallBack != NULL)
   if (this->m_rtp_callback != NULL)
   {
-    //fFrameCallBack(fReceiveBuffer, frameSize, presentationTime);
-    this->m_rtp_callback->on_frame_callback(fReceiveBuffer, frameSize, presentationTime);
-    //frame_callback(fReceiveBuffer, frameSize, presentationTime);
+    this->m_rtp_callback->on_frame(fReceiveBuffer, frameSize, presentationTime);
   }
   else
   {
@@ -95,7 +96,7 @@ void camOESink::setFrameCallback(frame_call_back callback)
   fFrameCallBack = callback;
 }
 
-void camOESink::set_callback(rtp_callback* callback)
+void camOESink::set_callback(rs_callback* callback)
 {
   this->m_rtp_callback = callback;
 }

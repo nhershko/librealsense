@@ -64,13 +64,16 @@ std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
     return this->supportedProfiles;
 }
 //int camOERTSPClient::addStream(rs2_video_stream stream, frame_call_back frameCallBack)
-int camOERTSPClient::addStream(rs2_video_stream stream, rtp_callback* callback_obj)
+int camOERTSPClient::addStream(rs2_video_stream stream, rs_callback* callback_obj)
 {
   //MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
   //nhershko - hard coded to subsession per media-session
-  MediaSubsession* subsession = this->subsessionMap.find(0)->second;
 
+  this->envir()  << "looking for sub session \n";;
+  MediaSubsession* subsession = this->subsessionMap.find(0)->second;
+  this->envir()  << "find sub session " << subsession  << "\n";;
   if (subsession != NULL) {
+    this->envir()  << " initiate subsession"  << "\n";;
      if (!subsession->initiate()) {
         this->envir() << "Failed to initiate the subsession \n";
         
@@ -104,8 +107,6 @@ int camOERTSPClient::addStream(rs2_video_stream stream, rtp_callback* callback_o
 
         this->envir()  << "Created a data sink for the subsession\n";
         subsession->miscPtr = this; // a hack to let subsession handler functions get the "RTSPClient" from the subsession 
-        //((camOESink*)(subsession->sink))->setFrameCallback(frameCallBack);
-        //((camOESink*)(subsession->sink))->setFrameCallback(&callback_obj->on_frame_callback);
         ((camOESink*)(subsession->sink))->set_callback(callback_obj);
         subsession->sink->startPlaying(*(subsession->readSource()),
                   subsessionAfterPlaying, subsession);
