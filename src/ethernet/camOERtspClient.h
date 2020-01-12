@@ -51,6 +51,10 @@ private:
 		int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum);
     // called only by createNew();
     virtual ~camOERTSPClient();
+    // TODO: should we have seperate mutex for each command?
+    //std::condition_variable cv;
+    //std::mutex command_mtx;
+    //bool cammand_done = false;
 };
 #endif // _CAM_OE_RTSP_CLIENT_H
 

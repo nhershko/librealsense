@@ -13,8 +13,16 @@ void myFrameCallBack(u_int8_t* buf, unsigned int size, struct timeval presentati
 
 int main()
 {
-
-    myFile = fopen("myFile.bin", "ab");
+    const char* fileName = "myFile.bin";
+    if (remove(fileName) ==  0)
+    {
+        printf("File removed\n");
+    }
+    else
+    {
+        printf("Cannot remove file\n");
+    }
+    myFile = fopen(fileName, "ab");
 
     int res = 0;
     IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.145.82:8554/depth", "myClient");
@@ -42,8 +50,8 @@ int main()
 
     res = camOErtspInstance->addStream(myProfiles[0], &myFrameCallBack);
     std::cout << "After setup. res = " << res << "\n";
-    res = camOErtspInstance->start();
-    std::cout << "After start. res = " << res << "\n";
+   // res = camOErtspInstance->start();
+   // std::cout << "After start. res = " << res << "\n";
     
     //res = camOErtspInstance2->addStream(myProfiles2[0], &myFrameCallBack);
     //std::cout << "After setup. res = " << res << "\n";
@@ -53,12 +61,12 @@ int main()
     //std::cout << "After start. res = " << res << "\n";
     sleep(5);
     
-    res = camOErtspInstance->stop();
-    std::cout << "After stop. res = " << res << "\n";
+   // res = camOErtspInstance->stop();
+   // std::cout << "After stop. res = " << res << "\n";
     //res = camOErtspInstance->stop(myProfiles[0]);
     //std::cout << "After stop. res = " << res << "\n";  
-    res = camOErtspInstance->close();
-    std::cout << "After close. res = " << res << "\n";
+   // res = camOErtspInstance->close();
+   // std::cout << "After close. res = " << res << "\n";
     fclose(myFile);
 
 //  camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.145.82:8554/depth", "myClient");
