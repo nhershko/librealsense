@@ -175,6 +175,7 @@ int camOERTSPClient::close()
   // wait for continueAfterTEARDOWN to finish
   std::unique_lock<std::mutex> lck(command_mtx);
   cv.wait(lck); 
+  is_connected=false;
   return this->commandResultCode;
 }
 
@@ -189,6 +190,12 @@ void camOERTSPClient::initFunc()
 {
    std::thread thread_scheduler(schedulerThread, this);
    thread_scheduler.detach();
+   is_connected=true;
+}
+
+bool camOERTSPClient::isConnected()
+{
+  return this->is_connected;
 }
 
 // TODO: Error handling

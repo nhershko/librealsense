@@ -45,6 +45,11 @@ std::vector<rs2_video_stream> ip_device::query_server_streams()
 	{
 		if (rtsp_clients[i]==NULL)
 			continue;
+        //temporary nhershko workaround for start after stop
+        if(!((camOERTSPClient*)rtsp_clients[i])->isConnected())
+        {
+            ((camOERTSPClient*)rtsp_clients[i])->initFunc();
+        }
 		std::vector<rs2_video_stream> sensor_streams = rtsp_clients[i]->queryStreams();
 		for (size_t j = 0; j < sensor_streams.size() ; j++)
 		{
@@ -127,9 +132,18 @@ void ip_device::polling_state_loop()
 
 void ip_device::update_sensor_stream(int sensor_index,std::vector<rs2::stream_profile> updated_streams)
 {
+    //check if need to close all
+    if(updated_streams.size()==0)
+    {
+        rtsp_clients[sensor_index]->stop();
+        rtsp_clients[sensor_index]->close();
+        injected_thread_active[sensor_index]=false;
+        inject_frames_thread[sensor_index].join();
+        return;
+    }
+
     for (size_t i = 0; i < updated_streams.size(); i++)
     {
-        
         rs2::video_stream_profile vst(updated_streams[i]);
         rs2_video_stream st;
         st.fps = vst.fps();
@@ -140,6 +154,14 @@ void ip_device::update_sensor_stream(int sensor_index,std::vector<rs2::stream_pr
 
         std::cout << "adding stream for sensor index: " << sensor_index << " uid: " << st.uid << " \n" ;
 
+        //temporary nhershko workaround for start after stop
+        if(!((camOERTSPClient*)rtsp_clients[sensor_index])->isConnected())
+        {
+            std::cout <<"do second init for rtsp client\n";
+            ((camOERTSPClient*)rtsp_clients[sensor_index])->initFunc();
+            std::cout <<"done\n";
+        }
+
         rtp_callbacks[sensor_index] = 
             new rtp_callback(st.uid,&frame_queues[sensor_index],&queue_locks[sensor_index]);
         rtsp_clients[sensor_index]->addStream(st,rtp_callbacks[sensor_index]);
@@ -147,7 +169,7 @@ void ip_device::update_sensor_stream(int sensor_index,std::vector<rs2::stream_pr
     rtsp_clients[sensor_index]->start();
     std::cout << "stream started for sensor index: " << sensor_index << "  \n" ;
 
-    inject_frames_thread = std::thread(&ip_device::inject_frames_loop,this,0);
+    inject_frames_thread[sensor_index] = std::thread(&ip_device::inject_frames_loop,this,sensor_index);
 }
 
 rs2::software_device ip_device::create_ip_device(std::string ip_address)
@@ -163,24 +185,22 @@ rs2::software_device ip_device::create_ip_device(std::string ip_address)
     // return sw device 
     return sw_dev;
 }
-std::mutex mtx1;
+
 void ip_device::inject_frames_loop(int stream_index)
 {
-    while (1)
+    injected_thread_active[stream_index]=true;
+    while (injected_thread_active[stream_index])
     {
-        std::lock_guard<std::mutex> lock(mtx1);
         if (this->frame_queues[stream_index].empty()) 
         {
-	        //std::cout<<"queue is NOT empty\n";
+	        //std::cout<<"queue is empty\n";
 		} 
         else 
         {				
-			queue_locks[stream_index].lock();
+            queue_locks[stream_index].lock();
             Tmp_Frame* frame = frame_queues[stream_index].front();
 			frame_queues[stream_index].pop();
             queue_locks[stream_index].unlock();
-          
-
 #ifdef COMPRESSION			
 			if (true) {
 				// depth
@@ -192,26 +212,23 @@ void ip_device::inject_frames_loop(int stream_index)
 #ifdef COMPRESSION
 			}
 #endif
-            
-            
-			// delete frame;
 			last_frame[stream_index].timestamp = frame->m_timestamp.tv_sec;
-
 			last_frame[stream_index].frame_number++;
-
             sensors[stream_index]->on_video_frame(last_frame[stream_index]);
-            /*
-            
-            */
             std::cout<<"added frame from type " << stream_index << "to sensor ptr " << sensors[stream_index] << " \n";
-            //exit(0);
 		}
 	}
-	while(!frame_queues[0].empty())
-	{
-		frame_queues[0].pop();
-	}
+    clean_frames_queue(stream_index);
 	std::cout<<"pulling data at stream index " << 0 <<" is done\n";
+}
+
+void ip_device::clean_frames_queue(int index)
+{
+    while(!frame_queues[index].empty())
+	{
+		frame_queues[index].pop();
+	}
+    std::cout << "done clean frames queue: " << index << std::endl;
 }
 
 

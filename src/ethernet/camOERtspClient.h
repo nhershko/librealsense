@@ -20,6 +20,7 @@ public:
     void describe();
     void setup(rs2_video_stream stream);
     void initFunc();
+    virtual bool isConnected();
 
 
 
@@ -52,6 +53,8 @@ private:
 
     // called only by createNew();
     virtual ~camOERTSPClient();
+
+    bool is_connected;
 };
 #endif // _CAM_OE_RTSP_CLIENT_H
 

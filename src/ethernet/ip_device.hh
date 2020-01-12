@@ -49,7 +49,9 @@ class ip_device
 
         std::thread sw_device_status_check;
 
-        std::thread inject_frames_thread;
+        std::thread inject_frames_thread[MAX_ACTIVE_STREAMS];
+
+        volatile bool injected_thread_active[MAX_ACTIVE_STREAMS];
 
         ip_device(std::string ip_address, rs2::software_device sw_device);
 
@@ -68,7 +70,6 @@ class ip_device
         rs2_software_video_frame last_frame[MAX_ACTIVE_STREAMS];
         // pixels data 
         std::vector<uint8_t> pixels_buff[MAX_ACTIVE_STREAMS];
-
         //profiles
         rs2::stream_profile profiles[MAX_ACTIVE_STREAMS];
 
@@ -78,6 +79,8 @@ class ip_device
         std::vector<rs2_video_stream> query_server_streams();
 
         void add_frame_to_queue(Tmp_Frame* frame);
+
+        void clean_frames_queue(int stream_index);
 
 /*
         void tear_down();
