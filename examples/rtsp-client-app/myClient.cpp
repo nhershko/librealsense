@@ -45,21 +45,21 @@ int main()
     res = camOErtspInstance->start();
     std::cout << "After start. res = " << res << "\n";
     
-   // res = camOErtspInstance2->addStream(myProfiles2[0]);
+    //res = camOErtspInstance2->addStream(myProfiles2[0], &myFrameCallBack);
     //std::cout << "After setup. res = " << res << "\n";
     //res = camOErtspInstance->stop(myProfiles[0]);
     //std::cout << "After stop. res = " << res << "\n";
     //res = camOErtspInstance2->start();
     //std::cout << "After start. res = " << res << "\n";
     sleep(5);
-    fclose(myFile);
-    //res = camOErtspInstance->stop();
-    //std::cout << "After stop. res = " << res << "\n";
+    
+    res = camOErtspInstance->stop();
+    std::cout << "After stop. res = " << res << "\n";
     //res = camOErtspInstance->stop(myProfiles[0]);
     //std::cout << "After stop. res = " << res << "\n";  
-    //res = camOErtspInstance->close();
-    //std::cout << "After close. res = " << res << "\n";
-
+    res = camOErtspInstance->close();
+    std::cout << "After close. res = " << res << "\n";
+    fclose(myFile);
 
 //  camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.145.82:8554/depth", "myClient");
  //((camOERTSPClient*)camOErtspInstance)->initFunc();
