@@ -14,6 +14,7 @@ set(DEPENDENCIES ${DEPENDENCIES} realsense2)
 set(LIVE ../../third-party/live/)
 
 file(GLOB ETHERNET_SOURCES 
+ "*.hh"
  "*.h"
  "*.cpp"
  "rtsp_client/*.cpp"

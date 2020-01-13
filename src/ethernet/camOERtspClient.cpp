@@ -67,7 +67,9 @@ std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
 }
 int camOERTSPClient::addStream(rs2_video_stream stream, frame_call_back frameCallBack)
 {
-  MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
+  //MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
+  //nhershko - hard coded to subsession per media-session
+  MediaSubsession* subsession = this->subsessionMap.find(0)->second;
 
   if (subsession != NULL) {
      if (!subsession->initiate()) {
@@ -221,11 +223,21 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
     if (stream_name.compare("depth") == 0)
     {
       videoStream.type = RS2_STREAM_DEPTH;
+      //nhershko: hard coded 
+      videoStream.fmt = RS2_FORMAT_Z16;
     }
     else if((stream_name.compare("color") == 0))
     {
       videoStream.type = RS2_STREAM_COLOR;
+      //nhershko: hard coded 
+      videoStream.fmt = RS2_FORMAT_YUYV;
     }
+
+    //nhershko: hard coded fixes
+    videoStream.bpp=2;
+    videoStream.fps=30;
+    
+
 
     // TODO: update width and height in subsession?
     ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, MediaSubsession*>(videoStream.uid, scs.subsession));

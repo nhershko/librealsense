@@ -27,6 +27,8 @@ int main()
     int res = 0;
     IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.145.82:8554/depth", "myClient");
     //IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.144.35:8554/unicast", "myClient");
+    //IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.144.74:8554/depth", "myClient");
+
     std::vector<rs2_video_stream> myProfiles;
     ((camOERTSPClient*)camOErtspInstance)->initFunc();
     myProfiles = camOErtspInstance->queryStreams();

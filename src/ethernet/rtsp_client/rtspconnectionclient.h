@@ -111,6 +111,8 @@ class RTSPConnection
 				virtual ~RTSPClientConnection(); 
 
 				void add_new_subsession(std::string subsession_id);
+
+				void add_session(MediaSession new_session);
 			
 			protected:
 				void sendNextCommand(); 

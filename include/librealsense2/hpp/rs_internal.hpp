@@ -261,7 +261,9 @@ namespace rs2
     public:
         software_device()
             : device(create_device_ptr())
-        {}
+        {
+            this->set_destruction_callback([]{});
+        }
 
         /**
         * Add sensor stream to software sensor
