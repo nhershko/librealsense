@@ -2,6 +2,8 @@
 #include "stdio.h"
 #include <string>
 
+#define WRITE_FRAMES_TO_FILE 0
+
 camOESink* camOESink::createNew(UsageEnvironment& env, MediaSubsession& subsession, int bufferSize, char const* streamId) {
   return new camOESink(env, subsession, bufferSize, streamId);
 }
@@ -12,19 +14,21 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession, int buf
   fStreamId = strDup(streamId);
   fBufferSize = bufferSize;
   fReceiveBuffer = new u_int8_t[bufferSize];
-  std::string url_str = fStreamId;
-  // Remove last "/"
-  url_str = url_str.substr(0, url_str.size()-1);
-  std::size_t stream_name_index = url_str.find_last_of("/") + 1;
-  std::string stream_name = url_str.substr(stream_name_index, url_str.size());
-  /*if (stream_name.compare("depth") == 0)
-  {
-    fp = fopen("file_depth.bin", "ab");
-  }
-  else if((stream_name.compare("color") == 0))
-  {
-    fp = fopen("file_rgb.bin", "ab");
-  }*/
+  #if WRITE_FRAMES_TO_FILE
+    std::string url_str = fStreamId;
+    // Remove last "/"
+    url_str = url_str.substr(0, url_str.size()-1);
+    std::size_t stream_name_index = url_str.find_last_of("/") + 1;
+    std::string stream_name = url_str.substr(stream_name_index, url_str.size());
+    if (stream_name.compare("depth") == 0)
+    {
+      fp = fopen("file_depth.bin", "ab");
+    }
+    else if((stream_name.compare("color") == 0))
+    {
+      fp = fopen("file_rgb.bin", "ab");
+    }
+  #endif
 }
 
 camOESink::~camOESink() {

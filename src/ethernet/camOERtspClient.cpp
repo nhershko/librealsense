@@ -42,8 +42,8 @@ bool cammand_done = false;
 //void continueAfterTEARDOWN(RTSPClient* rtspClient, int resultCode, char* resultString);
 //void continueAfterPAUSE(RTSPClient* rtspClient, int resultCode, char* resultString);
 
-void subsessionAfterPlaying(void* clientData); // called when a stream's subsession (e.g., audio or video substream) ends
-void subsessionByeHandler(void* clientData, char const* reason);
+//void subsessionAfterPlaying(void* clientData); // called when a stream's subsession (e.g., audio or video substream) ends
+//void subsessionByeHandler(void* clientData, char const* reason);
 
 std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
 {
@@ -299,13 +299,13 @@ void camOERTSPClient::continueAfterPAUSE(RTSPClient* rtspClient, int resultCode,
 }
 
 // TODO: implementation
-void subsessionAfterPlaying(void* clientData)
+void camOERTSPClient::subsessionAfterPlaying(void* clientData)
 {
   MediaSubsession* subsession = (MediaSubsession*)clientData;
   RTSPClient* rtspClient = (RTSPClient*)(subsession->miscPtr);
   rtspClient->envir() << "subsessionAfterPlaying\n";
 }
-void subsessionByeHandler(void* clientData, char const* reason)
+void camOERTSPClient::subsessionByeHandler(void* clientData, char const* reason)
 {
 
 }
