@@ -25,7 +25,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RsRTSPServer.hh"
 #endif
 
-#include "RsCamera.h"
+#include "RsCamera.hh"
 #include <librealsense2/rs.hpp>
 
 class RsRTSPServer: public RTSPServer {
@@ -72,7 +72,7 @@ public:
   protected:
     //RsRTSPServer& fOurRsRTSPServer; // same as ::fOurServer
   private:
-    std::map<int, rs2::frame_queue> streamProfiles;
+    std::unordered_map<long long int, rs2::frame_queue> streamProfiles;
   };
 
 protected: // redefined virtual functions
@@ -86,7 +86,7 @@ protected:
   virtual ClientSession* createNewClientSession(u_int32_t sessionId);
 
 private:
-  int openRsCamera(RsSensor sensor,std::map<int, rs2::frame_queue>& streamProfiles);
+  int openRsCamera(RsSensor sensor,std::unordered_map<long long int, rs2::frame_queue>& streamProfiles);
 
 private:
   friend class RsRTSPClientConnection;

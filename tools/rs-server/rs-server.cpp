@@ -33,7 +33,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <signal.h>
 #include "RsSource.hh"
 #include "RsMediaSubsession.h"
-#include "RsCamera.h"
+#include "RsCamera.hh"
 #include "RsRTSPServer.hh"
 #include "RsServerMediaSession.h"
 
@@ -50,7 +50,6 @@ RawVideoRTPSink *videoSink2;
 RTSPServer *rtspServer;
 RsCamera cam;
 std::vector<RsSensor> sensors;
-std::map<int, rs2::frame_queue> depth_queues;
 
 void play(); // forward
 void sigint_handler(int sig);
@@ -88,21 +87,23 @@ int main(int argc, char **argv)
                                                           True);
     }
     int index = 0;
-    for (auto stream:sensor.getStreamProfiles())
+    for (auto stream_profile:sensor.getStreamProfiles())
     {
+      rs2::video_stream_profile stream=stream_profile.second;
       if (sensorIndex==0 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_Z16 && stream.fps() == 30)
       {
         //depth_queues[index] = rs2::frame_queue(CAPACITY, true);
-        sms->addSubsession(RsMediaSubsession::createNew(*env,  stream/*,depth_queues[index]*/));
+        sms->addSubsession(RsMediaSubsession::createNew(*env,  stream));
       }
-      else  if (sensorIndex==0 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_RGB8 && stream.fps() == 30)
+      /*if (sensorIndex==0 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_RGB8 && stream.fps() == 30)
       {
-         sms->addSubsession(RsMediaSubsession::createNew(*env,  stream/*,depth_queues[index]*/));
-      }
-      else if (sensorIndex==1 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_YUYV && stream.fps() == 30)
+         sms->addSubsession(RsMediaSubsession::createNew(*env,  stream));
+      }*/
+      if (sensorIndex==1 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_YUYV && stream.fps() == 30)
       {
         //depth_queues[index] = rs2::frame_queue(CAPACITY, true);
-        sms->addSubsession(RsMediaSubsession::createNew(*env,  stream/*, depth_queues[index]*/));
+        sms->addSubsession(RsMediaSubsession::createNew(*env,  stream));
+        *env << "stream added\n";
       }       
       index++;
     }

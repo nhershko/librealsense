@@ -54,7 +54,7 @@ RsServerMediaSession::~RsServerMediaSession() {
 }
 
 
-int RsServerMediaSession::openRsCamera( std::map<int, rs2::frame_queue> &streamProfiles)
+int RsServerMediaSession::openRsCamera( std::unordered_map<long long int, rs2::frame_queue> &streamProfiles)
 {
     envir() << "openRsCamera  \n";
     int status = rsSensor.open(streamProfiles);

@@ -37,7 +37,7 @@ RawVideoRTPSink
   : VideoRTPSink(env, RTPgs, rtpPayloadFormat, 90000, "RAW"),
     fFmtpSDPLine(NULL), fSampling(NULL), fWidth(width), fHeight(height),
     fDepth(depth), fColorimetry(NULL), fLineindex(0) {
-    
+    env << "RawVideoRTPSink constructor\n";
   // Then use this 'config' string to construct our "a=fmtp:" SDP line:
   unsigned fmtpSDPLineMaxSize = 200;// 200 => more than enough space
   fFmtpSDPLine = new char[fmtpSDPLineMaxSize];

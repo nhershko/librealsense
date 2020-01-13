@@ -54,7 +54,6 @@ void RsDeviceSource::doGetNextFrame()
   // If a new frame of data is immediately available to be delivered, then do this now:
   rs2::frame frame=frames_queue->wait_for_frame(); //todo: check if it copies the frame
   frame.keep();
-  //envir() << "keep frame: " << frame.get_frame_number()<< "\n";
 
   deliverRSFrame(&frame);
 }
@@ -94,6 +93,7 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
 #endif
     //envir() << "got new frame: frame size is " << fFrameSize <<  "stream type is is " << stream_profile->stream_type() << "stream resolution is" <<  stream_profile->width() << "," << stream_profile->height() << "\n";
     memmove(fTo, frame->get_data(), fFrameSize);
+    //envir() << "after memove frame \n";
 #ifdef COMPRESSION
    }
 #endif
