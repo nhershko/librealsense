@@ -1,6 +1,12 @@
 #include "ip_device.hh"
 #include <librealsense2/rs.hpp>
 
+// michalpr - remove this. this is a workaround until callback branch will be merged
+void ipDeviceFrameCallBack(u_int8_t* buf, unsigned int size, struct timeval presentationTime)
+{
+    std::cout << "myFrameCallBack. size = " << size << " time (sec) = " << presentationTime.tv_sec << "\n";
+}
+
 ip_device::~ip_device()
 {
     is_device_alive = false;
@@ -126,7 +132,7 @@ void ip_device::update_sensor_stream(int sensor_index,std::vector<rs2::stream_pr
 
         std::cout << "Starting new stream" << st.type << "  " << st.fps << "\n" ;
         
-        rtsp_clients[sensor_index]->addStream(st);
+        rtsp_clients[sensor_index]->addStream(st, &ipDeviceFrameCallBack);
         rtsp_clients[sensor_index]->start();
     }
 }
