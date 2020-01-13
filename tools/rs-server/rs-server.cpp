@@ -90,6 +90,8 @@ int main(int argc, char **argv)
     for (auto stream_profile:sensor.getStreamProfiles())
     {
       rs2::video_stream_profile stream=stream_profile.second;
+      //if ( stream.format() == RS2_FORMAT_Z16 || stream.format() == RS2_FORMAT_Y16 || stream.format() == RS2_FORMAT_RAW16 || stream.format() == RS2_FORMAT_YUYV)
+     
       if (sensorIndex==0 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_Z16 && stream.fps() == 30)
       {
         //depth_queues[index] = rs2::frame_queue(CAPACITY, true);

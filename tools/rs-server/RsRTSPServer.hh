@@ -32,7 +32,7 @@ class RsRTSPServer: public RTSPServer {
 public:
   static RsRTSPServer* createNew(UsageEnvironment& env, Port ourPort = 554,
 			       UserAuthenticationDatabase* authDatabase = NULL,
-			       unsigned reclamationSeconds = 65);
+			       unsigned reclamationSeconds = 0);
 
 protected:
   RsRTSPServer(UsageEnvironment& env,
@@ -61,10 +61,12 @@ public:
     friend class RsRTSPServer;
     friend class RsRTSPClientConnection;
 
-    virtual void handleCmd_withinSession(RTSPClientConnection* ourClientConnection,
-					 char const* cmdName,
-					 char const* urlPreSuffix, char const* urlSuffix,
-					 char const* fullRequestStr);
+    virtual void handleCmd_TEARDOWN(RTSPClientConnection* ourClientConnection,
+				    ServerMediaSubsession* subsession);
+    virtual void handleCmd_PLAY(RTSPClientConnection* ourClientConnection,
+				ServerMediaSubsession* subsession, char const* fullRequestStr);
+    virtual void handleCmd_PAUSE(RTSPClientConnection* ourClientConnection,
+				 ServerMediaSubsession* subsession);
 
     int openRsCamera();
     int closeRsCamera();
