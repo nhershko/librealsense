@@ -17,6 +17,7 @@ void recover_rtsp_client(int sensor_index, IcamOERtsp* rtsp_clients, std::string
         rtsp_clients = camOERTSPClient::getRtspClient(std::string("rtsp://" + url + ":8554/color").c_str(),"ethernet_device");
     
     ((camOERTSPClient*)rtsp_clients)->initFunc();
+    rtsp_clients->queryStreams();
     std::cout <<"done\n";
 }
 
@@ -93,7 +94,6 @@ bool ip_device::init_device_data()
         rs2::software_sensor tmp_sensor = sw_dev.add_sensor(sensor_name);
         sensors[st.type-1] = new rs2::software_sensor(tmp_sensor);
 
-        //rs2::stream_profile profile = tmp_sensor.add_video_stream(st,i==0);
         std::cout << "create profile uid: " << st.uid << std::endl;
         profiles[st.type-1] = sensors[st.type-1]->add_video_stream(st,i==0);
         std::cout << "create profile at: " << st.type-1 << std::endl;
@@ -105,7 +105,7 @@ bool ip_device::init_device_data()
 		last_frame[st.type-1].pixels = pixels_buff[st.type-1].data();
 		last_frame[st.type-1].deleter = ip_device_deleter;
 		
-        std::cout << "initiate last frame: " << st.type-1 <<std::endl;
+        std::cout << "initiate frame buffer for stream ID: " << st.type-1 <<std::endl;
 	}
     
     return true;
@@ -151,6 +151,7 @@ void ip_device::update_sensor_stream(int sensor_index,std::vector<rs2::stream_pr
         rtsp_clients[sensor_index]->close();
         injected_thread_active[sensor_index]=false;
         inject_frames_thread[sensor_index].join();
+
         return;
     }
 
@@ -163,8 +164,6 @@ void ip_device::update_sensor_stream(int sensor_index,std::vector<rs2::stream_pr
         st.type = vst.stream_type();
         st.width = vst.width();
         st.height = vst.height();
-
-        std::cout << "adding stream for sensor index: " << sensor_index << " uid: " << st.uid << " \n" ;
 
         //temporary nhershko workaround for start after stop
         if(!((camOERTSPClient*)rtsp_clients[sensor_index])->isConnected())
@@ -212,6 +211,7 @@ void ip_device::inject_frames_loop(int stream_index)
             Tmp_Frame* frame = frame_queues[stream_index].front();
 			frame_queues[stream_index].pop();
             queue_locks[stream_index].unlock();
+
 #ifdef COMPRESSION			
 			if (stream_index==0) {
 				// depth
@@ -226,11 +226,11 @@ void ip_device::inject_frames_loop(int stream_index)
 			last_frame[stream_index].timestamp = frame->m_timestamp.tv_sec;
 			last_frame[stream_index].frame_number++;
             sensors[stream_index]->on_video_frame(last_frame[stream_index]);
-            std::cout<<"added frame from type " << stream_index << "to sensor ptr " << sensors[stream_index] << " \n";
+            //std::cout<<"added frame from type " << stream_index << "to sensor ptr " << sensors[stream_index] << " \n";
 		}
 	}
     clean_frames_queue(stream_index);
-	std::cout<<"pulling data at stream index " << 0 <<" is done\n";
+	std::cout<<"polling data at stream index " << stream_index <<" is done\n";
 }
 
 void ip_device::clean_frames_queue(int index)

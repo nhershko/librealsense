@@ -74,6 +74,23 @@ int main()
 
     camOErtspInstance2->addStream(myProfiles2[0],new my_callback("mycolor"));
     camOErtspInstance2->start();
+    sleep(3);
+    camOErtspInstance2->stop();
+    camOErtspInstance2->close();
+
+    std::cout << "\nwait 3 secs\n";
+    sleep(3);
+
+    camOErtspInstance2 = camOERTSPClient::getRtspClient("rtsp://10.12.144.74:8554/color", "myClient");
+    ((camOERTSPClient*)camOErtspInstance2)->initFunc();
+    myProfiles2 = camOErtspInstance2->queryStreams();
+    camOErtspInstance2->addStream(myProfiles2[0],new my_callback("mycolor"));
+    camOErtspInstance2->start();
+    sleep(3);
+
+    camOErtspInstance2->stop();
+    camOErtspInstance2->close();
+    sleep(3);
 
     //res = camOErtspInstance->addStream(myProfiles[0], new my_callback("myclient"));
     std::cout << "After setup. res = " << res << "\n";
