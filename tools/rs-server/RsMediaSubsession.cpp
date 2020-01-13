@@ -19,7 +19,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // on demand, from a file.
 // Implementation
 #include "RsMediaSubsession.h"
-#include "RsMediaSubsession.h"
 #include "RsRawVideoRTPSink.h"
 //#include <librealsense2/h/rs_sensor.h>
 

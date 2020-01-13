@@ -33,7 +33,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <signal.h>
 #include "RsSource.hh"
 #include "RsMediaSubsession.h"
-#include "RsCamera.hh"
+#include "RsDevice.hh"
 #include "RsRTSPServer.hh"
 #include "RsServerMediaSession.h"
 
@@ -48,7 +48,7 @@ RsDeviceSource *devSource2;
 RawVideoRTPSink *videoSink1;
 RawVideoRTPSink *videoSink2;
 RTSPServer *rtspServer;
-RsCamera cam;
+RsDevice device;
 std::vector<RsSensor> sensors;
 
 void play(); // forward
@@ -69,7 +69,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  sensors = cam.getSensors();
+  sensors = device.getSensors();
   int sensorIndex =0;//TODO::to remove
   for (auto sensor:sensors)
   {   

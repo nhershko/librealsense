@@ -1,9 +1,9 @@
 #include <iostream>
-#include "RsCamera.hh"
+#include "RsDevice.hh"
 
-RsCamera::RsCamera()
+RsDevice::RsDevice()
 {
-	//get RS device
+	//get LRS device
 	std::cerr << "RsCamera constructor" << std::endl;
 	// The context represents the current platform with respect to connected devices
 	rs2::context ctx;
@@ -13,21 +13,21 @@ RsCamera::RsCamera()
 	{
 		std::cerr << "No device connected, please connect a RealSense device" << std::endl;
 		rs2::device_hub device_hub(ctx);
-		m_dev = device_hub.wait_for_device();
+		m_device = device_hub.wait_for_device(); //todo: check wait_for_device
 	}
 	else
 	{
-		m_dev = devices[0]; // Only one device is supported
+		m_device = devices[0]; // Only one device is supported
 	}
 
 	//get RS sensors
-	for (auto &sensor : m_dev.query_sensors())
+	for (auto &sensor : m_device.query_sensors())
 	{
 		m_sensors.push_back(RsSensor(sensor));
 	}
 }
 
-RsCamera::~RsCamera()
+RsDevice::~RsDevice()
 {
-	std::cerr << "RsCamera destructor" << std::endl;
+	std::cerr << "RsDevice destructor" << std::endl;
 }

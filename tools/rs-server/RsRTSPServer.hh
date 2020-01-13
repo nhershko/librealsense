@@ -25,7 +25,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RsRTSPServer.hh"
 #endif
 
-#include "RsCamera.hh"
+#include "RsDevice.hh"
 #include <librealsense2/rs.hpp>
 
 class RsRTSPServer: public RTSPServer {
