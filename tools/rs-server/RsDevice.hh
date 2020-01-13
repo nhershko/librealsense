@@ -5,15 +5,15 @@
 #include "RsSensor.hh"
 
 
-class RsCamera
+class RsDevice
 {
 public:
-	RsCamera();
-	~RsCamera();
+	RsDevice();
+	~RsDevice();
 	std::vector<RsSensor> &getSensors() { return m_sensors; }
 
 private:
-	rs2::device m_dev;
+	rs2::device m_device;
 	std::vector<RsSensor> m_sensors;
 };
 

@@ -1,8 +1,6 @@
 #include <iostream>
-//#include <mutex>
-//#include <thread>
 #include <math.h>
-#include "RsCamera.hh"
+#include "RsDevice.hh"
 
 RsSensor::RsSensor(rs2::sensor sensor)
 {
@@ -19,16 +17,16 @@ RsSensor::RsSensor(rs2::sensor sensor)
 
 int RsSensor::open(std::unordered_map<long long int, rs2::frame_queue> &stream_profiles_queues)
 {
-	std::vector<rs2::stream_profile> stream_profiles;
+	std::vector<rs2::stream_profile> requested_stream_profiles;
 	for (auto stream_profile : stream_profiles_queues)
 	{
 		//make a vector of all requested stream profiles
 		long long int stream_profile_key = stream_profile.first;
-		stream_profiles.push_back(m_stream_profiles.at(stream_profile_key));
+		requested_stream_profiles.push_back(m_stream_profiles.at(stream_profile_key));
 	}
 	try
 	{
-		m_sensor.open(stream_profiles);
+		m_sensor.open(requested_stream_profiles);
 	}
 	catch (...)
 	{

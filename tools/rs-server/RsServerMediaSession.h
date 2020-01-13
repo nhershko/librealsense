@@ -25,7 +25,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #define _RS_SERVER_MEDIA_SESSION_HH
 
 #include "ServerMediaSession.hh"
-#include "RsCamera.hh"
+#include "RsDevice.hh"
 
 class RsServerMediaSession: public ServerMediaSession {
 public:
