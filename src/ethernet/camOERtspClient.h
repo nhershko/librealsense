@@ -25,7 +25,7 @@ public:
 
 // IcamOERtsp functions
   virtual std::vector<rs2_video_stream> queryStreams();
-  virtual int addStream(rs2_video_stream stream);
+  virtual int addStream(rs2_video_stream stream, frame_call_back frameCallBack);
   virtual int start();
   virtual int stop(rs2_video_stream stream);
   virtual int stop();
@@ -44,6 +44,8 @@ public:
   static void continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString);
   static void continueAfterTEARDOWN(RTSPClient* rtspClient, int resultCode, char* resultString);
   static void continueAfterPAUSE(RTSPClient* rtspClient, int resultCode, char* resultString);
+  static void subsessionAfterPlaying(void* clientData); // called when a stream's subsession (e.g., audio or video substream) ends
+  static void subsessionByeHandler(void* clientData, char const* reason);
 
 
 private:
@@ -51,6 +53,10 @@ private:
 		int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum);
     // called only by createNew();
     virtual ~camOERTSPClient();
+    // TODO: should we have seperate mutex for each command?
+    //std::condition_variable cv;
+    //std::mutex command_mtx;
+    //bool cammand_done = false;
 };
 #endif // _CAM_OE_RTSP_CLIENT_H
 
