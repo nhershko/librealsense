@@ -23,6 +23,12 @@ std::mutex mtx;
 rs2_stream_profile* depth_stream;
 volatile bool is_active = false;
 
+// michalpr - remove this. this is a workaround until callback branch will be merged
+void ethernetDeviceFrameCallBack(u_int8_t* buf, unsigned int size, struct timeval presentationTime)
+{
+    std::cout << "myFrameCallBack. size = " << size << " time (sec) = " << presentationTime.tv_sec << "\n";
+}
+
 char stop_flag = 0;
 void sig_handler(int signo)
 {
@@ -280,7 +286,7 @@ void rs2::ethernet_device::start(std::string url) {
 	{
 		if (rtsp_clients[i]==NULL)
 			continue;
-		rtsp_clients[i]->addStream(available_streams[i]);
+		rtsp_clients[i]->addStream(available_streams[i], &ethernetDeviceFrameCallBack);
 		rtsp_clients[i]->start();
 	}
 	
