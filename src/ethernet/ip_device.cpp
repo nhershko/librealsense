@@ -215,7 +215,7 @@ void ip_device::inject_frames_loop(int stream_index)
 #ifdef COMPRESSION			
 			if (stream_index==0) {
 				// depth
-				idecomress->decompressFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(last_frame[0].pixels));
+				idecomress->decompressDepthFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(last_frame[0].pixels));
 			} else {
 				// other -> color
 #endif

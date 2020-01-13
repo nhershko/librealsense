@@ -2,6 +2,8 @@
 #include "stdio.h"
 #include <string>
 
+#define WRITE_FRAMES_TO_FILE 0
+
 camOESink* camOESink::createNew(UsageEnvironment& env, MediaSubsession& subsession, int bufferSize, char const* streamId) {
   return new camOESink(env, subsession, bufferSize, streamId);
 }

@@ -12,5 +12,6 @@
 
 class IdecompressFrame {
    public: 
-        virtual void decompressFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf) = 0;
+        virtual void decompressColorFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf) = 0;
+        virtual void decompressDepthFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf) = 0;
 };

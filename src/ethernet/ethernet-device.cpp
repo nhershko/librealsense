@@ -23,6 +23,12 @@ std::mutex mtx;
 rs2_stream_profile* depth_stream;
 volatile bool is_active = false;
 
+// michalpr - remove this. this is a workaround until callback branch will be merged
+void ethernetDeviceFrameCallBack(u_int8_t* buf, unsigned int size, struct timeval presentationTime)
+{
+    std::cout << "myFrameCallBack. size = " << size << " time (sec) = " << presentationTime.tv_sec << "\n";
+}
+
 char stop_flag = 0;
 void sig_handler(int signo)
 {
@@ -36,7 +42,8 @@ rs2::ethernet_device::ethernet_device()
 {
 	dev = rs2_create_software_device(NULL);
 #ifdef COMPRESSION
-	idecomress = decompressFrameFactory::create(zipMethod::gzip);
+	iDecomressColor = decompressFrameFactory::create(zipMethod::gzip);
+	iDecomressDepth = decompressFrameFactory::create(zipMethod::gzip);
 #endif
 
 }
@@ -207,9 +214,12 @@ void rs2::ethernet_device::pull_from_queue(int stream_index)
 #ifdef COMPRESSION			
 			if (stream_index == 0) {
 				// depth
-				idecomress->decompressFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(last_frame[stream_index].pixels));
+				iDecomressDepth->decompressDepthFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(last_frame[stream_index].pixels));
+			} else  if(stream_index == 1){
+				//color
+				iDecomressColor->decompressColorFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(last_frame[stream_index].pixels));
+				//iDecomressColor->decompressColorFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(last_frame[stream_index].pixels));
 			} else {
-				// other -> color
 #endif
 				memcpy(last_frame[stream_index].pixels, frame->m_buffer, frame->m_size);
 #ifdef COMPRESSION

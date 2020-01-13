@@ -5,7 +5,8 @@
 class compressFrameRVL :public IcompressFrame 
 {
     public: 
-        int compressFrame(unsigned char* buffer, int size, unsigned char* compressedBuf);
+        int compressColorFrame(unsigned char* buffer, int size, unsigned char* compressedBuf){};
+        int compressDepthFrame(unsigned char* buffer, int size, unsigned char* compressedBuf);
     private:
         int EncodeVLE(int value);
         int *pBuffer, word, nibblesWritten;

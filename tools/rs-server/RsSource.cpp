@@ -29,56 +29,16 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <map>
 
 RsDeviceSource *
-RsDeviceSource::createNew(UsageEnvironment &env, RSDeviceParameters deviceParams, rs2::device selectedDevice)
+RsDeviceSource::createNew(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile, rs2::frame_queue &queue)
 {
-  return new RsDeviceSource(env, deviceParams, selectedDevice);
+  return new RsDeviceSource(env, video_stream_profile, queue);
 }
 
-RsDeviceSource::RsDeviceSource(UsageEnvironment &env, RSDeviceParameters deviceParams, rs2::device selectedDevice)
-    : FramedSource(env), fParams(deviceParams)
+RsDeviceSource::RsDeviceSource(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile, rs2::frame_queue &queue): FramedSource(env)
 {
-
-  fbuf = (unsigned char*)malloc(fParams.w*fParams.h*fParams.bpp);
-
-  isWaitingFrame = false;
-  selected_device = selectedDevice;
-
-  std::vector<rs2::sensor> sensors = selectedDevice.query_sensors();
-  if (sensors.size() > deviceParams.sensorID)
-  {
-    auto frameCallback = [&](const rs2::frame &f) {
-      std::lock_guard<std::mutex> lk(m);
-      //envir() << "Received frame with size " << f.get_data_size() << "\n";
-      memcpy(fbuf, f.get_data(), f.get_data_size());
-      isWaitingFrame = true;
-      cv.notify_one();
-    };
-
-    selected_sensor = sensors[deviceParams.sensorID];
-    int streamID;
-    std::vector<rs2::stream_profile> stream_profiles = selected_sensor.get_stream_profiles();
-  
-    streamID = get_stream_id();
-    if (streamID == -1)
-     {
-      envir() << "failed to open stream \n";
-      return;
-     }  
-    envir() << "stream ID is "<<streamID<< "\n";
-    selected_sensor.open(stream_profiles[streamID]);
-    selected_sensor.start(frameCallback);
-  }
-  else
-  {
-    envir() << "failed to create device \n";
-    return;
-  }
-}
-
-RsDeviceSource::~RsDeviceSource()
-{
-  selected_sensor.stop();
-  selected_sensor.close();
+  //envir() << "RsDeviceSource constructor\n";
+  frames_queue = &queue;
+  stream_profile = &video_stream_profile;
 }
 
 void RsDeviceSource::doGetNextFrame()
@@ -92,24 +52,25 @@ void RsDeviceSource::doGetNextFrame()
     return;
   }
   // If a new frame of data is immediately available to be delivered, then do this now:
-  std::unique_lock<std::mutex> lk(m);
-  cv.wait(lk, [&] { return isWaitingFrame == true; });
-  
-  deliverRSFrame();
+  rs2::frame frame=frames_queue->wait_for_frame(); //todo: check if it copies the frame
+  frame.keep();
+
+  deliverRSFrame(&frame);
 }
 
-void RsDeviceSource::deliverRSFrame()
+void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
 {
 #ifdef COMPRESSION
-  IcompressFrame* iCompress =  compressFrameFactory::create(zipMethod::gzip);
+  IcompressFrame* iCompressColor =  compressFrameFactory::create(zipMethod::gzip);
+  IcompressFrame* iCompressDepth =  compressFrameFactory::create(zipMethod::gzip);
 #endif
   if (!isCurrentlyAwaitingData())
   {
-    envir() << "isCurrentlyAwaitingData returned false"<<fParams.sensorID<<"\n";
+    envir() << "isCurrentlyAwaitingData returned false" << "\n";
     return; // we're not ready for the data yet
   }
-  isWaitingFrame = false;
-  unsigned newFrameSize = fParams.w * fParams.h * fParams.bpp;
+
+  unsigned newFrameSize = frame->get_data_size();
 
   if (newFrameSize > fMaxSize)
   {
@@ -122,65 +83,21 @@ void RsDeviceSource::deliverRSFrame()
   }
   gettimeofday(&fPresentationTime, NULL); // If you have a more accurate time - e.g., from an encoder - then use that instead.
 #ifdef COMPRESSION
-   if(fParams.sensorID == 0) 
+   if(stream_profile->stream_type() == RS2_STREAM_DEPTH) 
    {
-       iCompress->compressFrame(fbuf, fFrameSize, fTo);
+      iCompressDepth->compressDepthFrame((unsigned char*)frame->get_data(), fFrameSize, fTo);
+   } else if(stream_profile->stream_type() == RS2_STREAM_COLOR) 
+   {
+      iCompressColor->compressColorFrame((unsigned char*)frame->get_data(), fFrameSize, fTo);
    } else {
 #endif
-       memmove(fTo, fbuf, fFrameSize);
+    //envir() << "got new frame: frame size is " << fFrameSize <<  "stream type is is " << stream_profile->stream_type() << "stream resolution is" <<  stream_profile->width() << "," << stream_profile->height() << "\n";
+    memmove(fTo, frame->get_data(), fFrameSize);
+    //envir() << "after memove frame \n";
 #ifdef COMPRESSION
    }
 #endif
   // After delivering the data, inform the reader that it is now available:
   FramedSource::afterGetting(this);
 }
-
-int RsDeviceSource::get_stream_id()
-    {
-        rs2_format f;
-        if (fParams.sensorID == 0)
-        {
-          f = RS2_FORMAT_Z16;
-        }
-        else if(fParams.sensorID == 1)
-        {
-          f = RS2_FORMAT_YUYV;
-        }
-        else
-        {
-          return -1;
-        }
-        
-        std::vector<rs2::stream_profile> stream_profiles = selected_sensor.get_stream_profiles();
-        std::map<std::pair<rs2_stream, int>, int> unique_streams;
-        for (auto&& sp : stream_profiles)
-        {
-            unique_streams[std::make_pair(sp.stream_type(), sp.stream_index())]++;
-        }
-        for (size_t i = 0; i < unique_streams.size(); i++)
-        {
-            auto it = unique_streams.begin();
-            std::advance(it, i);
-        }
-        int profile_num = 0;
-        for (rs2::stream_profile stream_profile : stream_profiles)
-        {
-            rs2_stream stream_data_type = stream_profile.stream_type();
-            int stream_index = stream_profile.stream_index();
-            int unique_stream_id = stream_profile.unique_id(); 
-            if (stream_profile.is<rs2::video_stream_profile>()) 
-            {     
-                rs2::video_stream_profile video_stream_profile = stream_profile.as<rs2::video_stream_profile>();
-                if (video_stream_profile.format() == f &&
-                    video_stream_profile.width() == fParams.w &&
-                    video_stream_profile.height() == fParams.h &&
-                    video_stream_profile.fps() == fParams.fps )
-                    {
-                      return profile_num;
-                    }
-            }
-            profile_num++;
-        }
-        return -1;
-    }
 

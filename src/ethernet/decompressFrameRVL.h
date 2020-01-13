@@ -9,7 +9,8 @@
 class decompressFrameRVL :public IdecompressFrame 
 {
     public: 
-        void decompressFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf);
+        void decompressColorFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf) {};
+        void decompressDepthFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf);
     private:
         int decodeVLE();
         int *pBuffer, word, nibblesWritten;

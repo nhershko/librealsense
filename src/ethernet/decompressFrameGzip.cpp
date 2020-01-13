@@ -17,9 +17,8 @@
 #include <zlib.h>
 #include "decompressFrameGzip.h"
 
-void  decompressFrameGzip::decompressFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf) 
-{
-	
+void  decompressFrameGzip::decompressDepthFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf) 
+{	
 	unsigned int compressedSize;
 	int windowsBits = 15;
 	int GZIP_ENCODING = 16;
@@ -46,4 +45,9 @@ void  decompressFrameGzip::decompressFrame(unsigned char* buffer, int size, unsi
 	float zipRatio = fullSizeSum/(float)compressedSizeSum;
 	frameCounter++;
 	printf("gzip zip ratio is: %0.2f , frameCounter: %d\n", zipRatio, frameCounter);
+}
+
+void  decompressFrameGzip::decompressColorFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf) 
+{	
+	decompressDepthFrame(buffer,size, uncompressedBuf);
 }
