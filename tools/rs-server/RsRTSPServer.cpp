@@ -74,72 +74,28 @@ RsRTSPServer::RsRTSPClientSession
 
 RsRTSPServer::RsRTSPClientSession::~RsRTSPClientSession(){}
 
+void RsRTSPServer::RsRTSPClientSession::handleCmd_TEARDOWN(RTSPClientConnection* ourClientConnection,
+				ServerMediaSubsession* subsession)
+        {
+            envir() << "TEARDOWN \n";
+            RTSPServer::RTSPClientSession::handleCmd_TEARDOWN(ourClientConnection,subsession);
+        }
 
-void RsRTSPServer::RsRTSPClientSession
-::handleCmd_withinSession(RTSPServer::RTSPClientConnection* ourClientConnection,
-			  char const* cmdName,
-			  char const* urlPreSuffix, char const* urlSuffix,
-			  char const* fullRequestStr) {
-  // This will either be:
-  // - a non-aggregated operation, if "urlPreSuffix" is the session (stream)
-  //   name and "urlSuffix" is the subsession (track) name, or
-  // - an aggregated operation, if "urlSuffix" is the session (stream) name,
-  //   or "urlPreSuffix" is the session (stream) name, and "urlSuffix" is empty,
-  //   or "urlPreSuffix" and "urlSuffix" are both nonempty, but when concatenated, (with "/") form the session (stream) name.
-  // Begin by figuring out which of these it is:
-  ServerMediaSubsession* subsession;
-  
-  if (fOurServerMediaSession == NULL) { // There wasn't a previous SETUP!
-    ((RsRTSPClientConnection*)ourClientConnection)->handleCmd_notSupported();
-    return;
-  } else if (urlSuffix[0] != '\0' && strcmp(fOurServerMediaSession->streamName(), urlPreSuffix) == 0) {
-    // Non-aggregated operation.
-    // Look up the media subsession whose track id is "urlSuffix":
-    ServerMediaSubsessionIterator iter(*fOurServerMediaSession);
-    while ((subsession = iter.next()) != NULL) {
-      if (strcmp(subsession->trackId(), urlSuffix) == 0) break; // success
-    }
-    if (subsession == NULL) { // no such track!
-      ((RsRTSPClientConnection*)ourClientConnection)->handleCmd_notFound();
-      return;
-    }
-  } else if (strcmp(fOurServerMediaSession->streamName(), urlSuffix) == 0 ||
-	     (urlSuffix[0] == '\0' && strcmp(fOurServerMediaSession->streamName(), urlPreSuffix) == 0)) {
-    // Aggregated operation
-    subsession = NULL;
-  } else if (urlPreSuffix[0] != '\0' && urlSuffix[0] != '\0') {
-    // Aggregated operation, if <urlPreSuffix>/<urlSuffix> is the session (stream) name:
-    unsigned const urlPreSuffixLen = strlen(urlPreSuffix);
-    if (strncmp(fOurServerMediaSession->streamName(), urlPreSuffix, urlPreSuffixLen) == 0 &&
-	fOurServerMediaSession->streamName()[urlPreSuffixLen] == '/' &&
-	strcmp(&(fOurServerMediaSession->streamName())[urlPreSuffixLen+1], urlSuffix) == 0) {
-      subsession = NULL;
-    } else {
-      ((RsRTSPClientConnection*)ourClientConnection)->handleCmd_notFound();
-      return;
-    }
-  } else { // the request doesn't match a known stream and/or track at all!
-    ((RsRTSPClientConnection*)ourClientConnection)->handleCmd_notFound();
-    return;
-  }
-  
-  if (strcmp(cmdName, "TEARDOWN") == 0) {
-    envir() << "TEARDOWN \n";
-    handleCmd_TEARDOWN(ourClientConnection, subsession);
-  } else if (strcmp(cmdName, "PLAY") == 0) {  
-    envir() << "PLAY \n";
-    openRsCamera();
-    handleCmd_PLAY(ourClientConnection, subsession, fullRequestStr);
-  } else if (strcmp(cmdName, "PAUSE") == 0) {
-    envir() << "PAUSE \n";
-     handleCmd_PAUSE(ourClientConnection, subsession);
-     closeRsCamera();
-  } else if (strcmp(cmdName, "GET_PARAMETER") == 0) {
-    handleCmd_GET_PARAMETER(ourClientConnection, subsession, fullRequestStr);
-  } else if (strcmp(cmdName, "SET_PARAMETER") == 0) {
-    handleCmd_SET_PARAMETER(ourClientConnection, subsession, fullRequestStr);
-  }
-}
+void RsRTSPServer::RsRTSPClientSession::handleCmd_PLAY(RTSPClientConnection* ourClientConnection,
+				ServerMediaSubsession* subsession, char const* fullRequestStr)
+        {
+            envir() << "PLAY \n";
+            openRsCamera();
+            RTSPServer::RTSPClientSession::handleCmd_PLAY(ourClientConnection,subsession,fullRequestStr);
+        }
+
+void RsRTSPServer::RsRTSPClientSession::handleCmd_PAUSE(RTSPClientConnection* ourClientConnection,
+				 ServerMediaSubsession* subsession)
+         {
+            envir() << "PAUSE \n";
+            RTSPServer::RTSPClientSession::handleCmd_PAUSE(ourClientConnection,subsession);
+            closeRsCamera();
+         }
 
 int RsRTSPServer::RsRTSPClientSession::openRsCamera()
 {

@@ -40,12 +40,10 @@ int RsSensor::start(std::unordered_map<long long int, rs2::frame_queue> &stream_
 {
 	auto callback = [&](const rs2::frame &frame) {
 		long long int profile_key = getStreamProfileKey(frame.get_profile());
-		std::cout<<"queue size is "<< stream_profiles_queues.size() <<"\n";
 		//check if profile exists in map:
 		
 		if (stream_profiles_queues.find(profile_key) != stream_profiles_queues.end())
 		{
-			std::cout<<",\n";
 			//push frame to its queue
 			stream_profiles_queues[profile_key].enqueue(frame);
 		}
