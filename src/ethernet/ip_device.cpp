@@ -6,6 +6,20 @@ void ip_device_deleter(void* p)
 
 }
 
+//WA for stop
+void recover_rtsp_client(int sensor_index, IcamOERtsp* rtsp_clients, std::string url)
+{
+    std::cout <<"do second init for rtsp client\n";
+    
+    if(sensor_index==0)
+        rtsp_clients = camOERTSPClient::getRtspClient(std::string("rtsp://" + url + ":8554/depth").c_str(),"ethernet_device");
+    else 
+        rtsp_clients = camOERTSPClient::getRtspClient(std::string("rtsp://" + url + ":8554/color").c_str(),"ethernet_device");
+    
+    ((camOERTSPClient*)rtsp_clients)->initFunc();
+    std::cout <<"done\n";
+}
+
 ip_device::~ip_device()
 {
     is_device_alive = false;
@@ -48,7 +62,7 @@ std::vector<rs2_video_stream> ip_device::query_server_streams()
         //temporary nhershko workaround for start after stop
         if(!((camOERTSPClient*)rtsp_clients[i])->isConnected())
         {
-            ((camOERTSPClient*)rtsp_clients[i])->initFunc();
+            recover_rtsp_client(i,rtsp_clients[i],ip_address);
         }
 		std::vector<rs2_video_stream> sensor_streams = rtsp_clients[i]->queryStreams();
 		for (size_t j = 0; j < sensor_streams.size() ; j++)
@@ -80,6 +94,7 @@ bool ip_device::init_device_data()
         sensors[st.type-1] = new rs2::software_sensor(tmp_sensor);
 
         //rs2::stream_profile profile = tmp_sensor.add_video_stream(st,i==0);
+        std::cout << "create profile uid: " << st.uid << std::endl;
         profiles[st.type-1] = sensors[st.type-1]->add_video_stream(st,i==0);
         std::cout << "create profile at: " << st.type-1 << std::endl;
 
@@ -91,9 +106,6 @@ bool ip_device::init_device_data()
 		last_frame[st.type-1].deleter = ip_device_deleter;
 		
         std::cout << "initiate last frame: " << st.type-1 <<std::endl;
-
-		//quese array is 0 based so setting type -1 as address
-		//inject_threads[i] = std::thread(&rs2::ethernet_device::pull_from_queue,this,available_streams[i].type-1);
 	}
     
     return true;
@@ -157,13 +169,12 @@ void ip_device::update_sensor_stream(int sensor_index,std::vector<rs2::stream_pr
         //temporary nhershko workaround for start after stop
         if(!((camOERTSPClient*)rtsp_clients[sensor_index])->isConnected())
         {
-            std::cout <<"do second init for rtsp client\n";
-            ((camOERTSPClient*)rtsp_clients[sensor_index])->initFunc();
-            std::cout <<"done\n";
+            recover_rtsp_client(sensor_index,rtsp_clients[sensor_index],ip_address);
         }
 
         rtp_callbacks[sensor_index] = 
             new rtp_callback(st.uid,&frame_queues[sensor_index],&queue_locks[sensor_index]);
+        st.uid=sensor_index;
         rtsp_clients[sensor_index]->addStream(st,rtp_callbacks[sensor_index]);
     }
     rtsp_clients[sensor_index]->start();
@@ -202,7 +213,7 @@ void ip_device::inject_frames_loop(int stream_index)
 			frame_queues[stream_index].pop();
             queue_locks[stream_index].unlock();
 #ifdef COMPRESSION			
-			if (true) {
+			if (stream_index==0) {
 				// depth
 				idecomress->decompressFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(last_frame[0].pixels));
 			} else {

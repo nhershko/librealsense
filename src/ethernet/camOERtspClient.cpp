@@ -70,7 +70,7 @@ int camOERTSPClient::addStream(rs2_video_stream stream, rs_callback* callback_ob
   //nhershko - hard coded to subsession per media-session
 
   this->envir()  << "looking for sub session \n";;
-  MediaSubsession* subsession = this->subsessionMap.find(0)->second;
+  MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
   this->envir()  << "find sub session " << subsession  << "\n";;
   if (subsession != NULL) {
     this->envir()  << " initiate subsession"  << "\n";;
