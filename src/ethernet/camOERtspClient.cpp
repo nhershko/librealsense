@@ -217,7 +217,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       rs2_video_stream videoStream;
       videoStream.width = width;
       videoStream.height = height;
-      videoStream.uid = camOERTSPClient::stream_counter;
+      videoStream.uid = camOERTSPClient::stream_counter++;
     
       std::string url_str = rtspClient->url();
       // Remove last "/"
@@ -243,7 +243,6 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
 
       // TODO: update width and height in subsession?
       ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, MediaSubsession*>(videoStream.uid, scs.subsession));
-      camOERTSPClient::stream_counter++;
       ((camOERTSPClient*)rtspClient)->supportedProfiles.push_back(videoStream);
       scs.subsession = scs.iter->next();
       // TODO: when to delete p?
