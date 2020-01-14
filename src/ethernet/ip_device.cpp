@@ -7,18 +7,23 @@ void ip_device_deleter(void* p)
 }
 
 //WA for stop
-void recover_rtsp_client(int sensor_index, IcamOERtsp* rtsp_clients, std::string url)
+void ip_device::recover_rtsp_client(int sensor_index)
 {
-    std::cout <<"do second init for rtsp client\n";
-    
+    std::cout <<"\t@@@ do second init for rtsp client\n";
+
     if(sensor_index==0)
-        rtsp_clients = camOERTSPClient::getRtspClient(std::string("rtsp://" + url + ":8554/depth").c_str(),"ethernet_device");
-    else 
-        rtsp_clients = camOERTSPClient::getRtspClient(std::string("rtsp://" + url + ":8554/color").c_str(),"ethernet_device");
+    {
+        rtsp_clients[0] = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/depth").c_str(),"ethernet_device");
+	    //((camOERTSPClient*)rtsp_clients[rs2_stream::RS2_STREAM_DEPTH-1])->initFunc();
+        ((camOERTSPClient*)rtsp_clients[0])->initFunc();
+    }
+    else if (sensor_index==1)
+    {
+        rtsp_clients[1] = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/color").c_str(),"ethernet_device");
+	    ((camOERTSPClient*)rtsp_clients[1])->initFunc();
+    }
     
-    ((camOERTSPClient*)rtsp_clients)->initFunc();
-    rtsp_clients->queryStreams();
-    std::cout <<"done\n";
+    std::cout <<"\t@@@ done\n";
 }
 
 ip_device::~ip_device()
@@ -63,7 +68,7 @@ std::vector<rs2_video_stream> ip_device::query_server_streams()
         //temporary nhershko workaround for start after stop
         if(!((camOERTSPClient*)rtsp_clients[i])->isConnected())
         {
-            recover_rtsp_client(i,rtsp_clients[i],ip_address);
+            recover_rtsp_client(i);
         }
 		std::vector<rs2_video_stream> sensor_streams = rtsp_clients[i]->queryStreams();
 		for (size_t j = 0; j < sensor_streams.size() ; j++)
@@ -123,7 +128,7 @@ void ip_device::polling_state_loop()
                 auto current_active_streams = sensors[i].get_active_streams();
                 if (active_stream_per_sensor[i] != current_active_streams.size())
                 {
-                    std::cout<<"sensor: " << i << " active streams has changed.\n";
+                    std::cout<<"\t@@@ sensor: " << i << " active streams has changed.\n\n\n";
                     update_sensor_stream(i,current_active_streams);
                     active_stream_per_sensor[i] = current_active_streams.size();
                 }
@@ -147,11 +152,12 @@ void ip_device::update_sensor_stream(int sensor_index,std::vector<rs2::stream_pr
     //check if need to close all
     if(updated_streams.size()==0)
     {
+        std::cout <<"\t@@@ removing all streams for sensor index: " << sensor_index <<std::endl;
         rtsp_clients[sensor_index]->stop();
         rtsp_clients[sensor_index]->close();
         injected_thread_active[sensor_index]=false;
         inject_frames_thread[sensor_index].join();
-
+        
         return;
     }
 
@@ -164,20 +170,24 @@ void ip_device::update_sensor_stream(int sensor_index,std::vector<rs2::stream_pr
         st.type = vst.stream_type();
         st.width = vst.width();
         st.height = vst.height();
+        st.uid = vst.unique_id();
+
+        std::cout<< "\t@@@ setting new stream with uid: " << st.uid << "type: " << st.type  << std::endl;
 
         //temporary nhershko workaround for start after stop
         if(!((camOERTSPClient*)rtsp_clients[sensor_index])->isConnected())
         {
-            recover_rtsp_client(sensor_index,rtsp_clients[sensor_index],ip_address);
+            recover_rtsp_client(sensor_index);
+            st = rtsp_clients[sensor_index]->queryStreams()[0];
         }
 
         rtp_callbacks[sensor_index] = 
             new rtp_callback(st.uid,&frame_queues[sensor_index],&queue_locks[sensor_index]);
-        st.uid=sensor_index;
+        //st.uid=sensor_index;
         rtsp_clients[sensor_index]->addStream(st,rtp_callbacks[sensor_index]);
     }
     rtsp_clients[sensor_index]->start();
-    std::cout << "stream started for sensor index: " << sensor_index << "  \n" ;
+    std::cout << "stream started for sensor index: " << sensor_index << "  \n";
 
     inject_frames_thread[sensor_index] = std::thread(&ip_device::inject_frames_loop,this,sensor_index);
 }

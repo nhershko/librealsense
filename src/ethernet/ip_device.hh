@@ -82,6 +82,8 @@ class ip_device
 
         void clean_frames_queue(int stream_index);
 
+        void recover_rtsp_client(int sensor_index);
+
 /*
         void tear_down();
         void start();
