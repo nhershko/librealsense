@@ -156,7 +156,13 @@ int camOERTSPClient::close()
   cv.wait(lck, []{return cammand_done;}); 
   // for the next command
   cammand_done = false;
-  return this->commandResultCode;
+  int res_code = this->commandResultCode;
+
+  // delete the rtsp instance
+  this->envir() <<  "Closing the stream.\n";
+  Medium::close(this);
+
+  return res_code;
 }
 
 void schedulerThread(camOERTSPClient* rtspClientInstance)
@@ -198,7 +204,6 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       break;
     }
 
-
     int stream_counter = 0;
     scs.iter = new MediaSubsessionIterator(*scs.session);
     scs.subsession = scs.iter->next();
@@ -234,8 +239,6 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       //nhershko: hard coded fixes
       videoStream.bpp=2;
       videoStream.fps=30;
-      
-
 
       // TODO: update width and height in subsession?
       ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, MediaSubsession*>(videoStream.uid, scs.subsession));
