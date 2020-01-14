@@ -46,6 +46,8 @@ public:
   static void continueAfterPAUSE(RTSPClient* rtspClient, int resultCode, char* resultString);
   static void subsessionAfterPlaying(void* clientData); // called when a stream's subsession (e.g., audio or video substream) ends
   static void subsessionByeHandler(void* clientData, char const* reason);
+  static int stream_counter;
+
 
 
 private:

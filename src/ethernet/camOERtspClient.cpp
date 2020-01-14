@@ -13,6 +13,8 @@
 #define RTSP_CLIENT_VERBOSITY_LEVEL 1 // by default, print verbose output from each "RTSPClient"
 #define REQUEST_STREAMING_OVER_TCP 0 // TODO - uderstand this
 
+int camOERTSPClient::stream_counter = 0;
+
 IcamOERtsp* camOERTSPClient::getRtspClient(char const* rtspURL,
 	char const* applicationName, portNumBits tunnelOverHTTPPortNum) {
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
@@ -204,7 +206,6 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       break;
     }
 
-    int stream_counter = 0;
     scs.iter = new MediaSubsessionIterator(*scs.session);
     scs.subsession = scs.iter->next();
     while (scs.subsession != NULL) {
@@ -216,7 +217,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       rs2_video_stream videoStream;
       videoStream.width = width;
       videoStream.height = height;
-      videoStream.uid = stream_counter;
+      videoStream.uid = camOERTSPClient::stream_counter;
     
       std::string url_str = rtspClient->url();
       // Remove last "/"
@@ -242,7 +243,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
 
       // TODO: update width and height in subsession?
       ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, MediaSubsession*>(videoStream.uid, scs.subsession));
-      stream_counter++;
+      camOERTSPClient::stream_counter++;
       ((camOERTSPClient*)rtspClient)->supportedProfiles.push_back(videoStream);
       scs.subsession = scs.iter->next();
       // TODO: when to delete p?
@@ -291,6 +292,8 @@ void camOERTSPClient::continueAfterTEARDOWN(RTSPClient* rtspClient, int resultCo
   UsageEnvironment& env = rtspClient->envir(); // alias
   env << "continueAfterTEARDOWN " << resultCode << " " << resultString <<"\n";
   ((camOERTSPClient*)rtspClient)->commandResultCode = resultCode;
+  // In order to start the next UID from 0
+  camOERTSPClient::stream_counter = 0;
   {
     std::lock_guard<std::mutex> lck(command_mtx);
     cammand_done = true;
