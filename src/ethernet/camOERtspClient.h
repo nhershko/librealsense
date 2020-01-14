@@ -47,12 +47,13 @@ public:
   static void subsessionAfterPlaying(void* clientData); // called when a stream's subsession (e.g., audio or video substream) ends
   static void subsessionByeHandler(void* clientData, char const* reason);
 
-
 private:
     camOERTSPClient(UsageEnvironment& env, char const* rtspURL,
 		int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum);
     // called only by createNew();
     virtual ~camOERTSPClient();
+    static int stream_counter;
+
     // TODO: should we have seperate mutex for each command?
     //std::condition_variable cv;
     //std::mutex command_mtx;
