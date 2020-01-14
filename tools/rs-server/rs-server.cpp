@@ -80,7 +80,7 @@ int main(int argc, char **argv)
                                                           "Session streamed by \"realsense streamer\"",
                                                           True);
     }
-    else
+    else if(sensorIndex==1)
     {
        sms = RsServerMediaSession::createNew(*env,sensor, "color"/*sensor.get_sensor_name().data()*/, "",
                                                           "Session streamed by \"realsense streamer\"",
