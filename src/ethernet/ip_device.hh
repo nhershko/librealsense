@@ -63,7 +63,7 @@ class ip_device
 
         void inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream);
 
-        void update_sensor_stream(int sensor_index,std::vector<rs2::stream_profile> updated_streams);
+        void update_sensor_state(int sensor_index,std::vector<rs2::stream_profile> updated_streams);
 
         // sensors
         rs2::software_sensor* sensors[SENSORS_NUMBER];

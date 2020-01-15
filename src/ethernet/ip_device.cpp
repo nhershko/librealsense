@@ -127,7 +127,7 @@ void ip_device::polling_state_loop()
                 if (active_stream_per_sensor[i] != current_active_streams.size())
                 {
                     std::cout<<"\t@@@ sensor: " << i << " active streams has changed.\n\n\n";
-                    update_sensor_stream(i,current_active_streams);
+                    update_sensor_state(i,current_active_streams);
                     active_stream_per_sensor[i] = current_active_streams.size();
                 }
                 else
@@ -145,7 +145,7 @@ void ip_device::polling_state_loop()
 
 }
 
-void ip_device::update_sensor_stream(int sensor_index,std::vector<rs2::stream_profile> updated_streams)
+void ip_device::update_sensor_state(int sensor_index,std::vector<rs2::stream_profile> updated_streams)
 {
     //check if need to close all
     if(updated_streams.size()==0)

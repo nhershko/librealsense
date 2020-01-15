@@ -93,11 +93,6 @@ Boolean camOESink::continuePlaying() {
   return True;
 }
 
-void camOESink::setFrameCallback(frame_call_back callback)
-{
-  fFrameCallBack = callback;
-}
-
 void camOESink::set_callback(rtp_callback* callback)
 {
   this->m_rtp_callback = callback;
