@@ -6,14 +6,18 @@
 #include "camOERtspClient.h"
 #include "software-device.h"
 
+#include "rtp_stream.hh"
+
 #include "IdecompressFrame.h"
 #include "decompressFrameFactory.h"
 
-#include "rtp_callback.hh"
+#include "rs_rtp_callback.hh"
 
 #define MAX_ACTIVE_STREAMS 4
 
 #define SENSORS_NUMBER 2
+
+
 
 class ip_device
     {
@@ -35,13 +39,15 @@ class ip_device
 
         std::map<int, int> active_stream_per_sensor;
 
-        std::queue<Tmp_Frame*> frame_queues[MAX_ACTIVE_STREAMS];
+        std::map<int, std::list<int>> streams_uid_per_sensor;
 
-        std::mutex queue_locks[MAX_ACTIVE_STREAMS];
+        std::map<int, std::shared_ptr<rs_rtp_stream>> streams_collection;
+
+        std::map<int, std::thread> inject_frames_thread;
 
         IcamOERtsp* rtsp_clients[SENSORS_NUMBER] = {NULL};
 
-        rtp_callback* rtp_callbacks[MAX_ACTIVE_STREAMS];
+        rs_rtp_callback* rtp_callbacks[MAX_ACTIVE_STREAMS];
         
         rs2::software_device sw_dev;
 
@@ -49,38 +55,23 @@ class ip_device
 
         std::thread sw_device_status_check;
 
-        std::thread inject_frames_thread[MAX_ACTIVE_STREAMS];
-
-        volatile bool injected_thread_active[MAX_ACTIVE_STREAMS];
-
         ip_device(std::string ip_address, rs2::software_device sw_device);
 
         bool init_device_data();
 
         void polling_state_loop();
 
-        void inject_frames_loop(int stream_index);
+        void inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream);
 
         void update_sensor_stream(int sensor_index,std::vector<rs2::stream_profile> updated_streams);
 
         // sensors
         rs2::software_sensor* sensors[SENSORS_NUMBER];
 
-        // frame data buffers
-        rs2_software_video_frame last_frame[MAX_ACTIVE_STREAMS];
-        // pixels data 
-        std::vector<uint8_t> pixels_buff[MAX_ACTIVE_STREAMS];
-        //profiles
-        rs2::stream_profile profiles[MAX_ACTIVE_STREAMS];
-
         //rtp/rtsp protocol
 
         // => describe 
-        std::vector<rs2_video_stream> query_server_streams();
-
-        void add_frame_to_queue(Tmp_Frame* frame);
-
-        void clean_frames_queue(int stream_index);
+        std::vector<rs2_video_stream> query_streams(int sensor_id);
 
         void recover_rtsp_client(int sensor_index);
 
@@ -91,11 +82,5 @@ class ip_device
         void describe();
 */
     };
-
-
-
-
-
-
 
     //}//namespace

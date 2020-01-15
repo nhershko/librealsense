@@ -6,22 +6,7 @@
 
 FILE* myFile;
 
-void myFrameCallBack(u_int8_t* buf, unsigned int size, struct timeval presentationTime)
-{
-    std::cout << "myFrameCallBack. size = " << size << " time (sec) = " << presentationTime.tv_sec << "\n";
-    fwrite(buf, size, 1, myFile);
-}
-
-/*
-void myFrameCallBack2(unsigned char*buffer,ssize_t size, struct timeval presentationTime)
-{
-    std::cout << "myFrameCallBack. size = " << size << " time (sec) = " << presentationTime.tv_sec << "\n";
-    fwrite(buf, size, 1, myFile);
-}
-*/
-
-
-class my_callback : public rs_callback
+class my_callback : public rtp_callback
 {
 private:
 
@@ -64,13 +49,13 @@ int main()
     IcamOERtsp* camOErtspInstance2 = camOERTSPClient::getRtspClient("rtsp://10.12.144.74:8554/color", "myClient");
     //IcamOERtsp* camOErtspInstance2 = camOERTSPClient::getRtspClient("rtsp://10.12.144.35:8554/unicast", "myClient");
     std::vector<rs2_video_stream> myProfiles2;
-    ((camOERTSPClient*)camOErtspInstance2)->initFunc();
-    myProfiles2 = camOErtspInstance2->queryStreams();
-    std::cout << "Size = " << myProfiles2.size() << "\n";
-    for (int i =  0; i < myProfiles2.size(); i++)
-    {
-        std::cout << "Profile " << i << ": " << "width = " << myProfiles2[i].width << " height = " << myProfiles2[i].height << " sensor id = " << myProfiles2[i].type << " UID = " << myProfiles2[i].uid << "\n";
-    }
+    //((camOERTSPClient*)camOErtspInstance2)->initFunc();
+   // myProfiles2 = camOErtspInstance2->queryStreams();
+    //std::cout << "Size = " << myProfiles2.size() << "\n";
+    //for (int i =  0; i < myProfiles2.size(); i++)
+    //{
+    //    std::cout << "Profile " << i << ": " << "width = " << myProfiles2[i].width << " height = " << myProfiles2[i].height << " sensor id = " << myProfiles2[i].type << " UID = " << myProfiles2[i].uid << "\n";
+    //}
 
     camOErtspInstance2->addStream(myProfiles2[0],new my_callback("mycolor"));
     camOErtspInstance2->start();

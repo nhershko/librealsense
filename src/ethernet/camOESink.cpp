@@ -50,7 +50,7 @@ void camOESink::afterGettingFrame(void* clientData, unsigned frameSize, unsigned
 void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes,
 				  struct timeval presentationTime, unsigned /*durationInMicroseconds*/) {
   // We've just received a frame of data.  (Optionally) print out information about it:
-#ifdef DEBUG_PRINT_EACH_RECEIVED_FRAME
+#ifdef BLA
   if (fStreamId != NULL) envir() << "Stream \"" << fStreamId << "\"; ";
   envir() << fSubsession.mediumName() << "/" << fSubsession.codecName() << ":\tReceived " << frameSize << " bytes";
   if (numTruncatedBytes > 0) envir() << " (with " << numTruncatedBytes << " bytes truncated)";
@@ -65,7 +65,7 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 #endif
   envir() << "\n";
 #endif
-  envir() << "********* frame ************\n";
+  //envir() << "********* frame ************\n";
   //if (fFrameCallBack != NULL)
   if (this->m_rtp_callback != NULL)
   {
@@ -98,7 +98,7 @@ void camOESink::setFrameCallback(frame_call_back callback)
   fFrameCallBack = callback;
 }
 
-void camOESink::set_callback(rs_callback* callback)
+void camOESink::set_callback(rtp_callback* callback)
 {
   this->m_rtp_callback = callback;
 }
