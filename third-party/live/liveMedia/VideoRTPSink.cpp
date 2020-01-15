@@ -26,7 +26,6 @@ VideoRTPSink::VideoRTPSink(UsageEnvironment& env,
 			   char const* rtpPayloadFormatName)
   : MultiFramedRTPSink(env, rtpgs, rtpPayloadType, rtpTimestampFrequency,
 		       rtpPayloadFormatName) {
-				   env << "VideoRTPSink constructor\n";
 }
 
 VideoRTPSink::~VideoRTPSink() {

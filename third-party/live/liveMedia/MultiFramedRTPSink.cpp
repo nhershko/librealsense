@@ -53,7 +53,6 @@ MultiFramedRTPSink::MultiFramedRTPSink(UsageEnvironment& env,
 	    rtpPayloadFormatName, numChannels),
     fOutBuf(NULL), fCurFragmentationOffset(0), fPreviousFrameEndedFragmentation(False),
     fOnSendErrorFunc(NULL), fOnSendErrorData(NULL) {
-       env << "MultiFramedRTPSink constructor\n";
   setPacketSizes((RTP_PAYLOAD_PREFERRED_SIZE), (RTP_PAYLOAD_MAX_SIZE));
 }
 
@@ -157,7 +156,6 @@ void MultiFramedRTPSink::setFramePadding(unsigned numPaddingBytes) {
 Boolean MultiFramedRTPSink::continuePlaying() {
   // Send the first packet.
   // (This will also schedule any future sends.)
-  envir() << "continuePlaying\n";
   buildAndSendPacket(True);
   return True;
 }
@@ -168,7 +166,6 @@ void MultiFramedRTPSink::stopPlaying() {
   fOutBuf->resetOverflowData();
 
   // Then call the default "stopPlaying()" function:
-  envir() << "MultiFramedRTPSink ::stopPlaying\n";
   MediaSink::stopPlaying();
 }
 

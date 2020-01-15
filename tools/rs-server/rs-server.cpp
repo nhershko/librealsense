@@ -37,21 +37,12 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RsRTSPServer.hh"
 #include "RsServerMediaSession.h"
 
-int w1 = 640;//1280;
-int h1 = 480;//720;
-int w2 = 640;//1280;
-int h2 = 480;//720;
 UsageEnvironment *env;
 rs2::device selected_device;
-RsDeviceSource *devSource1;
-RsDeviceSource *devSource2;
-RawVideoRTPSink *videoSink1;
-RawVideoRTPSink *videoSink2;
 RTSPServer *rtspServer;
 RsDevice device;
 std::vector<RsSensor> sensors;
 
-void play(); // forward
 void sigint_handler(int sig);
 
 int main(int argc, char **argv)
@@ -70,46 +61,47 @@ int main(int argc, char **argv)
   }
 
   sensors = device.getSensors();
-  int sensorIndex =0;//TODO::to remove
-  for (auto sensor:sensors)
-  {   
+  int sensorIndex = 0; //TODO::to remove
+  for (auto sensor : sensors)
+  {
     RsServerMediaSession *sms;
-    if(sensorIndex==0)
+    if (sensorIndex == 0) //TODO: to move to generic exposure when host is ready
     {
-       sms = RsServerMediaSession::createNew(*env,sensor, "depth"/*sensor.get_sensor_name().data()*/, "",
-                                                          "Session streamed by \"realsense streamer\"",
-                                                          True);
+      sms = RsServerMediaSession::createNew(*env, sensor, "depth" /*sensor.get_sensor_name().data()*/, "",
+                                            "Session streamed by \"realsense streamer\"",
+                                            True);
     }
-    else if(sensorIndex==1)
+    else if (sensorIndex == 1)
     {
-       sms = RsServerMediaSession::createNew(*env,sensor, "color"/*sensor.get_sensor_name().data()*/, "",
-                                                          "Session streamed by \"realsense streamer\"",
-                                                          True);
+      sms = RsServerMediaSession::createNew(*env, sensor, "color" /*sensor.get_sensor_name().data()*/, "",
+                                            "Session streamed by \"realsense streamer\"",
+                                            True);
     }
     int index = 0;
-    for (auto stream_profile:sensor.getStreamProfiles())
+    for (auto stream_profile : sensor.getStreamProfiles())
     {
-      rs2::video_stream_profile stream=stream_profile.second;
-      //if ( stream.format() == RS2_FORMAT_Z16 || stream.format() == RS2_FORMAT_Y16 || stream.format() == RS2_FORMAT_RAW16 || stream.format() == RS2_FORMAT_YUYV)
-     
-      if (sensorIndex==0 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_Z16 && stream.fps() == 30)
+      rs2::video_stream_profile stream = stream_profile.second;
+      //TODO: expose all streams when host is ready
+      /*if ((sensorIndex == 1 || sensorIndex == 0) //don't expose IMU streams
+          && (stream.format() == RS2_FORMAT_Z16 || stream.format() == RS2_FORMAT_Y16 || stream.format() == RS2_FORMAT_RAW16 || stream.format() == RS2_FORMAT_YUYV))
       {
-        //depth_queues[index] = rs2::frame_queue(CAPACITY, true);
         sms->addSubsession(RsMediaSubsession::createNew(*env,  stream));
+      }*/
+      if (sensorIndex == 0 && stream.width() == 640 && stream.height() == 480 && stream.format() == RS2_FORMAT_Z16 && stream.fps() == 30)
+      {
+        sms->addSubsession(RsMediaSubsession::createNew(*env, stream));
       }
-      /*if (sensorIndex==0 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_RGB8 && stream.fps() == 30)
+      if (sensorIndex==0 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_RGB8 && stream.fps() == 30)
       {
          sms->addSubsession(RsMediaSubsession::createNew(*env,  stream));
-      }*/
-      if (sensorIndex==1 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_YUYV && stream.fps() == 30)
+      }
+      if (sensorIndex == 1 && stream.width() == 640 && stream.height() == 480 && stream.format() == RS2_FORMAT_YUYV && stream.fps() == 30)
       {
-        //depth_queues[index] = rs2::frame_queue(CAPACITY, true);
-        sms->addSubsession(RsMediaSubsession::createNew(*env,  stream));
-        *env << "stream added\n";
-      }       
+        sms->addSubsession(RsMediaSubsession::createNew(*env, stream));
+      }
       index++;
     }
-    
+
     rtspServer->addServerMediaSession(sms);
     char *url = rtspServer->rtspURL(sms);
     *env << "Play this stream using the URL \"" << url << "\"\n";
