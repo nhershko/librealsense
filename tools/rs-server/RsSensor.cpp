@@ -28,9 +28,9 @@ int RsSensor::open(std::unordered_map<long long int, rs2::frame_queue> &stream_p
 	{
 		m_sensor.open(requested_stream_profiles);
 	}
-	catch (...)
-	{
-		std::cerr << "unsupported combination of streams" << std::endl;
+	catch (const std::exception &e)
+    {
+		std::cerr << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
@@ -41,7 +41,7 @@ int RsSensor::start(std::unordered_map<long long int, rs2::frame_queue> &stream_
 	auto callback = [&](const rs2::frame &frame) {
 		long long int profile_key = getStreamProfileKey(frame.get_profile());
 		//check if profile exists in map:
-		
+
 		if (stream_profiles_queues.find(profile_key) != stream_profiles_queues.end())
 		{
 			//push frame to its queue
@@ -77,4 +77,3 @@ std::string RsSensor::get_sensor_name()
 		return "Unknown Sensor";
 	}
 }
-

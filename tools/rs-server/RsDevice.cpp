@@ -4,7 +4,6 @@
 RsDevice::RsDevice()
 {
 	//get LRS device
-	std::cerr << "RsCamera constructor" << std::endl;
 	// The context represents the current platform with respect to connected devices
 	rs2::context ctx;
 	rs2::device_list devices = ctx.query_devices();

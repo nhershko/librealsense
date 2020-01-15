@@ -48,7 +48,6 @@ public:
   static void subsessionAfterPlaying(void* clientData); // called when a stream's subsession (e.g., audio or video substream) ends
   static void subsessionByeHandler(void* clientData, char const* reason);
 
-
 private:
     camOERTSPClient(UsageEnvironment& env, char const* rtspURL,
 		int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum);
@@ -57,6 +56,12 @@ private:
     virtual ~camOERTSPClient();
 
     bool is_connected;
+    static int stream_counter;
+
+    // TODO: should we have seperate mutex for each command?
+    //std::condition_variable cv;
+    //std::mutex command_mtx;
+    //bool cammand_done = false;
 };
 #endif // _CAM_OE_RTSP_CLIENT_H
 

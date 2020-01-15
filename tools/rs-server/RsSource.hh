@@ -36,7 +36,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <mutex>
 #include <condition_variable>
 
-
 class RsDeviceSource : public FramedSource
 {
 public:
@@ -44,7 +43,7 @@ public:
 
 protected:
   RsDeviceSource(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile, rs2::frame_queue &queue);
-
+  virtual ~RsDeviceSource();
 private:
   virtual void doGetNextFrame();
   //virtual void doStopGettingFrames(); // optional
@@ -53,9 +52,8 @@ private:
   void deliverRSFrame(rs2::frame *frame);
 
 private:
-  rs2::frame_queue* frames_queue;
-  rs2::video_stream_profile* stream_profile;
-
+  rs2::frame_queue *frames_queue;
+  rs2::video_stream_profile *stream_profile;
 };
 
 #endif

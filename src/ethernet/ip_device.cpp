@@ -157,6 +157,8 @@ void ip_device::update_sensor_stream(int sensor_index,std::vector<rs2::stream_pr
 
         for (int uid : streams_uid_per_sensor[sensor_index]) 
         {
+            if (streams_collection[uid].get()->is_enabled==false)
+                continue;
             std::cout << "\t@@@ stopping stream uid: " << uid <<std::endl;
             streams_collection[uid].get()->is_enabled=false;
             inject_frames_thread[uid].join();

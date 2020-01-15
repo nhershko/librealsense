@@ -24,82 +24,76 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #define CAPACITY 100
 
-
-RsMediaSubsession* RsMediaSubsession::createNew(UsageEnvironment& env,  rs2::video_stream_profile &video_stream_profile/*, rs2::frame_queue &queue*/)
+RsMediaSubsession *RsMediaSubsession::createNew(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile /*, rs2::frame_queue &queue*/)
 {
-  return new RsMediaSubsession(env, video_stream_profile/*, queue*/);
+  return new RsMediaSubsession(env, video_stream_profile /*, queue*/);
 }
 
-RsMediaSubsession
-::RsMediaSubsession(UsageEnvironment& env, rs2::video_stream_profile &video_stream_profile/*, rs2::frame_queue &queue*/)
-  : OnDemandServerMediaSubsession(env, false),videoStreamProfile(video_stream_profile)/*,frameQueue(queue)*/
+RsMediaSubsession ::RsMediaSubsession(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile /*, rs2::frame_queue &queue*/)
+    : OnDemandServerMediaSubsession(env, false), videoStreamProfile(video_stream_profile) /*,frameQueue(queue)*/
 {
-  envir() << "RsMediaSubsession constructor \n";
+  envir() << "RsMediaSubsession constructor" <<this << "\n";
   frameQueue = rs2::frame_queue(CAPACITY, true);
 }
 
 RsMediaSubsession::~RsMediaSubsession() {
-  envir() << "RsMediaSubsession destructor \n";
+  envir() << "RsMediaSubsession destructor" <<this << "\n";
     //TODO:: free the queue
 }
 
-rs2::frame_queue& RsMediaSubsession::get_frame_queue()
+rs2::frame_queue &RsMediaSubsession::get_frame_queue()
 {
-   envir() << "RsMediaSubsession get_frame_queue \n";
   return frameQueue;
 }
 
- rs2::video_stream_profile RsMediaSubsession::get_stream_profile()
- {
-   return videoStreamProfile;
- }
-
-FramedSource* RsMediaSubsession::createNewStreamSource(unsigned /*clientSessionId*/, unsigned& estBitrate) {
-  estBitrate = 5000; // kbps, estimate //TODO:: to calculate the right value
-  envir() << "RsMediaSubsession createNewStreamSource \n";
-  return RsDeviceSource::createNew(envir(), videoStreamProfile, frameQueue); 
+rs2::video_stream_profile RsMediaSubsession::get_stream_profile()
+{
+  return videoStreamProfile;
 }
 
-RTPSink* RsMediaSubsession
-::createNewRTPSink(Groupsock* rtpGroupsock,
-		   unsigned char rtpPayloadTypeIfDynamic,
-		   FramedSource* /*inputSource*/) {
-  envir() << "RsMediaSubsession createNewRTPSink \n";
+FramedSource *RsMediaSubsession::createNewStreamSource(unsigned /*clientSessionId*/, unsigned &estBitrate)
+{
+  estBitrate = 5000; // kbps, estimate //TODO:: to calculate the right value
+  return RsDeviceSource::createNew(envir(), videoStreamProfile, frameQueue);
+}
 
+RTPSink *RsMediaSubsession ::createNewRTPSink(Groupsock *rtpGroupsock,
+                                              unsigned char rtpPayloadTypeIfDynamic,
+                                              FramedSource * /*inputSource*/)
+{
   switch (videoStreamProfile.format())
-  {            
-  case  RS2_FORMAT_RGB8: 
   {
-      pixelSize = 3;
-      return  RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "RGB");         
-  }           
-  case  RS2_FORMAT_BGR8: 
+  case RS2_FORMAT_RGB8:
   {
     pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "BGR");          
+    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "RGB");
   }
-  case  RS2_FORMAT_RGBA8:  
+  case RS2_FORMAT_BGR8:
   {
     pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "RGBA");       
-  }         
-  case  RS2_FORMAT_BGRA8: 
+    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "BGR");
+  }
+  case RS2_FORMAT_RGBA8:
   {
     pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "BGRA");        
-  }       
-  case  RS2_FORMAT_Z16:   
-  case  RS2_FORMAT_Y16:             
-  case  RS2_FORMAT_RAW16:          
-  case  RS2_FORMAT_YUYV:  
+    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "RGBA");
+  }
+  case RS2_FORMAT_BGRA8:
   {
-      pixelSize = 2;
-      return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "YCbCr-4:2:2");         
+    pixelSize = 3;
+    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "BGRA");
+  }
+  case RS2_FORMAT_Z16:
+  case RS2_FORMAT_Y16:
+  case RS2_FORMAT_RAW16:
+  case RS2_FORMAT_YUYV:
+  {
+    pixelSize = 2;
+    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "YCbCr-4:2:2");
   }
   default:
-     pixelSize = 0;
-     break;
-  }    
+    pixelSize = 0;
+    break;
+  }
   return NULL;
 }
-

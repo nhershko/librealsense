@@ -29,26 +29,25 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "RsSource.hh"
 
-
-
-class RsMediaSubsession: public OnDemandServerMediaSubsession {
-  public:
-   static RsMediaSubsession* createNew(UsageEnvironment& env,   rs2::video_stream_profile &video_stream_profile/*, rs2::frame_queue &queue*/);
-   rs2::frame_queue& get_frame_queue();
+class RsMediaSubsession : public OnDemandServerMediaSubsession
+{
+public:
+   static RsMediaSubsession *createNew(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile /*, rs2::frame_queue &queue*/);
+   rs2::frame_queue &get_frame_queue();
    rs2::video_stream_profile get_stream_profile();
-protected: // we're a virtual base class
-  RsMediaSubsession(UsageEnvironment& env,   rs2::video_stream_profile &video_stream_profile/*, rs2::frame_queue &queue*/);//rs2::stream_profile* stream);
-  virtual ~RsMediaSubsession();
-  virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
-					      unsigned& estBitrate);
-  virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,
-                                    unsigned char rtpPayloadTypeIfDynamic,
-				    FramedSource* inputSource);
 
+protected:                                                                                                                  // we're a virtual base class
+   RsMediaSubsession(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile /*, rs2::frame_queue &queue*/); //rs2::stream_profile* stream);
+   virtual ~RsMediaSubsession();
+   virtual FramedSource *createNewStreamSource(unsigned clientSessionId,
+                                               unsigned &estBitrate);
+   virtual RTPSink *createNewRTPSink(Groupsock *rtpGroupsock,
+                                     unsigned char rtpPayloadTypeIfDynamic,
+                                     FramedSource *inputSource);
 
 private:
    rs2::video_stream_profile videoStreamProfile;
    rs2::frame_queue frameQueue;
    int pixelSize;
 };
-#endif//_RS_MEDIA_SUBSESSION_HH
+#endif //_RS_MEDIA_SUBSESSION_HH

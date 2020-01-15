@@ -23,60 +23,73 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "RsServerMediaSession.h"
 
-
 ////////// ServerMediaSession //////////
 
-RsServerMediaSession* RsServerMediaSession
-::createNew(UsageEnvironment& env, RsSensor& sensor,
-	    char const* streamName, char const* info,
-	    char const* description, Boolean isSSM, char const* miscSDPLines) {
+RsServerMediaSession *RsServerMediaSession ::createNew(UsageEnvironment &env, RsSensor &sensor,
+                                                       char const *streamName, char const *info,
+                                                       char const *description, Boolean isSSM, char const *miscSDPLines)
+{
   return new RsServerMediaSession(env, sensor, streamName, info, description,
-				isSSM, miscSDPLines);
+                                  isSSM, miscSDPLines);
 }
 
+static char const *const libNameStr = "LIVE555 Streaming Media v";
+char const *const libVersionStr = LIVEMEDIA_LIBRARY_VERSION_STRING;
 
-static char const* const libNameStr = "LIVE555 Streaming Media v";
-char const* const libVersionStr = LIVEMEDIA_LIBRARY_VERSION_STRING;
-
-RsServerMediaSession::RsServerMediaSession(UsageEnvironment& env,
-               RsSensor& sensor,
-				       char const* streamName,
-				       char const* info,
-				       char const* description,
-				       Boolean isSSM, char const* miscSDPLines)
-  : ServerMediaSession(env,streamName,info,description,isSSM,miscSDPLines),rsSensor(sensor) {
-    envir() << "RsServerMediaSession constructor \n";
+RsServerMediaSession::RsServerMediaSession(UsageEnvironment &env,
+                                           RsSensor &sensor,
+                                           char const *streamName,
+                                           char const *info,
+                                           char const *description,
+                                           Boolean isSSM, char const *miscSDPLines)
+    : ServerMediaSession(env, streamName, info, description, isSSM, miscSDPLines), rsSensor(sensor), isActive(false)
+{
 }
 
-RsServerMediaSession::~RsServerMediaSession() {
-  envir() << "RsServerMediaSession destructor \n";
+RsServerMediaSession::~RsServerMediaSession()
+{
   //TODO:: to check if i need to delete rsSensor
 }
 
-
-int RsServerMediaSession::openRsCamera( std::unordered_map<long long int, rs2::frame_queue> &streamProfiles)
+int RsServerMediaSession::openRsCamera(std::unordered_map<long long int, rs2::frame_queue> &streamProfiles)
 {
-    envir() << "openRsCamera  \n";
-    int status = rsSensor.open(streamProfiles);
+  if (isActive)
+  {
+    envir()<< "sensor is already open, closing sensor and than open again...\n";
+    closeRsCamera();
+  }
+  int status = rsSensor.open(streamProfiles);
+  if (status == EXIT_SUCCESS)
+  {
+    status = rsSensor.start(streamProfiles);
     if (status == EXIT_SUCCESS)
     {
-      return rsSensor.start(streamProfiles);
+      isActive = true;
     }
-    else
-    {
-      return status;
-    }    
+  }
+  return status;
 }
 
-void RsServerMediaSession::closeRsCamera()
+int RsServerMediaSession::closeRsCamera()
 {
-    envir() << "closeRsCamera  \n";
-    rsSensor.getRsSensor().stop();
-    rsSensor.getRsSensor().close();
+  if (isActive)
+  {
+    isActive = false;
+    try
+    {
+      rsSensor.getRsSensor().stop();
+      rsSensor.getRsSensor().close();
+    }
+    catch (const std::exception &e)
+    {
+      envir() << e.what() << '\n';
+      return EXIT_FAILURE;
+    }
+  }
+  return EXIT_SUCCESS;
 }
 
-
-RsSensor& RsServerMediaSession::getRsSensor()
+RsSensor &RsServerMediaSession::getRsSensor()
 {
   return rsSensor;
 }
