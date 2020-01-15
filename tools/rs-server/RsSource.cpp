@@ -88,7 +88,7 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
       iCompressDepth->compressDepthFrame((unsigned char*)frame->get_data(), fFrameSize, fTo);
    } else if(stream_profile->stream_type() == RS2_STREAM_COLOR) 
    {
-      iCompressColor->compressColorFrame((unsigned char*)frame->get_data(), fFrameSize, fTo,stream_profile->width, fTo,stream_profile->height);
+      iCompressColor->compressColorFrame((unsigned char*)frame->get_data(), fFrameSize, fTo,stream_profile->width(),stream_profile->height());
    } else {
 #endif
     //envir() << "got new frame: frame size is " << fFrameSize <<  "stream type is is " << stream_profile->stream_type() << "stream resolution is" <<  stream_profile->width() << "," << stream_profile->height() << "\n";
