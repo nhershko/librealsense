@@ -6,6 +6,6 @@
 class compressFrameJpeg :public IcompressFrame 
 {
     public: 
-        int compressColorFrame(unsigned char* buffer, int size, unsigned char* compressedBuf);
+        int compressColorFrame(unsigned char* buffer, int size, unsigned char* compressedBuf, int width, int height);
         int compressDepthFrame(unsigned char* buffer, int size, unsigned char* compressedBuf){};
 };

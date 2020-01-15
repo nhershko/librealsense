@@ -134,7 +134,7 @@ void RsDeviceSource::deliverRSFrame()
       iCompressDepth->compressDepthFrame(fbuf, fFrameSize, fTo);
    } else if(fParams.sensorID == 1) 
    {
-      iCompressColor->compressColorFrame(fbuf, fFrameSize, fTo);
+      iCompressColor->compressColorFrame(fbuf, fFrameSize, fTo, fParams.w, fParams.h);
    } else {
 #endif
        memmove(fTo, fbuf, 640*480*2);

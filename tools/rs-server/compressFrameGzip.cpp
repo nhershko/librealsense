@@ -25,12 +25,12 @@ int compressFrameGzip::compressDepthFrame(unsigned char* buffer, int size, unsig
 	assert(z_result == Z_STREAM_END);
 	deflateEnd(&strm);
 	unsigned int compressedSize = strm.total_out;
-	//printf("finish compression with GZIP, full size: %u, compressed size: %lu\n",size, compressedSize );	
+	printf("finish depth compression with GZIP, full size: %u, compressed size: %lu\n",size, compressedSize );	
 	memcpy(compressedBuf, &compressedSize, sizeof(unsigned int));
 	return compressedSize;
 }
 
-int compressFrameGzip::compressColorFrame(unsigned char* buffer, int size, unsigned char* compressedBuf)
+int compressFrameGzip::compressColorFrame(unsigned char* buffer, int size, unsigned char* compressedBuf, int width, int height)
 {
 	compressDepthFrame(buffer, size, compressedBuf);
 }
