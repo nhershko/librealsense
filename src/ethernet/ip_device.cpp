@@ -1,10 +1,26 @@
 #include "ip_device.hh"
 #include <librealsense2/rs.hpp>
 
-// michalpr - remove this. this is a workaround until callback branch will be merged
-void ipDeviceFrameCallBack(u_int8_t* buf, unsigned int size, struct timeval presentationTime)
+void ip_device_deleter(void* p) 
 {
-    std::cout << "myFrameCallBack. size = " << size << " time (sec) = " << presentationTime.tv_sec << "\n";
+
+}
+
+//WA for stop
+void ip_device::recover_rtsp_client(int sensor_index)
+{
+    std::cout <<"\t@@@ do second init for rtsp client\n";
+
+    if(sensor_index==0)
+    {
+        rtsp_clients[0] = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/depth").c_str(),"ethernet_device");
+	}
+    else if (sensor_index==1)
+    {
+        rtsp_clients[1] = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/color").c_str(),"ethernet_device");
+	}
+    ((camOERTSPClient*)rtsp_clients[sensor_index])->initFunc();
+    std::cout <<"\t@@@ done\n";
 }
 
 ip_device::~ip_device()
@@ -20,11 +36,10 @@ ip_device::ip_device(std::string ip_address, rs2::software_device sw_device)
     this->sw_dev = sw_device;
     this->is_device_alive = true;
 
-    rtsp_clients[rs2_stream::RS2_STREAM_DEPTH-1] = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/depth").c_str(),"ethernet_device");
-	((camOERTSPClient*)rtsp_clients[rs2_stream::RS2_STREAM_DEPTH-1])->initFunc();
-    rtsp_clients[rs2_stream::RS2_STREAM_COLOR-1] = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/color").c_str(),"ethernet_device");
-	((camOERTSPClient*)rtsp_clients[rs2_stream::RS2_STREAM_COLOR-1])->initFunc();
-    
+    #ifdef COMPRESSION
+	idecomress = decompressFrameFactory::create(zipMethod::gzip);
+    #endif
+
     //init device data
     init_device_data();
 
@@ -32,57 +47,69 @@ ip_device::ip_device(std::string ip_address, rs2::software_device sw_device)
     this->sw_device_status_check = std::thread(&ip_device::polling_state_loop,this);
 }
 
-std::vector<rs2_video_stream> ip_device::query_server_streams()
+std::vector<rs2_video_stream> ip_device::query_streams(int sensor_id)
 {
-    std::cout << "Querry Sensors\n";
+    std::cout << "\n\n\nQuerry Sensors\n\n\n";
 	std::vector<rs2_video_stream> streams;
 
-	int stream_uid=0;
-	for (size_t i = 0; i < SENSORS_NUMBER; i++)
-	{
-		if (rtsp_clients[i]==NULL)
-			continue;
-		std::vector<rs2_video_stream> sensor_streams = rtsp_clients[i]->queryStreams();
-		for (size_t j = 0; j < sensor_streams.size() ; j++)
-		{
-		sensor_streams[j].uid = stream_uid;
-		streams.insert(streams.end(),sensor_streams[j]);
-		stream_uid++;
-        }
-	}
+    if (rtsp_clients[sensor_id]==NULL)
+			return streams;
+    
+    //workaround 
+    if(!((camOERTSPClient*)rtsp_clients[sensor_id])->isConnected())
+            recover_rtsp_client(sensor_id);
+    
+    streams = rtsp_clients[sensor_id]->queryStreams();
+
+    std::cout <<"\t@@@ got " << streams.size() <<std::endl;
+    
     return streams;
 }
 
+int stream_id=0;
 bool ip_device::init_device_data()
 {
-    //TODO: getting streams per sensor
-    auto streams = query_server_streams();
-
-    for (size_t i = 0; i < streams.size(); i++)
-	{
-		rs2_video_stream st = streams[i];//rtsp_stream_to_rs_video_stream(streams.front());
-
-        std::string sensor_name;
-        if (st.type==RS2_STREAM_DEPTH)
-			sensor_name = "Depth (Remote)";
-        else 
+    std::string url,sensor_name;
+    for (int sensor_id = 0; sensor_id < SENSORS_NUMBER; sensor_id++)
+    {
+        if(sensor_id==0)
+        {
+            url = std::string("rtsp://" + ip_address + ":8554/depth");
+            sensor_name = "Depth (Remote)";
+        }
+        else if (sensor_id==1)
+        {
+            url = std::string("rtsp://" + ip_address + ":8554/color");
             sensor_name = "Color (Remote)";
-			
-        rs2::software_sensor tmp_sensor= sw_dev.add_sensor(sensor_name);
+        }
 
-        rs2::stream_profile profile = tmp_sensor.add_video_stream(st,i==0);
+        rtsp_clients[sensor_id] = camOERTSPClient::getRtspClient(url.c_str(),"ip_device_device");
+	    ((camOERTSPClient*)rtsp_clients[sensor_id])->initFunc();
 
-		last_frame[i].bpp = st.bpp;
-		last_frame[i].profile = profile;
-		last_frame[i].stride = st.bpp * st.width;
-		pixels_buff[i].resize(last_frame[i].stride * st.height, 0);
-		last_frame[i].pixels = pixels_buff[i].data();
-		last_frame[i].deleter = {};//&ethernet_device_deleter;
-		
-		//quese array is 0 based so setting type -1 as address
-		//inject_threads[i] = std::thread(&rs2::ethernet_device::pull_from_queue,this,available_streams[i].type-1);
-	}
-    
+        std::cout << "\t@@@ adding new sensor of type id: " << sensor_id << std::endl;
+
+        rs2::software_sensor tmp_sensor = sw_dev.add_sensor(sensor_name);
+        sensors[sensor_id] = new rs2::software_sensor(tmp_sensor);
+
+        auto streams = query_streams(sensor_id);
+
+        std::cout << "\t@@@ got " << streams.size() << " streams per sensor " << sensor_id << std::endl;
+
+        for (int stream_index = 0; stream_index < streams.size(); stream_index++)
+        {
+            // just for readable code
+            rs2_video_stream st = streams[stream_index];
+
+            std::cout << "\t@@@ add stream uid: "  << st.uid <<" at sensor: " << sensor_id << std::endl;
+            
+            //nhershko: check why profile with type 0
+            streams_collection[st.uid] = std::make_shared<rs_rtp_stream>(st,sensors[sensor_id]->add_video_stream(st,stream_index==0));
+            
+            std::cout << "\t@@@ added stream uid: "  << st.uid <<" of type: " << streams_collection[st.uid].get()->stream_type() << std::endl;
+            streams_uid_per_sensor[sensor_id].push_front(st.uid);
+        }
+        std::cout << "\t@@@ done adding streams for sensor ID: " << sensor_id <<std::endl;
+    }
     return true;
 }
 
@@ -92,20 +119,21 @@ void ip_device::polling_state_loop()
         {
             //TODO: consider using sensor id as vector id (indexer)
             std::vector<rs2::sensor> sensors = this->sw_dev.query_sensors();
+            //for eahc sensor check the size of active streams
             for (size_t i = 0; i < sensors.size(); i++)
             {
                 auto current_active_streams = sensors[i].get_active_streams();
+                
                 if (active_stream_per_sensor[i] != current_active_streams.size())
                 {
-                    std::cout<<"sensor: " << i << " active streams has changed.\n";
-                    update_sensor_stream(i,current_active_streams);
+                    std::cout<<"\t@@@ sensor: " << i << " active streams has changed.\n\n\n";
+                    update_sensor_state(i,current_active_streams);
                     active_stream_per_sensor[i] = current_active_streams.size();
                 }
                 else
                 {
-
+                    //std::cout<<"sensor: " << i << " have not changed.\n";
                 }
-
             }
             
             usleep(1000);
@@ -117,24 +145,72 @@ void ip_device::polling_state_loop()
 
 }
 
-void ip_device::update_sensor_stream(int sensor_index,std::vector<rs2::stream_profile> updated_streams)
+void ip_device::update_sensor_state(int sensor_index,std::vector<rs2::stream_profile> updated_streams)
 {
-    for (size_t i = 0; i < updated_streams.size(); i++)
+    //check if need to close all
+    if(updated_streams.size()==0)
     {
         
+        std::cout <<"\t@@@ removing all streams for sensor index: " << sensor_index <<std::endl;
+        rtsp_clients[sensor_index]->stop();
+        rtsp_clients[sensor_index]->close();
+
+        for (int uid : streams_uid_per_sensor[sensor_index]) 
+        {
+            if (streams_collection[uid].get()->is_enabled==false)
+                continue;
+            std::cout << "\t@@@ stopping stream uid: " << uid <<std::endl;
+            streams_collection[uid].get()->is_enabled=false;
+            inject_frames_thread[uid].join();
+        }
+        return;
+    }
+
+
+    std::cout <<"\t@@@ got new " <<updated_streams.size() << " streams to enable.\n";
+    for (size_t i = 0; i < updated_streams.size(); i++)
+    {
         rs2::video_stream_profile vst(updated_streams[i]);
+
+        if(streams_collection.find(vst.unique_id()) == streams_collection.end())
+        {
+            std::cout<<"\n\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
+            std::cout<< "\t@@@ stream with uid: " << vst.unique_id() << " was not found! adding new stream" << std::endl;
+            std::cout<<"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n\n\n";
+        }
+
+        //streams_collection[vst.unique_id()].get()->is_enabled=true;
+        //vst.unique_id
+        /*
         rs2_video_stream st;
         st.fps = vst.fps();
         st.fmt = vst.format();
         st.type = vst.stream_type();
         st.width = vst.width();
         st.height = vst.height();
+        st.uid = vst.unique_id();
+        */
 
-        std::cout << "Starting new stream" << st.type << "  " << st.fps << "\n" ;
+        std::cout<< "\t@@@ starting new stream with uid: " << vst.unique_id() << " of type: " << vst.stream_type()  << std::endl;
+
+        //temporary nhershko workaround for start after stop
+        if(!((camOERTSPClient*)rtsp_clients[sensor_index])->isConnected())
+        {
+            recover_rtsp_client(sensor_index);
+            //st = rtsp_clients[sensor_index]->queryStreams()[0];
+        }
+
+        rtp_callbacks[vst.unique_id()] = 
+            new rs_rtp_callback(streams_collection[vst.unique_id()]);
         
-        rtsp_clients[sensor_index]->addStream(st, &ipDeviceFrameCallBack);
-        rtsp_clients[sensor_index]->start();
+        rtsp_clients[sensor_index]->addStream(streams_collection[vst.unique_id()].get()->m_rs_stream ,rtp_callbacks[vst.unique_id()]);
+        
+        std::cout << "\t@@@ initiate new thread for stream: " << vst.unique_id() << "\n";    
+        inject_frames_thread[vst.unique_id()] = std::thread(&ip_device::inject_frames_loop,this,streams_collection[vst.unique_id()]);
     }
+
+    rtsp_clients[sensor_index]->start();
+    std::cout << "stream started for sensor index: " << sensor_index << "  \n";
 }
 
 rs2::software_device ip_device::create_ip_device(std::string ip_address)
@@ -151,6 +227,58 @@ rs2::software_device ip_device::create_ip_device(std::string ip_address)
     return sw_dev;
 }
 
+void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
+{
+
+    rtp_stream.get()->is_enabled=true;
+    int uid = rtp_stream.get()->m_rs_stream.uid;
+    rs2_stream type = rtp_stream.get()->m_rs_stream.type;
+    
+    while (rtp_stream.get()->is_enabled==true)
+    {
+        if (rtp_stream.get()->queue_size()==0) 
+        {
+	        
+		} 
+        else 
+        {				
+            //std:: cout <<"\t@@@ get frame of stream uid "<< uid << "type: " << type << std::endl;
+            Tmp_Frame* frame = rtp_stream.get()->extract_frame();
+            //std:: cout <<"\t@@@ got the frame"<<std::endl;
+
+#ifdef COMPRESSION			
+            //check if depth image
+			if (type==rs2_stream::RS2_STREAM_DEPTH) 
+            {
+				// depth
+                //std:: cout <<"\t@@@ before com the frame"<<std::endl;
+				idecomress->decompressDepthFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(rtp_stream.get()->frame_data_buff.pixels));
+                //std:: cout <<"\t@@@ after com the frame"<<std::endl;
+			} else if(type==rs2_stream::RS2_STREAM_COLOR) {
+				// other -> color
+#endif
+                //std:: cout <<"\t@@@ color frame"<<std::endl;
+				memcpy(rtp_stream.get()->frame_data_buff.pixels, frame->m_buffer, frame->m_size);
+#ifdef COMPRESSION
+			}
+            else 
+            {
+                std::cerr <<" BAD type"<<std::endl;
+                exit(-1);
+            }
+#endif
+			rtp_stream.get()->frame_data_buff.timestamp = frame->m_timestamp.tv_sec;
+			rtp_stream.get()->frame_data_buff.frame_number++;
+            
+            sensors[type-1]->on_video_frame(rtp_stream.get()->frame_data_buff);
+            //std::cout<<"added frame from type " << uid << "to sensor ptr " << sensors[rtp_stream.get()->stream_type()-1] << " \n";
+        }
+	}
+
+    rtp_stream.get()->reset_queue();
+    std::cout<<"polling data at stream index " << rtp_stream.get()->m_rs_stream.uid <<" is done\n";
+
+}
 
     //3. get sensors and streams
     /*

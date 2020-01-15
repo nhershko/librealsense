@@ -93,6 +93,8 @@ int main(int argc, char **argv)
       }
       if (sensorIndex==0 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_RGB8 && stream.fps() == 30)
       {
+
+        *env << "\n\n\n\nstream added\n";        
          sms->addSubsession(RsMediaSubsession::createNew(*env,  stream));
       }
       if (sensorIndex == 1 && stream.width() == 640 && stream.height() == 480 && stream.format() == RS2_FORMAT_YUYV && stream.fps() == 30)

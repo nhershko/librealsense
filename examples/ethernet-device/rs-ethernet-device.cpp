@@ -5,7 +5,8 @@
 #include <librealsense2/hpp/rs_internal.hpp>
 #include "example.hpp"
 
-#include <ethernet/ethernet-device.h>
+//#include <ethernet/ethernet-device.h>
+#include <ethernet/ip_device.hh>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
@@ -116,6 +117,25 @@ private:
 int main(int argc, char * argv[]) try
 {
     std::string address = argv[1];
+
+    rs2::software_device dev = ip_device::create_ip_device(address);
+
+    auto sensors = dev.query_sensors();
+
+    rs2::syncer sync;
+
+
+    int i =0;
+    //for (size_t i = 0; i < sensors.size(); i++)
+    //{
+        sensors[i].open(sensors[i].get_stream_profiles()[0]);
+        sensors[i].start(sync);
+        sleep(5);
+        sensors[i].stop();
+        sleep(5);
+    //}
+
+    /*
     //CI agent address
 	rs2::ethernet_device dev(address); // Create software-only device
 	//auto sensors = dev.query_sensors();
