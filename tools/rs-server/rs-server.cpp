@@ -77,6 +77,11 @@ int main(int argc, char **argv)
                                             "Session streamed by \"realsense streamer\"",
                                             True);
     }
+    else
+    {
+      break;
+    }
+    
     int index = 0;
     for (auto stream_profile : sensor.getStreamProfiles())
     {
