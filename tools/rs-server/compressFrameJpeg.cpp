@@ -1,15 +1,11 @@
 #pragma once
 
-#include <cassert>
 #include <iostream>
 #include <cstdint>
 #include <cstring>
 #include "compressFrameJpeg.h"
 #include <stdio.h>
 #include "jpeglib.h"
-
-int image_counter = 0;
-int client_image_counter = 0;
 
 int compressFrameJpeg::compressColorFrame(unsigned char* buffer, int size, unsigned char* compressedBuf, int width, int height)
 {	
@@ -18,10 +14,11 @@ int compressFrameJpeg::compressColorFrame(unsigned char* buffer, int size, unsig
 	JSAMPROW row_pointer[1];
 	int row_stride;
 	cinfo.err = jpeg_std_error(&jerr);
-	jpeg_create_compress(&cinfo);
 	uint64_t compressedSize = 0;
 	unsigned char * data;
 	int bpp = size/(width*height);
+
+	jpeg_create_compress(&cinfo);
 	jpeg_mem_dest(&cinfo, &data, &compressedSize);
 	cinfo.image_width = width;
 	cinfo.image_height = height;
