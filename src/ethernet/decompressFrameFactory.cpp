@@ -6,6 +6,7 @@
 #include <zlib.h>
 #include "decompressFrameRVL.h"
 #include "decompressFrameGzip.h"
+#include "decompressFrameJpeg.h"
 #include "decompressFrameFactory.h"
 
 IdecompressFrame* decompressFrameFactory::create(zipMethod  zipMeth)
@@ -18,6 +19,9 @@ IdecompressFrame* decompressFrameFactory::create(zipMethod  zipMeth)
 		case zipMethod::rvl:
 			return new decompressFrameRVL();
 			break;
+		case zipMethod::Jpeg:
+			return new decompressFrameJpeg();
+			break;		
 		default:
 			printf("unknown zip method\n");
 			return nullptr;
