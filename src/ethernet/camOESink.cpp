@@ -14,21 +14,22 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession, int buf
   fStreamId = strDup(streamId);
   fBufferSize = bufferSize;
   fReceiveBuffer = new u_int8_t[bufferSize];
-  #if WRITE_FRAMES_TO_FILE
-    std::string url_str = fStreamId;
-    // Remove last "/"
-    url_str = url_str.substr(0, url_str.size()-1);
-    std::size_t stream_name_index = url_str.find_last_of("/") + 1;
-    std::string stream_name = url_str.substr(stream_name_index, url_str.size());
-    if (stream_name.compare("depth") == 0)
-    {
-      fp = fopen("file_depth.bin", "ab");
-    }
-    else if((stream_name.compare("color") == 0))
-    {
-      fp = fopen("file_rgb.bin", "ab");
-    }
-  #endif
+  std::string url_str = fStreamId;
+  // Remove last "/"
+  url_str = url_str.substr(0, url_str.size()-1);
+  std::size_t stream_name_index = url_str.find_last_of("/") + 1;
+  std::string stream_name = url_str.substr(stream_name_index, url_str.size());
+  /*if (stream_name.compare("depth") == 0)
+  {
+    fp = fopen("file_depth.bin", "ab");
+  }
+  else if((stream_name.compare("color") == 0))
+  {
+    fp = fopen("file_rgb.bin", "ab");
+  }*/
+
+  envir() << "create new sink";
+
 }
 
 camOESink::~camOESink() {
@@ -44,12 +45,12 @@ void camOESink::afterGettingFrame(void* clientData, unsigned frameSize, unsigned
 }
 
 // If you don't want to see debugging output for each received frame, then comment out the following line:
-#define DEBUG_PRINT_EACH_RECEIVED_FRAME 1
+#define DEBUG_PRINT_EACH_RECEIVED_FRAME 0
 
 void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes,
 				  struct timeval presentationTime, unsigned /*durationInMicroseconds*/) {
   // We've just received a frame of data.  (Optionally) print out information about it:
-#ifdef DEBUG_PRINT_EACH_RECEIVED_FRAME
+#ifdef BLA
   if (fStreamId != NULL) envir() << "Stream \"" << fStreamId << "\"; ";
   envir() << fSubsession.mediumName() << "/" << fSubsession.codecName() << ":\tReceived " << frameSize << " bytes";
   if (numTruncatedBytes > 0) envir() << " (with " << numTruncatedBytes << " bytes truncated)";
@@ -64,10 +65,11 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 #endif
   envir() << "\n";
 #endif
-  envir() << "********* frame ************\n";
-  if (fFrameCallBack != NULL)
+  //envir() << "********* frame ************\n";
+  //if (fFrameCallBack != NULL)
+  if (this->m_rtp_callback != NULL)
   {
-    fFrameCallBack(fReceiveBuffer, frameSize, presentationTime);
+    this->m_rtp_callback->on_frame(fReceiveBuffer, frameSize, presentationTime);
   }
   else
   {
@@ -91,8 +93,8 @@ Boolean camOESink::continuePlaying() {
   return True;
 }
 
-void camOESink::setFrameCallback(frame_call_back callback)
+void camOESink::set_callback(rtp_callback* callback)
 {
-  fFrameCallBack = callback;
+  this->m_rtp_callback = callback;
 }
 

@@ -29,109 +29,115 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 ////////// RTSPServer implementation //////////
 
-RsRTSPServer*
-RsRTSPServer::createNew(UsageEnvironment& env, Port ourPort,
-		      UserAuthenticationDatabase* authDatabase,
-		      unsigned reclamationSeconds) {
+RsRTSPServer *
+RsRTSPServer::createNew(UsageEnvironment &env, Port ourPort,
+                        UserAuthenticationDatabase *authDatabase,
+                        unsigned reclamationSeconds)
+{
   int ourSocket = setUpOurSocket(env, ourPort);
-  if (ourSocket == -1) return NULL;
-  
+  if (ourSocket == -1)
+    return NULL;
+
   return new RsRTSPServer(env, ourSocket, ourPort, authDatabase, reclamationSeconds);
 }
 
-
-RsRTSPServer::RsRTSPServer(UsageEnvironment& env,
-		       int ourSocket, Port ourPort,
-		       UserAuthenticationDatabase* authDatabase,
-		       unsigned reclamationSeconds)
-  : RTSPServer(env, ourSocket, ourPort, authDatabase, reclamationSeconds) {
+RsRTSPServer::RsRTSPServer(UsageEnvironment &env,
+                           int ourSocket, Port ourPort,
+                           UserAuthenticationDatabase *authDatabase,
+                           unsigned reclamationSeconds)
+    : RTSPServer(env, ourSocket, ourPort, authDatabase, reclamationSeconds)
+{
 }
 
-RsRTSPServer::~RsRTSPServer(){}
-
+RsRTSPServer::~RsRTSPServer() {}
 
 ////////// RTSPServer::RTSPClientConnection implementation //////////
 
-RsRTSPServer::RsRTSPClientConnection
-::RsRTSPClientConnection(RTSPServer& ourServer, int clientSocket, struct sockaddr_in clientAddr)
-  :RTSPClientConnection(ourServer, clientSocket, clientAddr)
-  {
-    envir() << "RsRTSPClientConnection  constructor" << this <<"\n";
-  }
+RsRTSPServer::RsRTSPClientConnection ::RsRTSPClientConnection(RTSPServer &ourServer, int clientSocket, struct sockaddr_in clientAddr)
+    : RTSPClientConnection(ourServer, clientSocket, clientAddr)
+{
+}
 
 RsRTSPServer::RsRTSPClientConnection::~RsRTSPClientConnection()
 {
-  envir() << "RsRTSPClientConnection  destructor" << this <<"\n";
 }
-
 
 ////////// RsRTSPServer::RsRTSPClientSession implementation //////////
 
-RsRTSPServer::RsRTSPClientSession
-::RsRTSPClientSession(RTSPServer& ourServer, u_int32_t sessionId)
-  :RTSPClientSession(ourServer, sessionId){
+RsRTSPServer::RsRTSPClientSession ::RsRTSPClientSession(RTSPServer &ourServer, u_int32_t sessionId)
+    : RTSPClientSession(ourServer, sessionId)
+{
 }
 
-RsRTSPServer::RsRTSPClientSession::~RsRTSPClientSession(){}
+RsRTSPServer::RsRTSPClientSession::~RsRTSPClientSession() {}
 
-void RsRTSPServer::RsRTSPClientSession::handleCmd_TEARDOWN(RTSPClientConnection* ourClientConnection,
-				ServerMediaSubsession* subsession)
-        {
-            envir() << "TEARDOWN \n";
-            RTSPServer::RTSPClientSession::handleCmd_TEARDOWN(ourClientConnection,subsession);
-        }
+void RsRTSPServer::RsRTSPClientSession::handleCmd_TEARDOWN(RTSPClientConnection *ourClientConnection,
+                                                           ServerMediaSubsession *subsession)
+{
+  envir() << "TEARDOWN \n";
 
-void RsRTSPServer::RsRTSPClientSession::handleCmd_PLAY(RTSPClientConnection* ourClientConnection,
-				ServerMediaSubsession* subsession, char const* fullRequestStr)
-        {
-            envir() << "PLAY \n";
-            openRsCamera();
-            RTSPServer::RTSPClientSession::handleCmd_PLAY(ourClientConnection,subsession,fullRequestStr);
-        }
+  closeRsCamera();
+  RTSPServer::RTSPClientSession::handleCmd_TEARDOWN(ourClientConnection, subsession);
+}
 
-void RsRTSPServer::RsRTSPClientSession::handleCmd_PAUSE(RTSPClientConnection* ourClientConnection,
-				 ServerMediaSubsession* subsession)
-         {
-            envir() << "PAUSE \n";
-            RTSPServer::RTSPClientSession::handleCmd_PAUSE(ourClientConnection,subsession);
-            closeRsCamera();
-         }
+void RsRTSPServer::RsRTSPClientSession::handleCmd_PLAY(RTSPClientConnection *ourClientConnection,
+                                                       ServerMediaSubsession *subsession, char const *fullRequestStr)
+{
+  envir() << "PLAY \n";
+  openRsCamera();
+  RTSPServer::RTSPClientSession::handleCmd_PLAY(ourClientConnection, subsession, fullRequestStr);
+}
+
+void RsRTSPServer::RsRTSPClientSession::handleCmd_PAUSE(RTSPClientConnection *ourClientConnection,
+                                                        ServerMediaSubsession *subsession)
+{
+  envir() << "PAUSE \n";
+  RTSPServer::RTSPClientSession::handleCmd_PAUSE(ourClientConnection, subsession);
+  closeRsCamera();
+}
 
 int RsRTSPServer::RsRTSPClientSession::openRsCamera()
 {
-    for (int i = 0; i < fNumStreamStates; ++i) 
+  for (int i = 0; i < fNumStreamStates; ++i)
+  {
+    if (fStreamStates[i].subsession != NULL)
     {
-      if (fStreamStates[i].subsession != NULL) 
-      {
-          long long int profile_key = ((RsServerMediaSession*)fOurServerMediaSession)->getRsSensor().getStreamProfileKey(((RsMediaSubsession*)(fStreamStates[i].subsession))->get_stream_profile());
-          streamProfiles[profile_key] = ((RsMediaSubsession*)(fStreamStates[i].subsession))->get_frame_queue();
-          rs2::frame f;
-          while (streamProfiles[profile_key].poll_for_frame(&f));
-      }  
+      long long int profile_key = ((RsServerMediaSession *)fOurServerMediaSession)->getRsSensor().getStreamProfileKey(((RsMediaSubsession *)(fStreamStates[i].subsession))->get_stream_profile());
+      streamProfiles[profile_key] = ((RsMediaSubsession *)(fStreamStates[i].subsession))->get_frame_queue();
+      emptyStreamProfileQueue(profile_key);
     }
-    ((RsServerMediaSession*)fOurServerMediaSession)->openRsCamera(streamProfiles);//TODO:: to check if this is indeed RsServerMediaSession
+  }
+  ((RsServerMediaSession *)fOurServerMediaSession)->openRsCamera(streamProfiles); //TODO:: to check if this is indeed RsServerMediaSession
 }
 
 int RsRTSPServer::RsRTSPClientSession::closeRsCamera()
 {
-    ((RsServerMediaSession*)fOurServerMediaSession)->closeRsCamera();//TODO:: to check if this is indeed RsServerMediaSession
-    for (int i = 0; i < fNumStreamStates; ++i) 
+  ((RsServerMediaSession *)fOurServerMediaSession)->closeRsCamera(); //TODO:: to check if this is indeed RsServerMediaSession
+  for (int i = 0; i < fNumStreamStates; ++i)
+  {
+    if (fStreamStates[i].subsession != NULL)
     {
-      if (fStreamStates[i].subsession != NULL) 
-      {
-          long long int profile_key = ((RsServerMediaSession*)fOurServerMediaSession)->getRsSensor().getStreamProfileKey(((RsMediaSubsession*)(fStreamStates[i].subsession))->get_stream_profile());
-          rs2::frame f;
-          while (streamProfiles[profile_key].poll_for_frame(&f));
-      }  
+      long long int profile_key = ((RsServerMediaSession *)fOurServerMediaSession)->getRsSensor().getStreamProfileKey(((RsMediaSubsession *)(fStreamStates[i].subsession))->get_stream_profile());
+      emptyStreamProfileQueue(profile_key);
     }
+  }
 }
 
-GenericMediaServer::ClientConnection*
-RsRTSPServer::createNewClientConnection(int clientSocket, struct sockaddr_in clientAddr) {
+void RsRTSPServer::RsRTSPClientSession::emptyStreamProfileQueue(long long int profile_key)
+{
+  rs2::frame f;
+  while (streamProfiles[profile_key].poll_for_frame(&f))
+    ;
+}
+
+GenericMediaServer::ClientConnection *
+RsRTSPServer::createNewClientConnection(int clientSocket, struct sockaddr_in clientAddr)
+{
   return new RsRTSPClientConnection(*this, clientSocket, clientAddr);
 }
 
-GenericMediaServer::ClientSession*
-RsRTSPServer::createNewClientSession(u_int32_t sessionId) {
+GenericMediaServer::ClientSession *
+RsRTSPServer::createNewClientSession(u_int32_t sessionId)
+{
   return new RsRTSPClientSession(*this, sessionId);
 }

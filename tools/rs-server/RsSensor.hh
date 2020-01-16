@@ -4,7 +4,6 @@
 #include <librealsense2/rs.hpp>
 #include <unordered_map>
 
-
 class RsSensor
 {
 public:
@@ -20,6 +19,5 @@ private:
 	rs2::sensor m_sensor;
 	std::unordered_map<long long int, rs2::video_stream_profile> m_stream_profiles;
 };
-
 
 #endif

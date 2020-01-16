@@ -27,32 +27,31 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "ServerMediaSession.hh"
 #include "RsDevice.hh"
 
-class RsServerMediaSession: public ServerMediaSession {
+class RsServerMediaSession : public ServerMediaSession
+{
 public:
-  static RsServerMediaSession* createNew(UsageEnvironment& env,
-               RsSensor& sensor,
-				       char const* streamName = NULL,
-				       char const* info = NULL,
-				       char const* description = NULL,
-				       Boolean isSSM = False,
-				       char const* miscSDPLines = NULL);
-  RsSensor& getRsSensor();
+  static RsServerMediaSession *createNew(UsageEnvironment &env,
+                                         RsSensor &sensor,
+                                         char const *streamName = NULL,
+                                         char const *info = NULL,
+                                         char const *description = NULL,
+                                         Boolean isSSM = False,
+                                         char const *miscSDPLines = NULL);
+  RsSensor &getRsSensor();
   int openRsCamera(std::unordered_map<long long int, rs2::frame_queue> &streamProfiles);
-  void closeRsCamera();
-
-
-
+  int closeRsCamera();
 
 protected:
-  RsServerMediaSession(UsageEnvironment& env,RsSensor& sensor, char const* streamName,
-		     char const* info, char const* description,
-		     Boolean isSSM, char const* miscSDPLines);
+  RsServerMediaSession(UsageEnvironment &env, RsSensor &sensor, char const *streamName,
+                       char const *info, char const *description,
+                       Boolean isSSM, char const *miscSDPLines);
   // called only by "createNew()"
 
   virtual ~RsServerMediaSession();
 
-private: 
+private:
   RsSensor rsSensor;
+  bool isActive;
   //std::map<int, rs2::frame_queue> streamProfiles;
 };
 

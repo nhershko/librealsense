@@ -67,11 +67,14 @@ std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
     this->envir() << "in sendDescribe After wait\n";   
     return this->supportedProfiles;
 }
-int camOERTSPClient::addStream(rs2_video_stream stream, frame_call_back frameCallBack)
-{
-  MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
 
+int camOERTSPClient::addStream(rs2_video_stream stream, rtp_callback* callback_obj)
+{
+  this->envir()  << "looking for sub session \n";;
+  MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
+  this->envir()  << "find sub session " << subsession  << "\n";;
   if (subsession != NULL) {
+    this->envir()  << " initiate subsession"  << "\n";;
      if (!subsession->initiate()) {
         this->envir() << "Failed to initiate the subsession \n";
         
@@ -101,7 +104,7 @@ int camOERTSPClient::addStream(rs2_video_stream stream, frame_call_back frameCal
 
         this->envir()  << "Created a data sink for the subsession\n";
         subsession->miscPtr = this; // a hack to let subsession handler functions get the "RTSPClient" from the subsession 
-        ((camOESink*)(subsession->sink))->setFrameCallback(frameCallBack);
+        ((camOESink*)(subsession->sink))->set_callback(callback_obj);
         subsession->sink->startPlaying(*(subsession->readSource()),
                   subsessionAfterPlaying, subsession);
         // Also set a handler to be called if a RTCP "BYE" arrives for this subsession:
@@ -158,6 +161,8 @@ int camOERTSPClient::close()
   cv.wait(lck, []{return cammand_done;}); 
   // for the next command
   cammand_done = false;
+  is_connected = false;
+  
   int res_code = this->commandResultCode;
 
   // delete the rtsp instance
@@ -178,6 +183,12 @@ void camOERTSPClient::initFunc()
 {
    std::thread thread_scheduler(schedulerThread, this);
    thread_scheduler.detach();
+   is_connected=true;
+}
+
+bool camOERTSPClient::isConnected()
+{
+  return this->is_connected;
 }
 
 // TODO: Error handling
@@ -240,6 +251,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       //nhershko: hard coded fixes
       videoStream.bpp=2;
       videoStream.fps=30;
+      
 
       // TODO: update width and height in subsession?
       ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, MediaSubsession*>(videoStream.uid, scs.subsession));

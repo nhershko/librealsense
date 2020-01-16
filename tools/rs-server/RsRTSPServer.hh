@@ -28,48 +28,52 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RsDevice.hh"
 #include <librealsense2/rs.hpp>
 
-class RsRTSPServer: public RTSPServer {
+class RsRTSPServer : public RTSPServer
+{
 public:
-  static RsRTSPServer* createNew(UsageEnvironment& env, Port ourPort = 554,
-			       UserAuthenticationDatabase* authDatabase = NULL,
-			       unsigned reclamationSeconds = 0);
+  static RsRTSPServer *createNew(UsageEnvironment &env, Port ourPort = 554,
+                                 UserAuthenticationDatabase *authDatabase = NULL,
+                                 unsigned reclamationSeconds = 0);
 
 protected:
-  RsRTSPServer(UsageEnvironment& env,
-	     int ourSocket, Port ourPort,
-	     UserAuthenticationDatabase* authDatabase,
-	     unsigned reclamationSeconds);
+  RsRTSPServer(UsageEnvironment &env,
+               int ourSocket, Port ourPort,
+               UserAuthenticationDatabase *authDatabase,
+               unsigned reclamationSeconds);
   virtual ~RsRTSPServer();
 
-public: 
+public:
   class RsRTSPClientSession; // forward
-  class RsRTSPClientConnection: public RTSPClientConnection {
+  class RsRTSPClientConnection : public RTSPClientConnection
+  {
 
   protected:
-    RsRTSPClientConnection(RTSPServer& ourServer, int clientSocket, struct sockaddr_in clientAddr);
+    RsRTSPClientConnection(RTSPServer &ourServer, int clientSocket, struct sockaddr_in clientAddr);
     virtual ~RsRTSPClientConnection();
-     
+
     friend class RsRTSPServer;
     friend class RsRTSPClientSession;
   };
   // The state of an individual client session (using one or more sequential TCP connections) handled by a RTSP server:
-  class RsRTSPClientSession: public RTSPClientSession {
+  class RsRTSPClientSession : public RTSPClientSession
+  {
   protected:
-    RsRTSPClientSession(RTSPServer& ourServer, u_int32_t sessionId);
+    RsRTSPClientSession(RTSPServer &ourServer, u_int32_t sessionId);
     virtual ~RsRTSPClientSession();
 
     friend class RsRTSPServer;
     friend class RsRTSPClientConnection;
 
-    virtual void handleCmd_TEARDOWN(RTSPClientConnection* ourClientConnection,
-				    ServerMediaSubsession* subsession);
-    virtual void handleCmd_PLAY(RTSPClientConnection* ourClientConnection,
-				ServerMediaSubsession* subsession, char const* fullRequestStr);
-    virtual void handleCmd_PAUSE(RTSPClientConnection* ourClientConnection,
-				 ServerMediaSubsession* subsession);
+    virtual void handleCmd_TEARDOWN(RTSPClientConnection *ourClientConnection,
+                                    ServerMediaSubsession *subsession);
+    virtual void handleCmd_PLAY(RTSPClientConnection *ourClientConnection,
+                                ServerMediaSubsession *subsession, char const *fullRequestStr);
+    virtual void handleCmd_PAUSE(RTSPClientConnection *ourClientConnection,
+                                 ServerMediaSubsession *subsession);
 
     int openRsCamera();
     int closeRsCamera();
+    void emptyStreamProfileQueue(long long int profile_key);
 
   protected:
     //RsRTSPServer& fOurRsRTSPServer; // same as ::fOurServer
@@ -80,15 +84,15 @@ public:
 protected: // redefined virtual functions
   // If you subclass "RTSPClientConnection", then you must also redefine this virtual function in order
   // to create new objects of your subclass:
-  virtual ClientConnection* createNewClientConnection(int clientSocket, struct sockaddr_in clientAddr);
+  virtual ClientConnection *createNewClientConnection(int clientSocket, struct sockaddr_in clientAddr);
 
 protected:
   // If you subclass "RTSPClientSession", then you must also redefine this virtual function in order
   // to create new objects of your subclass:
-  virtual ClientSession* createNewClientSession(u_int32_t sessionId);
+  virtual ClientSession *createNewClientSession(u_int32_t sessionId);
 
 private:
-  int openRsCamera(RsSensor sensor,std::unordered_map<long long int, rs2::frame_queue>& streamProfiles);
+  int openRsCamera(RsSensor sensor, std::unordered_map<long long int, rs2::frame_queue> &streamProfiles);
 
 private:
   friend class RsRTSPClientConnection;

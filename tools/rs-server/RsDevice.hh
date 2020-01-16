@@ -4,7 +4,6 @@
 #include <librealsense2/rs.hpp>
 #include "RsSensor.hh"
 
-
 class RsDevice
 {
 public:

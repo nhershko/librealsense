@@ -87,7 +87,6 @@ std::vector<rs2_video_stream> rs2::ethernet_device::query_sensors()
 		streams.insert(streams.end(),sensor_streams[j]);
 		stream_uid++;
 		}
-			
 	}
 
 	/*
@@ -286,7 +285,7 @@ void rs2::ethernet_device::start(std::string url) {
 	{
 		if (rtsp_clients[i]==NULL)
 			continue;
-		rtsp_clients[i]->addStream(available_streams[i], &ethernetDeviceFrameCallBack);
+		//rtsp_clients[i]->addStream(available_streams[i]);
 		rtsp_clients[i]->start();
 	}
 	

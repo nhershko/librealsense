@@ -44,7 +44,7 @@ void  decompressFrameGzip::decompressDepthFrame(unsigned char* buffer, int size,
 	compressedSizeSum += compressedSize;
 	float zipRatio = fullSizeSum/(float)compressedSizeSum;
 	frameCounter++;
-	printf("gzip zip ratio is: %0.2f , frameCounter: %d\n", zipRatio, frameCounter);
+	//printf("gzip zip ratio is: %0.2f , frameCounter: %d\n", zipRatio, frameCounter);
 }
 
 void  decompressFrameGzip::decompressColorFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf) 
