@@ -70,7 +70,7 @@ std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
 
 int camOERTSPClient::addStream(rs2_video_stream stream, rtp_callback* callback_obj)
 {
-  this->envir()  << "looking for sub session \n";;
+  this->envir()  << "looking for sub session " << stream.uid << " \n";
   MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
   this->envir()  << "find sub session " << subsession  << "\n";;
   if (subsession != NULL) {
@@ -167,7 +167,7 @@ int camOERTSPClient::close()
 
   // delete the rtsp instance
   this->envir() <<  "Closing the stream.\n";
-  Medium::close(this);
+  //Medium::close(this);
 
   return res_code;
 }
@@ -188,7 +188,7 @@ void camOERTSPClient::initFunc()
 
 bool camOERTSPClient::isConnected()
 {
-  return this->is_connected;
+  return is_connected;
 }
 
 // TODO: Error handling
@@ -231,6 +231,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       videoStream.width = width;
       videoStream.height = height;
       videoStream.uid = camOERTSPClient::stream_counter++;
+
       videoStream.fmt = static_cast<rs2_format>(format);
     
       std::string url_str = rtspClient->url();

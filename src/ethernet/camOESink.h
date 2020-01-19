@@ -3,7 +3,6 @@
 
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
-#include <functional>
 #include "rtp_callback.hh"
 
 
