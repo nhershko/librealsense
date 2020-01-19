@@ -96,23 +96,24 @@ void RsRTSPServer::RsRTSPClientSession::handleCmd_PAUSE(RTSPClientConnection *ou
   closeRsCamera();
 }
 
-
-void RsRTSPServer::RsRTSPClientSession::handleCmd_SETUP(RTSPServer::RTSPClientConnection* ourClientConnection,
-		  char const* urlPreSuffix, char const* urlSuffix, char const* fullRequestStr)
+void RsRTSPServer::RsRTSPClientSession::handleCmd_SETUP(RTSPServer::RTSPClientConnection *ourClientConnection,
+                                                        char const *urlPreSuffix, char const *urlSuffix, char const *fullRequestStr)
 {
-  RTSPServer::RTSPClientSession::handleCmd_SETUP(ourClientConnection, urlPreSuffix, urlSuffix,fullRequestStr);
-  ServerMediaSubsession* subsession;
-  if (urlSuffix[0] != '\0' && strcmp(fOurServerMediaSession->streamName(), urlPreSuffix) == 0) {
+  RTSPServer::RTSPClientSession::handleCmd_SETUP(ourClientConnection, urlPreSuffix, urlSuffix, fullRequestStr);
+  ServerMediaSubsession *subsession;
+  if (urlSuffix[0] != '\0' && strcmp(fOurServerMediaSession->streamName(), urlPreSuffix) == 0)
+  {
     // Non-aggregated operation.
     // Look up the media subsession whose track id is "urlSuffix":
     ServerMediaSubsessionIterator iter(*fOurServerMediaSession);
-    while ((subsession = iter.next()) != NULL) {
-      if (strcmp(subsession->trackId(), urlSuffix) == 0) break; // success
+    while ((subsession = iter.next()) != NULL)
+    {
+      long long int profile_key = ((RsServerMediaSession *)fOurServerMediaSession)->getRsSensor().getStreamProfileKey(((RsServerMediaSubsession *)(subsession))->get_stream_profile());
+      streamProfiles[profile_key] = ((RsServerMediaSubsession *)(subsession))->get_frame_queue();
+      if (strcmp(subsession->trackId(), urlSuffix) == 0)
+        break; // success
     }
   }
-  
-  long long int profile_key = ((RsServerMediaSession *)fOurServerMediaSession)->getRsSensor().getStreamProfileKey(((RsServerMediaSubsession *)(subsession))->get_stream_profile());
-  streamProfiles[profile_key] = ((RsServerMediaSubsession *)(subsession))->get_frame_queue();
 }
 
 int RsRTSPServer::RsRTSPClientSession::openRsCamera()
