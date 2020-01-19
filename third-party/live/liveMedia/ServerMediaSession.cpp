@@ -398,7 +398,7 @@ FramedSource* ServerMediaSubsession::getStreamSource(void* /*streamToken*/) {
 }
 void ServerMediaSubsession::deleteStream(unsigned /*clientSessionId*/,
 					 void*& /*streamToken*/) {
-  // default implementation: do nothing
+  // default implementation: do nothing //TODO:: to remove source
 }
 
 void ServerMediaSubsession::testScaleFactor(float& scale) {

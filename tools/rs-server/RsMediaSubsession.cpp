@@ -24,40 +24,40 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #define CAPACITY 100
 
-RsMediaSubsession *RsMediaSubsession::createNew(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile /*, rs2::frame_queue &queue*/)
+RsServerMediaSubsession *RsServerMediaSubsession::createNew(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile /*, rs2::frame_queue &queue*/)
 {
-  return new RsMediaSubsession(env, video_stream_profile /*, queue*/);
+  return new RsServerMediaSubsession(env, video_stream_profile /*, queue*/);
 }
 
-RsMediaSubsession ::RsMediaSubsession(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile /*, rs2::frame_queue &queue*/)
+RsServerMediaSubsession ::RsServerMediaSubsession(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile /*, rs2::frame_queue &queue*/)
     : OnDemandServerMediaSubsession(env, false), videoStreamProfile(video_stream_profile) /*,frameQueue(queue)*/
 {
-  envir() << "RsMediaSubsession constructor" <<this << "\n";
+  envir() << "RsServerMediaSubsession constructor" <<this << "\n";
   frameQueue = rs2::frame_queue(CAPACITY, true);
 }
 
-RsMediaSubsession::~RsMediaSubsession() {
-  envir() << "RsMediaSubsession destructor" <<this << "\n";
+RsServerMediaSubsession::~RsServerMediaSubsession() {
+  envir() << "RsServerMediaSubsession destructor" <<this << "\n";
     //TODO:: free the queue
 }
 
-rs2::frame_queue &RsMediaSubsession::get_frame_queue()
+rs2::frame_queue &RsServerMediaSubsession::get_frame_queue()
 {
   return frameQueue;
 }
 
-rs2::video_stream_profile RsMediaSubsession::get_stream_profile()
+rs2::video_stream_profile RsServerMediaSubsession::get_stream_profile()
 {
   return videoStreamProfile;
 }
 
-FramedSource *RsMediaSubsession::createNewStreamSource(unsigned /*clientSessionId*/, unsigned &estBitrate)
+FramedSource *RsServerMediaSubsession::createNewStreamSource(unsigned /*clientSessionId*/, unsigned &estBitrate)
 {
   estBitrate = 5000; // kbps, estimate //TODO:: to calculate the right value
   return RsDeviceSource::createNew(envir(), videoStreamProfile, frameQueue);
 }
 
-RTPSink *RsMediaSubsession ::createNewRTPSink(Groupsock *rtpGroupsock,
+RTPSink *RsServerMediaSubsession ::createNewRTPSink(Groupsock *rtpGroupsock,
                                               unsigned char rtpPayloadTypeIfDynamic,
                                               FramedSource * /*inputSource*/)
 {
