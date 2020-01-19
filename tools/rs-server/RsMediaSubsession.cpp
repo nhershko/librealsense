@@ -67,22 +67,22 @@ RTPSink *RsServerMediaSubsession ::createNewRTPSink(Groupsock *rtpGroupsock,
   case  RS2_FORMAT_RGB8: 
   {
       pixelSize = 3;
-      return  RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile, "RGB");         
+      return  RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, format, rs2_format_to_string(videoStreamProfile.format()), "RGB");         
   }           
   case  RS2_FORMAT_BGR8: 
   {
     pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile, "BGR");          
+    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, format, rs2_format_to_string(videoStreamProfile.format()), "BGR");          
   }
   case  RS2_FORMAT_RGBA8:  
   {
     pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile,  "RGBA");       
+    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, format, rs2_format_to_string(videoStreamProfile.format()),  "RGBA");       
   }         
   case  RS2_FORMAT_BGRA8: 
   {
     pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile, "BGRA");        
+    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, format, rs2_format_to_string(videoStreamProfile.format()), "BGRA");        
   }       
   case  RS2_FORMAT_Z16:   
   case  RS2_FORMAT_Y16:             
@@ -90,7 +90,7 @@ RTPSink *RsServerMediaSubsession ::createNewRTPSink(Groupsock *rtpGroupsock,
   case  RS2_FORMAT_YUYV:  
   {
       pixelSize = 2;
-      return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile, "YCbCr-4:2:2");         
+      return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, format, rs2_format_to_string(videoStreamProfile.format()), "YCbCr-4:2:2");         
   }
   default:
      pixelSize = 0;
