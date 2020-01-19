@@ -108,10 +108,12 @@ void RsRTSPServer::RsRTSPClientSession::handleCmd_SETUP(RTSPServer::RTSPClientCo
     ServerMediaSubsessionIterator iter(*fOurServerMediaSession);
     while ((subsession = iter.next()) != NULL)
     {
-      long long int profile_key = ((RsServerMediaSession *)fOurServerMediaSession)->getRsSensor().getStreamProfileKey(((RsServerMediaSubsession *)(subsession))->get_stream_profile());
-      streamProfiles[profile_key] = ((RsServerMediaSubsession *)(subsession))->get_frame_queue();
       if (strcmp(subsession->trackId(), urlSuffix) == 0)
+      {
+        long long int profile_key = ((RsServerMediaSession *)fOurServerMediaSession)->getRsSensor().getStreamProfileKey(((RsServerMediaSubsession *)(subsession))->get_stream_profile());
+        streamProfiles[profile_key] = ((RsServerMediaSubsession *)(subsession))->get_frame_queue();
         break; // success
+      }
     }
   }
 }
