@@ -22,6 +22,12 @@ class rs_rtp_stream
 {
     public:
 
+        rs_rtp_stream(rtp_rs_video_stream rtp_stream_obj,rs2::stream_profile rs_profile)
+        {
+            rs_rtp_stream(rtp_stream_obj.video_stream,rs_profile);
+            trp_uid = rtp_stream_obj.rtp_uid;
+        }
+
         rs_rtp_stream(rs2_video_stream rs_stream, rs2::stream_profile rs_profile)
         {
             std::cout << "\t@@@ initiate frame buffer for stream ID: " << rs_stream.uid <<std::endl;
@@ -33,6 +39,8 @@ class rs_rtp_stream
     		frame_data_buff.deleter = this->frame_deleter;
 
             m_rs_stream = rs_stream;
+
+            
         }
 
         rs2_stream stream_type()
@@ -87,6 +95,9 @@ class rs_rtp_stream
         rs2_video_stream m_rs_stream;
 
         rs2_software_video_frame frame_data_buff;
+
+        //nhershko public just for now
+        int trp_uid;
 
     private:
 

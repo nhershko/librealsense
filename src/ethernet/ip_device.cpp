@@ -50,10 +50,10 @@ ip_device::ip_device(std::string ip_address, rs2::software_device sw_device)
     this->sw_device_status_check = std::thread(&ip_device::polling_state_loop,this);
 }
 
-std::vector<rs2_video_stream> ip_device::query_streams(int sensor_id)
+std::vector<rtp_rs_video_stream> ip_device::query_streams(int sensor_id)
 {
     std::cout << "\n\n\nQuerry Sensors\n\n\n";
-	std::vector<rs2_video_stream> streams;
+	std::vector<rtp_rs_video_stream> streams;
 
     if (rtsp_clients[sensor_id]==NULL)
 			return streams;
@@ -70,6 +70,7 @@ std::vector<rs2_video_stream> ip_device::query_streams(int sensor_id)
 }
 
 int stream_id=0;
+
 bool ip_device::init_device_data()
 {
     std::string url,sensor_name;
@@ -94,14 +95,14 @@ bool ip_device::init_device_data()
         rs2::software_sensor tmp_sensor = sw_dev.add_sensor(sensor_name);
         sensors[sensor_id] = new rs2::software_sensor(tmp_sensor);
 
-        auto streams = query_streams(sensor_id);
+        auto rtp_streams = query_streams(sensor_id);
 
-        std::cout << "\t@@@ got " << streams.size() << " streams per sensor " << sensor_id << std::endl;
+        std::cout << "\t@@@ got " << rtp_streams.size() << " streams per sensor " << sensor_id << std::endl;
 
-        for (int stream_index = 0; stream_index < streams.size(); stream_index++)
+        for (int stream_index = 0; stream_index < rtp_streams.size(); stream_index++)
         {
             // just for readable code
-            rs2_video_stream st = streams[stream_index];
+            rs2_video_stream st = rtp_streams[stream_index].video_stream;
 
             std::cout << "\t@@@ add stream uid: "  << st.uid <<" at sensor: " << sensor_id << std::endl;
             
@@ -194,7 +195,10 @@ void ip_device::update_sensor_state(int sensor_index,std::vector<rs2::stream_pro
 
         rtp_callbacks[vst.unique_id()] = new rs_rtp_callback(streams_collection[vst.unique_id()]);
         
-        rtsp_clients[sensor_index]->addStream(streams_collection[vst.unique_id()].get()->m_rs_stream ,rtp_callbacks[vst.unique_id()]);
+        rtsp_clients[sensor_index]->addStream(
+            //convert the object to struct with rtp uid
+            {streams_collection[vst.unique_id()].get()->m_rs_stream,streams_collection[vst.unique_id()].get()->trp_uid}
+         ,rtp_callbacks[vst.unique_id()]);
         
         std::cout << "\t@@@ initiate new thread for stream: " << vst.unique_id() << "\n";    
         inject_frames_thread[vst.unique_id()] = std::thread(&ip_device::inject_frames_loop,this,streams_collection[vst.unique_id()]);
