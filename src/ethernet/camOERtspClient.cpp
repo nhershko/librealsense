@@ -9,11 +9,24 @@
 #include <condition_variable>
 #include <vector>
 #include <string>
+#include <math.h>
 
 #define RTSP_CLIENT_VERBOSITY_LEVEL 1 // by default, print verbose output from each "RTSPClient"
 #define REQUEST_STREAMING_OVER_TCP 0 // TODO - uderstand this
 
-int camOERTSPClient::stream_counter = 0;
+//int camOERTSPClient::stream_counter = 0;
+
+long long int getStreamProfileUniqueKey(rs2_video_stream profile)
+{
+	long long int key;
+	key = profile.type * pow(10, 12) + profile.fmt * pow(10, 10) + profile.fps * pow(10, 8);
+	//if (profile.is<rs2::video_stream_profile>())
+	{
+		//rs2::video_stream_profile video_stream_profile = profile.as<rs2::video_stream_profile>();
+		key += profile.width * pow(10, 4) + profile.height;
+	}
+	return key;
+}
 
 IcamOERtsp* camOERTSPClient::getRtspClient(char const* rtspURL,
 	char const* applicationName, portNumBits tunnelOverHTTPPortNum) {
@@ -70,8 +83,9 @@ std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
 
 int camOERTSPClient::addStream(rs2_video_stream stream, rtp_callback* callback_obj)
 {
-  this->envir()  << "looking for sub session \n";;
-  MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
+  this->envir()  << "looking for sub session \n";
+  long long uniqueKey = getStreamProfileUniqueKey(stream);
+  MediaSubsession* subsession = this->subsessionMap.find(uniqueKey)->second;
   this->envir()  << "find sub session " << subsession  << "\n";;
   if (subsession != NULL) {
     this->envir()  << " initiate subsession"  << "\n";;
@@ -131,6 +145,7 @@ int camOERTSPClient::start()
 
 int camOERTSPClient::stop(rs2_video_stream stream)
 {
+  // TODO: uniqueu key
   MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
   unsigned res = this->sendPauseCommand(*subsession, this->continueAfterPAUSE);
   // wait for continueAfterPAUSE to finish
@@ -255,7 +270,8 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       videoStream.bpp=2;      
 
       // TODO: update width and height in subsession?
-      ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, MediaSubsession*>(videoStream.uid, scs.subsession));
+      long long uniqueKey = getStreamProfileUniqueKey(videoStream);
+      ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, MediaSubsession*>(uniqueKey, scs.subsession));
       ((camOERTSPClient*)rtspClient)->supportedProfiles.push_back(videoStream);
       scs.subsession = scs.iter->next();
       // TODO: when to delete p?
@@ -305,7 +321,7 @@ void camOERTSPClient::continueAfterTEARDOWN(RTSPClient* rtspClient, int resultCo
   env << "continueAfterTEARDOWN " << resultCode << " " << resultString <<"\n";
   ((camOERTSPClient*)rtspClient)->commandResultCode = resultCode;
   // In order to start the next UID from 0
-  camOERTSPClient::stream_counter = 0;
+  //camOERTSPClient::stream_counter = 0;
   {
     std::lock_guard<std::mutex> lck(command_mtx);
     cammand_done = true;
