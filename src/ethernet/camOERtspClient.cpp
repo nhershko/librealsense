@@ -70,7 +70,7 @@ std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
 
 int camOERTSPClient::addStream(rs2_video_stream stream, rtp_callback* callback_obj)
 {
-  this->envir()  << "looking for sub session " << stream.uid << " \n";
+  this->envir()  << "looking for sub session \n";;
   MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
   this->envir()  << "find sub session " << subsession  << "\n";;
   if (subsession != NULL) {
@@ -223,44 +223,36 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       // Get more data from the SDP string 
       const char* strWidthVal = scs.subsession->attrVal_str("width");
       const char* strHeightVal = scs.subsession->attrVal_str("height");
-      const char* strFormatVal = scs.subsession->attrVal_str("rs_format");
-      int width = strWidthVal != NULL ? std::stoi(strWidthVal) : 0;
-      int height = strHeightVal != NULL ? std::stoi(strHeightVal) : 0;
-      int format = strFormatVal != NULL ? std::stoi(strFormatVal) : 0;
+      const char* strFormatVal = scs.subsession->attrVal_str("format");
+      const char* strUidVal = scs.subsession->attrVal_str("uid");
+      const char* strFpsVal = scs.subsession->attrVal_str("fps");
+      const char* strIndexVal = scs.subsession->attrVal_str("index");
+      const char* strStreamTypeVal = scs.subsession->attrVal_str("stream_type");
+
+      int width = strWidthVal != "" ? std::stoi(strWidthVal) : 0;
+      int height = strHeightVal != "" ? std::stoi(strHeightVal) : 0;
+      int format = strFormatVal != "" ? std::stoi(strFormatVal) : 0;
+      int uid = strUidVal != "" ? std::stoi(strUidVal) : 0;
+      int fps = strFpsVal != "" ? std::stoi(strFpsVal) : 0;
+      int index = strIndexVal != "" ? std::stoi(strIndexVal) : 0;
+      int stream_type = strStreamTypeVal != "" ? std::stoi(strStreamTypeVal): 0;
       rs2_video_stream videoStream;
       videoStream.width = width;
       videoStream.height = height;
-      videoStream.uid = camOERTSPClient::stream_counter++;
-
+      videoStream.uid = uid; //camOERTSPClient::stream_counter++;
       videoStream.fmt = static_cast<rs2_format>(format);
+      videoStream.fps = fps;
+      videoStream.index = index;
+      videoStream.type = static_cast<rs2_stream>(stream_type);
     
       std::string url_str = rtspClient->url();
       // Remove last "/"
       url_str = url_str.substr(0, url_str.size()-1);
       std::size_t stream_name_index = url_str.find_last_of("/") + 1;
       std::string stream_name = url_str.substr(stream_name_index, url_str.size());
-      if (stream_name.compare("depth") == 0)
-      {
-        videoStream.type = RS2_STREAM_DEPTH;
-        
-        //nhershko: hard coded 
-        if(videoStream.fmt == RS2_FORMAT_RGB8)
-          videoStream.type = RS2_STREAM_INFRARED;
-        else
-            videoStream.fmt = RS2_FORMAT_Z16;
-      }
-      else if((stream_name.compare("color") == 0))
-      {
-        videoStream.type = RS2_STREAM_COLOR;
-        env << "Color!!!\n";
-        //nhershko: hard coded 
-       // videoStream.fmt = RS2_FORMAT_YUYV;
-      }
 
       //nhershko: hard coded fixes
-      videoStream.bpp=2;
-      videoStream.fps=30;
-      
+      videoStream.bpp=2;      
 
       // TODO: update width and height in subsession?
       ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, MediaSubsession*>(videoStream.uid, scs.subsession));

@@ -5,49 +5,32 @@
 RsRawVideoRTPSink*
   RsRawVideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs, u_int8_t rtpPayloadFormat,
         // The following headers provide the 'configuration' information, for the SDP description:
-        unsigned height, unsigned width, unsigned depth,
-         unsigned int format, char const* format_str, char const* sampling, char const* colorimetry)
+        unsigned depth,
+        rs2::video_stream_profile& video_stream, char const* sampling, char const* colorimetry)
         {
             return new RsRawVideoRTPSink(env, RTPgs, rtpPayloadFormat,
-                 height, width, depth, format, format_str, sampling, colorimetry);
-
+                 depth, video_stream, sampling, colorimetry);
         }
-
-
-  
-/*RawVideoRTPSink* RawVideoRTPSink
-::createNew(UsageEnvironment& env, Groupsock* RTPgs, u_int8_t rtpPayloadFormat,
-        unsigned height, unsigned width, unsigned depth,
-        char const* sampling, char const* colorimetry) {
-  return new RawVideoRTPSink(env, RTPgs,
-                             rtpPayloadFormat,
-                             height, width, depth,
-                             sampling, colorimetry);
-}*/
 
 RsRawVideoRTPSink
 ::RsRawVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs, u_int8_t rtpPayloadFormat,
-                  unsigned height, unsigned width, unsigned depth,
-                  unsigned int format, char const* format_str, char const* sampling, char const* colorimetry)
+                  unsigned depth,
+                  rs2::video_stream_profile& video_stream, char const* sampling, char const* colorimetry)
   : RawVideoRTPSink(env, RTPgs, rtpPayloadFormat,
-                 height, width, depth, sampling, colorimetry) {
+                 video_stream.height(), video_stream.width(), depth, sampling, colorimetry) {
     env << "RsRawVideoRTPSink constructor\n";
       // Then use this 'config' string to construct our "a=fmtp:" SDP line:
     unsigned fmtpSDPLineMaxSize = 200;// 200 => more than enough space
     fFmtpSDPLine = new char[fmtpSDPLineMaxSize];
-    sprintf(fFmtpSDPLine, "a=fmtp:%d sampling=%s;width=%u;height=%u;depth=%u;rs_format=%u;format_str=%s;colorimetry=%s\r\n",
-        rtpPayloadType(), sampling, width, height, depth, format, format_str, colorimetry);
+    sprintf(fFmtpSDPLine, "a=fmtp:%d sampling=%s;depth=%u;width=%d;height=%d;format=%d;uid=%d;fps=%u;index=%d;stream_type=%d;colorimetry=%s\r\n",
+        rtpPayloadType(), sampling, depth, 
+        video_stream.width(), video_stream.height(), video_stream.format(), video_stream.unique_id(), 
+        video_stream.fps(), video_stream.stream_index(), video_stream.stream_type(), colorimetry);
 
     // Set parameters
     fSampling = strDup(sampling);
     fColorimetry = strDup(colorimetry);
-    fFormat = strDup(format_str);
 }
-
-/*RsRawVideoRTPSink :: ~RsRawVideoRTPSink()
-{
-    envir() << "RsRawVideoRTPSink destructor " <<this <<"\n";
-}*/
 
 void RsRawVideoRTPSink::stopPlaying()
 {
