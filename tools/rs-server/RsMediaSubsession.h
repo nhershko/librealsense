@@ -20,8 +20,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // C++ header
 #include <liveMedia.hh>
 
-#ifndef _RS_MEDIA_SUBSESSION_HH
-#define _RS_MEDIA_SUBSESSION_HH
+#ifndef _RS_SERVER_MEDIA_SUBSESSION_HH
+#define _RS_SERVER_MEDIA_SUBSESSION_HH
 
 #ifndef _ON_DEMAND_SERVER_MEDIA_SUBSESSION_HH
 #include "OnDemandServerMediaSubsession.hh"
@@ -29,16 +29,16 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "RsSource.hh"
 
-class RsMediaSubsession : public OnDemandServerMediaSubsession
+class RsServerMediaSubsession : public OnDemandServerMediaSubsession
 {
 public:
-   static RsMediaSubsession *createNew(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile /*, rs2::frame_queue &queue*/);
+   static RsServerMediaSubsession *createNew(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile /*, rs2::frame_queue &queue*/);
    rs2::frame_queue &get_frame_queue();
    rs2::video_stream_profile get_stream_profile();
 
 protected:                                                                                                                  // we're a virtual base class
-   RsMediaSubsession(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile /*, rs2::frame_queue &queue*/); //rs2::stream_profile* stream);
-   virtual ~RsMediaSubsession();
+   RsServerMediaSubsession(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile /*, rs2::frame_queue &queue*/); //rs2::stream_profile* stream);
+   virtual ~RsServerMediaSubsession();
    virtual FramedSource *createNewStreamSource(unsigned clientSessionId,
                                                unsigned &estBitrate);
    virtual RTPSink *createNewRTPSink(Groupsock *rtpGroupsock,
@@ -50,4 +50,4 @@ private:
    rs2::frame_queue frameQueue;
    int pixelSize;
 };
-#endif //_RS_MEDIA_SUBSESSION_HH
+#endif //_RS_SERVER_MEDIA_SUBSESSION_HH

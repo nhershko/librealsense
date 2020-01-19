@@ -70,6 +70,8 @@ public:
                                 ServerMediaSubsession *subsession, char const *fullRequestStr);
     virtual void handleCmd_PAUSE(RTSPClientConnection *ourClientConnection,
                                  ServerMediaSubsession *subsession);
+    virtual void handleCmd_SETUP(RTSPServer::RTSPClientConnection *ourClientConnection,
+                                 char const *urlPreSuffix, char const *urlSuffix, char const *fullRequestStr);
 
     int openRsCamera();
     int closeRsCamera();
