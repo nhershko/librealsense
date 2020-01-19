@@ -45,8 +45,6 @@ protected:
   RsServerMediaSession(UsageEnvironment &env, RsSensor &sensor, char const *streamName,
                        char const *info, char const *description,
                        Boolean isSSM, char const *miscSDPLines);
-  // called only by "createNew()"
-
   virtual ~RsServerMediaSession();
 
 private:

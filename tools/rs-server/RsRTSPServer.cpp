@@ -96,17 +96,27 @@ void RsRTSPServer::RsRTSPClientSession::handleCmd_PAUSE(RTSPClientConnection *ou
   closeRsCamera();
 }
 
-int RsRTSPServer::RsRTSPClientSession::openRsCamera()
+
+void RsRTSPServer::RsRTSPClientSession::handleCmd_SETUP(RTSPServer::RTSPClientConnection* ourClientConnection,
+		  char const* urlPreSuffix, char const* urlSuffix, char const* fullRequestStr)
 {
-  for (int i = 0; i < fNumStreamStates; ++i)
-  {
-    if (fStreamStates[i].subsession != NULL)
-    {
-      long long int profile_key = ((RsServerMediaSession *)fOurServerMediaSession)->getRsSensor().getStreamProfileKey(((RsMediaSubsession *)(fStreamStates[i].subsession))->get_stream_profile());
-      streamProfiles[profile_key] = ((RsMediaSubsession *)(fStreamStates[i].subsession))->get_frame_queue();
-      emptyStreamProfileQueue(profile_key);
+  RTSPServer::RTSPClientSession::handleCmd_SETUP(ourClientConnection, urlPreSuffix, urlSuffix,fullRequestStr);
+  ServerMediaSubsession* subsession;
+  if (urlSuffix[0] != '\0' && strcmp(fOurServerMediaSession->streamName(), urlPreSuffix) == 0) {
+    // Non-aggregated operation.
+    // Look up the media subsession whose track id is "urlSuffix":
+    ServerMediaSubsessionIterator iter(*fOurServerMediaSession);
+    while ((subsession = iter.next()) != NULL) {
+      if (strcmp(subsession->trackId(), urlSuffix) == 0) break; // success
     }
   }
+  
+  long long int profile_key = ((RsServerMediaSession *)fOurServerMediaSession)->getRsSensor().getStreamProfileKey(((RsServerMediaSubsession *)(subsession))->get_stream_profile());
+  streamProfiles[profile_key] = ((RsServerMediaSubsession *)(subsession))->get_frame_queue();
+}
+
+int RsRTSPServer::RsRTSPClientSession::openRsCamera()
+{
   ((RsServerMediaSession *)fOurServerMediaSession)->openRsCamera(streamProfiles); //TODO:: to check if this is indeed RsServerMediaSession
 }
 
@@ -117,7 +127,7 @@ int RsRTSPServer::RsRTSPClientSession::closeRsCamera()
   {
     if (fStreamStates[i].subsession != NULL)
     {
-      long long int profile_key = ((RsServerMediaSession *)fOurServerMediaSession)->getRsSensor().getStreamProfileKey(((RsMediaSubsession *)(fStreamStates[i].subsession))->get_stream_profile());
+      long long int profile_key = ((RsServerMediaSession *)fOurServerMediaSession)->getRsSensor().getStreamProfileKey(((RsServerMediaSubsession *)(fStreamStates[i].subsession))->get_stream_profile());
       emptyStreamProfileQueue(profile_key);
     }
   }

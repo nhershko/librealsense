@@ -77,31 +77,19 @@ int main(int argc, char **argv)
                                             "Session streamed by \"realsense streamer\"",
                                             True);
     }
-    int index = 0;
+    else
+    {
+      break;
+    }
+    
     for (auto stream_profile : sensor.getStreamProfiles())
     {
       rs2::video_stream_profile stream = stream_profile.second;
       //TODO: expose all streams when host is ready
-      /*if ((sensorIndex == 1 || sensorIndex == 0) //don't expose IMU streams
-          && (stream.format() == RS2_FORMAT_Z16 || stream.format() == RS2_FORMAT_Y16 || stream.format() == RS2_FORMAT_RAW16 || stream.format() == RS2_FORMAT_YUYV))
+      if (stream.format() == RS2_FORMAT_Z16 || stream.format() == RS2_FORMAT_Y16 || stream.format() == RS2_FORMAT_RAW16 || stream.format() == RS2_FORMAT_YUYV)
       {
-        sms->addSubsession(RsMediaSubsession::createNew(*env,  stream));
-      }*/
-      if (sensorIndex == 0 && stream.width() == 640 && stream.height() == 480 && stream.format() == RS2_FORMAT_Z16 && stream.fps() == 30)
-      {
-        sms->addSubsession(RsMediaSubsession::createNew(*env, stream));
+        sms->addSubsession(RsServerMediaSubsession::createNew(*env,  stream));
       }
-      if (sensorIndex==0 && stream.width()==640 && stream.height() == 480 && stream.format()== RS2_FORMAT_RGB8 && stream.fps() == 30)
-      {
-
-        *env << "\n\n\n\nstream added\n";        
-         sms->addSubsession(RsMediaSubsession::createNew(*env,  stream));
-      }
-      if (sensorIndex == 1 && stream.width() == 640 && stream.height() == 480 && stream.format() == RS2_FORMAT_YUYV && stream.fps() == 30)
-      {
-        sms->addSubsession(RsMediaSubsession::createNew(*env, stream));
-      }
-      index++;
     }
 
     rtspServer->addServerMediaSession(sms);

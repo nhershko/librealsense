@@ -60,7 +60,6 @@ void RsDeviceSource::doGetNextFrame()
   rs2::frame frame;
   try
   {
-    envir() << "RsDeviceSource wait_for_frame " <<this <<"\n";
     frame = frames_queue->wait_for_frame(); //todo: check if it copies the frame
     frame.keep();
     deliverRSFrame(&frame);
