@@ -34,7 +34,7 @@ int main()
     myFile = fopen("myFile.bin", "ab");
 
     int res = 0;
-    IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.144.74:8554/depth", "myClient");
+    IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.145.82:8554/depth", "myClient");
     //IcamOERtsp* camOErtspInstance = camOERTSPClient::getRtspClient("rtsp://10.12.144.35:8554/unicast", "myClient");
     std::vector<rs2_video_stream> myProfiles;
     ((camOERTSPClient*)camOErtspInstance)->initFunc();
@@ -42,7 +42,7 @@ int main()
     std::cout << "Size = " << myProfiles.size() << "\n";
     for (int i =  0; i < myProfiles.size(); i++)
     {
-        std::cout << "Profile " << i << ": " << "width = " << myProfiles[i].width << " height = " << myProfiles[i].height << " sensor id = " << myProfiles[i].type <<" UID = " << myProfiles[i].uid << "\n";
+        std::cout << "Profile " << i << ": " << "width = " << myProfiles[i].width << " height = " << myProfiles[i].height << " format = " << myProfiles[i].fmt << " sensor id = " << myProfiles[i].type <<" UID = " << myProfiles[i].uid << "\n";
     }
 
 

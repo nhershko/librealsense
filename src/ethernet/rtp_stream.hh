@@ -4,6 +4,8 @@
 #include "camOERtspClient.h"
 #include "software-device.h"
 
+const int RTP_QUEUE_MAX_SIZE = 30;
+
 struct Tmp_Frame
 {
 	Tmp_Frame(char* buffer, int size,  struct timeval timestamp) : m_buffer(buffer), m_size(size), m_timestamp(timestamp) {};
@@ -31,7 +33,6 @@ class rs_rtp_stream
     		frame_data_buff.deleter = this->frame_deleter;
 
             m_rs_stream = rs_stream;
-
         }
 
         rs2_stream stream_type()
@@ -41,10 +42,16 @@ class rs_rtp_stream
 
         void insert_frame(Tmp_Frame* new_raw_frame)
         {
-            this->stream_lock.lock();
-                frames_queue.push(new_raw_frame);
-            this->stream_lock.unlock();
-
+            if(queue_size()>RTP_QUEUE_MAX_SIZE)
+            {
+                std::cout << "queue is full. dropping frame for stream id: " << this->m_rs_stream.uid << std::endl;
+            }
+            else
+            {
+                this->stream_lock.lock();
+                    frames_queue.push(new_raw_frame);
+                this->stream_lock.unlock();
+            }
         }
 
         Tmp_Frame* extract_frame()
