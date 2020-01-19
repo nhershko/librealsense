@@ -103,7 +103,7 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
   }
   else if (stream_profile->stream_type() == RS2_STREAM_COLOR)
   {
-    iCompressColor->compressColorFrame((unsigned char *)frame->get_data(), fFrameSize, fTo, stream_profile->width(),stream_profile->height());
+    iCompressColor->compressColorFrame((unsigned char *)frame->get_data(), fFrameSize, fTo, stream_profile->width(),stream_profile->height(),stream_profile->format());
   }
   else
   {

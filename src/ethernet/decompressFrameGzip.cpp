@@ -37,13 +37,13 @@ void  decompressFrameGzip::decompressDepthFrame(unsigned char* buffer, int size,
 	//assert(z_result != Z_BUF_ERROR);
 	//assert(z_result == Z_STREAM_END);
 	inflateEnd(&strm);
-	printf("finish depth decompression, full size: %lu , compressed size %u \n", strm.total_out, compressedSize);	
+	printf("finish depth decompression with gzip, full size: %lu , compressed size %u \n", strm.total_out, compressedSize);	
 
 	//statistic:
-	fullSizeSum += size;
-	compressedSizeSum += compressedSize;
-	float zipRatio = fullSizeSum/(float)compressedSizeSum;
-	frameCounter++;
+	//fullSizeSum += size;
+	//compressedSizeSum += compressedSize;
+	//float zipRatio = fullSizeSum/(float)compressedSizeSum;
+	//frameCounter++;
 	//printf("gzip zip ratio is: %0.2f , frameCounter: %d\n", zipRatio, frameCounter);
 }
 
