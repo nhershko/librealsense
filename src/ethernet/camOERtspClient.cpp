@@ -47,7 +47,7 @@ bool cammand_done = false;
 //void subsessionAfterPlaying(void* clientData); // called when a stream's subsession (e.g., audio or video substream) ends
 //void subsessionByeHandler(void* clientData, char const* reason);
 
-std::vector<rtp_rs_video_stream> camOERTSPClient::queryStreams()
+std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
 {
   // TODO - handle in a function
     unsigned res = this->sendDescribeCommand(this->continueAfterDESCRIBE);
@@ -68,10 +68,10 @@ std::vector<rtp_rs_video_stream> camOERTSPClient::queryStreams()
     return this->supportedProfiles;
 }
 
-int camOERTSPClient::addStream(rtp_rs_video_stream stream, rtp_callback* callback_obj)
+int camOERTSPClient::addStream(rs2_video_stream stream, rtp_callback* callback_obj)
 {
   this->envir()  << "looking for sub session \n";;
-  MediaSubsession* subsession = this->subsessionMap.find(stream.rtp_uid)->second;
+  MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
   this->envir()  << "find sub session " << subsession  << "\n";;
   if (subsession != NULL) {
     this->envir()  << " initiate subsession"  << "\n";;
@@ -93,7 +93,7 @@ int camOERTSPClient::addStream(rtp_rs_video_stream stream, rtp_callback* callbac
         {
           // TODO: change size according to BPP
           //
-          subsession->sink = camOESink::createNew(this->envir(), *subsession, stream.video_stream.width*stream.video_stream.height*2, this->url());
+          subsession->sink = camOESink::createNew(this->envir(), *subsession, stream.width*stream.height*2, this->url());
         // perhaps use your own custom "MediaSink" subclass instead
           if (subsession->sink == NULL) {
             this->envir() << "Failed to create a data sink for the subsession: " << this->envir().getResultMsg() << "\n";
@@ -129,9 +129,9 @@ int camOERTSPClient::start()
   return this->commandResultCode;
 }
 
-int camOERTSPClient::stop(rtp_rs_video_stream stream)
+int camOERTSPClient::stop(rs2_video_stream stream)
 {
-  MediaSubsession* subsession = this->subsessionMap.find(stream.rtp_uid)->second;
+  MediaSubsession* subsession = this->subsessionMap.find(stream.uid)->second;
   unsigned res = this->sendPauseCommand(*subsession, this->continueAfterPAUSE);
   // wait for continueAfterPAUSE to finish
   std::unique_lock<std::mutex> lck(command_mtx);
@@ -236,43 +236,27 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       int fps = strFpsVal != "" ? std::stoi(strFpsVal) : 0;
       int index = strIndexVal != "" ? std::stoi(strIndexVal) : 0;
       int stream_type = strStreamTypeVal != "" ? std::stoi(strStreamTypeVal): 0;
-      rtp_rs_video_stream rtpVideoStream;
-      rtpVideoStream.rtp_uid = camOERTSPClient::stream_counter++;
-      rtpVideoStream.video_stream.width = width;
-      rtpVideoStream.video_stream.height = height;
-      rtpVideoStream.video_stream.uid = uid; //camOERTSPClient::stream_counter++;
-      rtpVideoStream.video_stream.fmt = static_cast<rs2_format>(format);
-      rtpVideoStream.video_stream.fps = fps;
-      rtpVideoStream.video_stream.index = index;
-      rtpVideoStream.video_stream.type = static_cast<rs2_stream>(stream_type);
+      rs2_video_stream videoStream;
+      videoStream.width = width;
+      videoStream.height = height;
+      videoStream.uid = uid; //camOERTSPClient::stream_counter++;
+      videoStream.fmt = static_cast<rs2_format>(format);
+      videoStream.fps = fps;
+      videoStream.index = index;
+      videoStream.type = static_cast<rs2_stream>(stream_type);
     
       std::string url_str = rtspClient->url();
       // Remove last "/"
       url_str = url_str.substr(0, url_str.size()-1);
       std::size_t stream_name_index = url_str.find_last_of("/") + 1;
       std::string stream_name = url_str.substr(stream_name_index, url_str.size());
-      /*if (stream_name.compare("depth") == 0)
-      {
-        rtpVideoStream.video_stream.type = RS2_STREAM_DEPTH;
-        //nhershko: hard coded 
-        if(videoStream.fmt == RS2_FORMAT_RGB8)
-          videoStream.type = RS2_STREAM_INFRARED;
-        else
-            videoStream.fmt = RS2_FORMAT_Z16;
-      }
-      else if((stream_name.compare("color") == 0))
-      {
-        rtpVideoStream.video_stream.type = RS2_STREAM_COLOR;
-        //nhershko: hard coded 
-       // videoStream.fmt = RS2_FORMAT_YUYV;
-      }*/
 
       //nhershko: hard coded fixes
-      rtpVideoStream.video_stream.bpp=2;      
+      videoStream.bpp=2;      
 
       // TODO: update width and height in subsession?
-      ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, MediaSubsession*>(rtpVideoStream.rtp_uid, scs.subsession));
-      ((camOERTSPClient*)rtspClient)->supportedProfiles.push_back(rtpVideoStream);
+      ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, MediaSubsession*>(videoStream.uid, scs.subsession));
+      ((camOERTSPClient*)rtspClient)->supportedProfiles.push_back(videoStream);
       scs.subsession = scs.iter->next();
       // TODO: when to delete p?
     }

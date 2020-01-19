@@ -48,13 +48,13 @@ int main()
 
     IcamOERtsp* camOErtspInstance2 = camOERTSPClient::getRtspClient("rtsp://10.12.145.82:8554/color", "myClient");
     //IcamOERtsp* camOErtspInstance2 = camOERTSPClient::getRtspClient("rtsp://10.12.144.35:8554/unicast", "myClient");
-    std::vector<rtp_rs_video_stream> myProfiles2;
+    std::vector<rs2_video_stream> myProfiles2;
     ((camOERTSPClient*)camOErtspInstance2)->initFunc();
     myProfiles2 = camOErtspInstance2->queryStreams();
     std::cout << "Size = " << myProfiles2.size() << "\n";
     for (int i =  0; i < myProfiles2.size(); i++)
     {
-        std::cout << "Profile " << i << ": " << "width = " << myProfiles2[i].video_stream.width << " height = " << myProfiles2[i].video_stream.height << " format = " << myProfiles2[i].video_stream.fmt << " sensor id = " << myProfiles2[i].video_stream.type << " UID = " << myProfiles2[i].video_stream.uid << "\n";
+        std::cout << "Profile " << i << ": " << "width = " << myProfiles2[i].width << " height = " << myProfiles2[i].height << " format = " << myProfiles2[i].fmt << " sensor id = " << myProfiles2[i].type << " UID = " << myProfiles2[i].uid << "\n";
     }
 
     camOErtspInstance2->addStream(myProfiles2[0],new my_callback("mycolor"));
