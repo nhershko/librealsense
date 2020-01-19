@@ -242,8 +242,12 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       if (stream_name.compare("depth") == 0)
       {
         videoStream.type = RS2_STREAM_DEPTH;
+        
         //nhershko: hard coded 
-       // videoStream.fmt = RS2_FORMAT_Z16;
+        if(videoStream.fmt == RS2_FORMAT_RGB8)
+          videoStream.type = RS2_STREAM_INFRARED;
+        else
+            videoStream.fmt = RS2_FORMAT_Z16;
       }
       else if((stream_name.compare("color") == 0))
       {

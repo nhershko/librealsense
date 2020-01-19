@@ -6,6 +6,16 @@ void ip_device_deleter(void* p)
 
 }
 
+rs2_intrinsics get_hard_coded_sensor_intrinsics(rs2_video_stream stream)
+{
+	//todo: get intrinsics from rtsp 
+    int W = stream.width;
+    int H = stream.height;
+	if (stream.type==RS2_STREAM_DEPTH)
+		return { W, H,(float)W / 2, (float)H / 2,(float)W / 2, (float)H / 2,RS2_DISTORTION_BROWN_CONRADY ,{ 0,0,0,0,0 } };
+	return { W, H ,0, 0, 0, 0, RS2_DISTORTION_BROWN_CONRADY, { 0,0,0,0,0 } };
+}
+
 //WA for stop
 void ip_device::recover_rtsp_client(int sensor_index)
 {
@@ -92,7 +102,15 @@ bool ip_device::init_device_data()
         std::cout << "\t@@@ adding new sensor of type id: " << sensor_id << std::endl;
 
         rs2::software_sensor tmp_sensor = sw_dev.add_sensor(sensor_name);
+
         sensors[sensor_id] = new rs2::software_sensor(tmp_sensor);
+        
+        //hard_coded 
+        if (sensor_id==0)
+        {
+            sensors[sensor_id]->add_read_only_option(RS2_OPTION_DEPTH_UNITS, 0.001);
+            sensors[sensor_id]->add_read_only_option(RS2_OPTION_STEREO_BASELINE,0);
+        }
 
         auto streams = query_streams(sensor_id);
 
@@ -102,6 +120,9 @@ bool ip_device::init_device_data()
         {
             // just for readable code
             rs2_video_stream st = streams[stream_index];
+            
+            //todo: remove
+            st.intrinsics = get_hard_coded_sensor_intrinsics(st);
 
             std::cout << "\t@@@ add stream uid: "  << st.uid <<" at sensor: " << sensor_id << std::endl;
             
@@ -255,9 +276,17 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
 #else
 				memcpy(rtp_stream.get()->frame_data_buff.pixels, frame->m_buffer, frame->m_size);
 #endif
-			rtp_stream.get()->frame_data_buff.timestamp = frame->m_timestamp.tv_sec;
+			rtp_stream.get()->frame_data_buff.timestamp = frame->m_timestamp.tv_usec;
 			rtp_stream.get()->frame_data_buff.frame_number++;
             
+            sensors[type-1]->set_metadata(RS2_FRAME_METADATA_FRAME_TIMESTAMP,rtp_stream.get()->frame_data_buff.timestamp);
+            sensors[type-1]->set_metadata(RS2_FRAME_METADATA_ACTUAL_FPS,rtp_stream.get()->m_rs_stream.fps);
+            sensors[type-1]->set_metadata(RS2_FRAME_METADATA_FRAME_COUNTER,rtp_stream.get()->frame_data_buff.frame_number);
+            
+            //nhershko todo: consider set when frame is actualty arrive
+            sensors[type-1]->set_metadata(RS2_FRAME_METADATA_TIME_OF_ARRIVAL,
+                std::chrono::duration<double, std::milli>(std::chrono::system_clock::now().time_since_epoch()).count());
+
             sensors[type-1]->on_video_frame(rtp_stream.get()->frame_data_buff);
             //std::cout<<"\t@@@ added frame from type " << type << " with uid " << rtp_stream.get()->m_rs_stream.uid << " time stamp: " << (double)rtp_stream.get()->frame_data_buff.frame_number <<" profile: " << rtp_stream.get()->frame_data_buff.profile->profile->get_stream_type() << "   \n";
         }
