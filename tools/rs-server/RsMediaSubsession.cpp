@@ -61,39 +61,40 @@ RTPSink *RsServerMediaSubsession ::createNewRTPSink(Groupsock *rtpGroupsock,
                                               unsigned char rtpPayloadTypeIfDynamic,
                                               FramedSource * /*inputSource*/)
 {
+  unsigned int format = (unsigned int)(videoStreamProfile.format());
   switch (videoStreamProfile.format())
+  {            
+  case  RS2_FORMAT_RGB8: 
   {
-  case RS2_FORMAT_RGB8:
-  {
-    pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "RGB");
-  }
-  case RS2_FORMAT_BGR8:
-  {
-    pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "BGR");
-  }
-  case RS2_FORMAT_RGBA8:
+      pixelSize = 3;
+      return  RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, format, rs2_format_to_string(videoStreamProfile.format()), "RGB");         
+  }           
+  case  RS2_FORMAT_BGR8: 
   {
     pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "RGBA");
+    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, format, rs2_format_to_string(videoStreamProfile.format()), "BGR");          
   }
-  case RS2_FORMAT_BGRA8:
+  case  RS2_FORMAT_RGBA8:  
   {
     pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "BGRA");
-  }
-  case RS2_FORMAT_Z16:
-  case RS2_FORMAT_Y16:
-  case RS2_FORMAT_RAW16:
-  case RS2_FORMAT_YUYV:
+    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, format, rs2_format_to_string(videoStreamProfile.format()),  "RGBA");       
+  }         
+  case  RS2_FORMAT_BGRA8: 
   {
-    pixelSize = 2;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, "YCbCr-4:2:2");
+    pixelSize = 3;
+    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, format, rs2_format_to_string(videoStreamProfile.format()), "BGRA");        
+  }       
+  case  RS2_FORMAT_Z16:   
+  case  RS2_FORMAT_Y16:             
+  case  RS2_FORMAT_RAW16:          
+  case  RS2_FORMAT_YUYV:  
+  {
+      pixelSize = 2;
+      return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, videoStreamProfile.height(), videoStreamProfile.width(), 8, format, rs2_format_to_string(videoStreamProfile.format()), "YCbCr-4:2:2");         
   }
   default:
-    pixelSize = 0;
-    break;
-  }
+     pixelSize = 0;
+     break;
+  }   
   return NULL;
 }

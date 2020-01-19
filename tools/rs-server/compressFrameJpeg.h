@@ -3,11 +3,9 @@
 #include "IcompressFrame.h"
 #include <zlib.h>
 
-class compressFrameGzip :public IcompressFrame 
+class compressFrameJpeg :public IcompressFrame 
 {
     public: 
         int compressColorFrame(unsigned char* buffer, int size, unsigned char* compressedBuf, int width, int height);
-        int compressDepthFrame(unsigned char* buffer, int size, unsigned char* compressedBuf);
-    private:
-        z_stream strm;
+        int compressDepthFrame(unsigned char* buffer, int size, unsigned char* compressedBuf){};
 };
