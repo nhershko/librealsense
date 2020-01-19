@@ -55,7 +55,7 @@ class ip_device
         
         rs2::software_device sw_dev;
 
-        IdecompressFrame* idecomress;
+        IdecompressFrame *iDecomressColor, *iDecomressDepth;
 
         std::thread sw_device_status_check;
 

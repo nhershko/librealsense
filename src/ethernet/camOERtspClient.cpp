@@ -223,13 +223,17 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       // Get more data from the SDP string 
       const char* strWidthVal = scs.subsession->attrVal_str("width");
       const char* strHeightVal = scs.subsession->attrVal_str("height");
+      const char* strFormatVal = scs.subsession->attrVal_str("rs_format");
       int width = strWidthVal != NULL ? std::stoi(strWidthVal) : 0;
       int height = strHeightVal != NULL ? std::stoi(strHeightVal) : 0;
+      int format = strFormatVal != NULL ? std::stoi(strFormatVal) : 0;
       rs2_video_stream videoStream;
       videoStream.width = width;
       videoStream.height = height;
       videoStream.uid = camOERTSPClient::stream_counter++;
-      
+
+      videoStream.fmt = static_cast<rs2_format>(format);
+    
       std::string url_str = rtspClient->url();
       // Remove last "/"
       url_str = url_str.substr(0, url_str.size()-1);
@@ -239,13 +243,14 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       {
         videoStream.type = RS2_STREAM_DEPTH;
         //nhershko: hard coded 
-        videoStream.fmt = RS2_FORMAT_Z16;
+       // videoStream.fmt = RS2_FORMAT_Z16;
       }
       else if((stream_name.compare("color") == 0))
       {
         videoStream.type = RS2_STREAM_COLOR;
+        env << "Color!!!\n";
         //nhershko: hard coded 
-        videoStream.fmt = RS2_FORMAT_YUYV;
+       // videoStream.fmt = RS2_FORMAT_YUYV;
       }
 
       //nhershko: hard coded fixes

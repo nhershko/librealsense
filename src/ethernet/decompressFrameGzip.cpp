@@ -37,7 +37,7 @@ void  decompressFrameGzip::decompressDepthFrame(unsigned char* buffer, int size,
 	//assert(z_result != Z_BUF_ERROR);
 	//assert(z_result == Z_STREAM_END);
 	inflateEnd(&strm);
-	//printf("finish decompression, full size: %lu , compressed size %u \n", strm.total_out, compressedSize);	
+	printf("finish depth decompression, full size: %lu , compressed size %u \n", strm.total_out, compressedSize);	
 
 	//statistic:
 	fullSizeSum += size;
