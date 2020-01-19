@@ -25,10 +25,10 @@ public:
 
 
 // IcamOERtsp functions
-  virtual std::vector<rs2_video_stream> queryStreams();
-  virtual int addStream(rs2_video_stream stream, rtp_callback* frameCallBack);
+  virtual std::vector<rtp_rs_video_stream> queryStreams();
+  virtual int addStream(rtp_rs_video_stream stream, rtp_callback* frameCallBack);
   virtual int start();
-  virtual int stop(rs2_video_stream stream);
+  virtual int stop(rtp_rs_video_stream stream);
   virtual int stop();
   virtual int close();
 
@@ -37,7 +37,7 @@ protected:
 // TODO: deside about protection level
 public:
   StreamClientState scs;
-  std::vector<rs2_video_stream> supportedProfiles;
+  std::vector<rtp_rs_video_stream> supportedProfiles;
   std::map<int, MediaSubsession*> subsessionMap;
   int commandResultCode;
   static void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString);
