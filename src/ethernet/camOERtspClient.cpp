@@ -227,6 +227,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       const char* strUidVal = scs.subsession->attrVal_str("uid");
       const char* strFpsVal = scs.subsession->attrVal_str("fps");
       const char* strIndexVal = scs.subsession->attrVal_str("index");
+      const char* strStreamTypeVal = scs.subsession->attrVal_str("stream_type");
 
       int width = strWidthVal != "" ? std::stoi(strWidthVal) : 0;
       int height = strHeightVal != "" ? std::stoi(strHeightVal) : 0;
@@ -234,6 +235,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       int uid = strUidVal != "" ? std::stoi(strUidVal) : 0;
       int fps = strFpsVal != "" ? std::stoi(strFpsVal) : 0;
       int index = strIndexVal != "" ? std::stoi(strIndexVal) : 0;
+      int stream_type = strStreamTypeVal != "" ? std::stoi(strStreamTypeVal): 0;
       rtp_rs_video_stream rtpVideoStream;
       rtpVideoStream.rtp_uid = camOERTSPClient::stream_counter++;
       rtpVideoStream.video_stream.width = width;
@@ -242,13 +244,14 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       rtpVideoStream.video_stream.fmt = static_cast<rs2_format>(format);
       rtpVideoStream.video_stream.fps = fps;
       rtpVideoStream.video_stream.index = index;
+      rtpVideoStream.video_stream.type = static_cast<rs2_stream>(stream_type);
     
       std::string url_str = rtspClient->url();
       // Remove last "/"
       url_str = url_str.substr(0, url_str.size()-1);
       std::size_t stream_name_index = url_str.find_last_of("/") + 1;
       std::string stream_name = url_str.substr(stream_name_index, url_str.size());
-      if (stream_name.compare("depth") == 0)
+      /*if (stream_name.compare("depth") == 0)
       {
         rtpVideoStream.video_stream.type = RS2_STREAM_DEPTH;
         //nhershko: hard coded 
@@ -262,7 +265,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
         rtpVideoStream.video_stream.type = RS2_STREAM_COLOR;
         //nhershko: hard coded 
        // videoStream.fmt = RS2_FORMAT_YUYV;
-      }
+      }*/
 
       //nhershko: hard coded fixes
       rtpVideoStream.video_stream.bpp=2;      
