@@ -55,7 +55,7 @@ class ip_device
         
         rs2::software_device sw_dev;
 
-        IdecompressFrame* idecomress;
+        IdecompressFrame *iDecomressColor, *iDecomressDepth;
 
         std::thread sw_device_status_check;
 
@@ -75,7 +75,7 @@ class ip_device
         //rtp/rtsp protocol
 
         // => describe 
-        std::vector<rtp_rs_video_stream> query_streams(int sensor_id);
+        std::vector<rs2_video_stream> query_streams(int sensor_id);
 
         void recover_rtsp_client(int sensor_index);
 

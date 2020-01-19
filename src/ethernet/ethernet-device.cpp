@@ -72,7 +72,6 @@ int rs2::ethernet_device::arrived_frame_counter()
 
 std::vector<rs2_video_stream> rs2::ethernet_device::query_sensors() 
 {
-	/*
 	std::cout << "Querry Sensors\n";
 	std::vector<rs2_video_stream> streams;
 
@@ -89,7 +88,7 @@ std::vector<rs2_video_stream> rs2::ethernet_device::query_sensors()
 		stream_uid++;
 		}
 	}
-	*/
+
 	/*
 	TODO: use rtsp client
 	std::vector<stream_profile> rtsp_profiles = rtsp_client.query_streams();
@@ -100,7 +99,6 @@ std::vector<rs2_video_stream> rs2::ethernet_device::query_sensors()
 	//TODO: get device sensors via network
 	//rs2::sensor mock_sensor;
 	//sensors.push_back(mock_sensor);
-	std::vector<rs2_video_stream> streams;
 	return streams;
 }
 
