@@ -301,7 +301,8 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
 #endif
 			rtp_stream.get()->frame_data_buff.timestamp = frame->m_timestamp.tv_usec;
 			rtp_stream.get()->frame_data_buff.frame_number++;
-            
+            if (type<=SENSORS_NUMBER)
+            {
             sensors[type-1]->set_metadata(RS2_FRAME_METADATA_FRAME_TIMESTAMP,rtp_stream.get()->frame_data_buff.timestamp);
             sensors[type-1]->set_metadata(RS2_FRAME_METADATA_ACTUAL_FPS,rtp_stream.get()->m_rs_stream.fps);
             sensors[type-1]->set_metadata(RS2_FRAME_METADATA_FRAME_COUNTER,rtp_stream.get()->frame_data_buff.frame_number);
@@ -311,6 +312,7 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
                 std::chrono::duration<double, std::milli>(std::chrono::system_clock::now().time_since_epoch()).count());
 
             sensors[type-1]->on_video_frame(rtp_stream.get()->frame_data_buff);
+            }          
             //std::cout<<"\t@@@ added frame from type " << type << " with uid " << rtp_stream.get()->m_rs_stream.uid << " time stamp: " << (double)rtp_stream.get()->frame_data_buff.frame_number <<" profile: " << rtp_stream.get()->frame_data_buff.profile->profile->get_stream_type() << "   \n";
         }
 	}

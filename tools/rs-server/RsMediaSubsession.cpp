@@ -85,9 +85,11 @@ RTPSink *RsServerMediaSubsession ::createNewRTPSink(Groupsock *rtpGroupsock,
     return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile, "BGRA");        
   }       
   case  RS2_FORMAT_Z16:   
-  case  RS2_FORMAT_Y16:             
+  case  RS2_FORMAT_Y16: 
+  case  RS2_FORMAT_Y8:             
   case  RS2_FORMAT_RAW16:          
   case  RS2_FORMAT_YUYV:  
+  case  RS2_FORMAT_UYVY:
   {
       pixelSize = 2;
       return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile, "YCbCr-4:2:2");         
