@@ -16,7 +16,7 @@
 
 //int camOERTSPClient::stream_counter = 0;
 
-long long int getStreamProfileUniqueKey(rs2_video_stream profile)
+long long int camOERTSPClient::getStreamProfileUniqueKey(rs2_video_stream profile)
 {
 	long long int key;
 	key = profile.type * pow(10, 12) + profile.fmt * pow(10, 10) + profile.fps * pow(10, 8);

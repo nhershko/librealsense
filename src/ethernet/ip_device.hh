@@ -39,13 +39,13 @@ class ip_device
 
         std::map<int, int> active_stream_per_sensor;
 
-        std::map<int, std::list<int>> streams_uid_per_sensor;
+        std::map<int, std::list<long long int>> streams_uid_per_sensor;
 
-        std::map<int, std::shared_ptr<rs_rtp_stream>> streams_collection;
+        std::map<long long int, std::shared_ptr<rs_rtp_stream>> streams_collection;
 
-        std::map<int, std::thread> inject_frames_thread;
+        std::map<long long int, std::thread> inject_frames_thread;
 
-        std::map<int, rs_rtp_callback*> rtp_callbacks;
+        std::map<long long int, rs_rtp_callback*> rtp_callbacks;
 
         //rs_rtp_callback* rtp_callbacks[MAX_ACTIVE_STREAMS];
 
