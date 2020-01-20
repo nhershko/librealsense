@@ -39,6 +39,10 @@ RsDeviceSource::RsDeviceSource(UsageEnvironment &env, rs2::video_stream_profile 
   envir() << "RsDeviceSource constructor " <<this <<"\n";
   frames_queue = &queue;
   stream_profile = &video_stream_profile;
+#ifdef COMPRESSION
+  iCompressColor = compressFrameFactory::create(zipMethod::Jpeg);
+  iCompressDepth = compressFrameFactory::create(zipMethod::gzip);
+#endif
 }
 
 RsDeviceSource::~RsDeviceSource()
@@ -72,10 +76,6 @@ void RsDeviceSource::doGetNextFrame()
 
 void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
 {
-#ifdef COMPRESSION
-  IcompressFrame* iCompressColor = compressFrameFactory::create(zipMethod::Jpeg);
-  IcompressFrame* iCompressDepth = compressFrameFactory::create(zipMethod::gzip);
-#endif
   if (!isCurrentlyAwaitingData())
   {
     envir() << "isCurrentlyAwaitingData returned false"
@@ -102,7 +102,7 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
   }
   else if (stream_profile->stream_type() == RS2_STREAM_COLOR)
   {
-    iCompressColor->compressColorFrame((unsigned char *)frame->get_data(), fFrameSize, fTo, stream_profile->width(),stream_profile->height());
+    iCompressColor->compressColorFrame((unsigned char *)frame->get_data(), fFrameSize, fTo, stream_profile->width(),stream_profile->height(),stream_profile->format());
   }
   else
   {

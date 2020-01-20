@@ -30,7 +30,7 @@ int compressFrameGzip::compressDepthFrame(unsigned char* buffer, int size, unsig
 	return compressedSize;
 }
 
-int compressFrameGzip::compressColorFrame(unsigned char* buffer, int size, unsigned char* compressedBuf, int width, int height)
+int compressFrameGzip::compressColorFrame(unsigned char* buffer, int size, unsigned char* compressedBuf, int width, int height, rs2_format format)
 {
 	compressDepthFrame(buffer, size, compressedBuf);
 }
