@@ -18,6 +18,9 @@
 	//(void) jpeg_read_scanlines(&cinfo, destBuffer, 1);
 	//memcpy(ptr,destBuffer[0], 640*3);
 	//ptr+= 640*3;
+clock_t t1, t2;
+float diffsum = 0;
+int frameCounter = 0;
 
 decompressFrameJpeg::~decompressFrameJpeg() 
 {
@@ -34,15 +37,28 @@ decompressFrameJpeg::decompressFrameJpeg()
 
 void  decompressFrameJpeg::decompressColorFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf) 
 {	
+	t1 = clock();
 	unsigned char * ptr =  uncompressedBuf;
 	unsigned char* data = buffer + sizeof(unsigned int);
 	uint64_t compressedSize = 0;
-
+	uint res;
 	memcpy(&compressedSize, buffer, sizeof(unsigned int));
 	jpeg_mem_src(&cinfo, data , compressedSize);
-	(void) jpeg_read_header(&cinfo, TRUE);
+	memcpy(&res, buffer+sizeof(unsigned int), sizeof(unsigned int));
+	if (res != 3774863615) { //workaround for bad frames = E0FF D8FF - the First 4 bytes jpeg standards  
+		printf("skip frame\n");
+		return;
+	}
+	int retVal =  jpeg_read_header(&cinfo, TRUE);
+	if (!retVal) {
+		return;
+	}
 	cinfo.out_color_space = JCS_YCbCr;
-	(void) jpeg_start_decompress(&cinfo);
+	int r =  jpeg_start_decompress(&cinfo);
+	if (!r) {
+		printf("error\n");
+		return;
+	}
 	uint64_t row_stride = cinfo.output_width * cinfo.output_components;
 	destBuffer = (*cinfo.mem->alloc_sarray)((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
 	while (cinfo.output_scanline < cinfo.output_height) {
@@ -57,5 +73,10 @@ void  decompressFrameJpeg::decompressColorFrame(unsigned char* buffer, int size,
 	}
   
 	(void) jpeg_finish_decompress(&cinfo);
-	printf("finish color decompression with jpeg, full size: %d , compressed size %lu \n", size, compressedSize);
+	t2 = clock() - t1;
+	diffsum += t2;
+	//printf ("It took me %d clicks (%f miliseconds).\n",t2,((float)t2)/1000);
+	//printf("decompress time measurement is: %0.2f , frameCounter: %d\n", ((float)diffsum/frameCounter)/1000, frameCounter);
+	frameCounter++;
+	printf("finish color decompression with jpeg, full size: %lu , compressed size %u \n", size, compressedSize);
 }

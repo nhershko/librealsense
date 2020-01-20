@@ -6,6 +6,11 @@
 #include "compressFrameJpeg.h"
 #include <stdio.h>
 #include "jpeglib.h"
+#include <time.h>
+
+clock_t t1, t2;
+float diffsum = 0;
+int frameCounter = 0;
 
 #define MAX_INPUT_COMPONENT 3
 #define MAX_WIDTH 1280
@@ -23,6 +28,7 @@ compressFrameJpeg::~compressFrameJpeg()
 
 int compressFrameJpeg::compressColorFrame(unsigned char* buffer, int size, unsigned char* compressedBuf, int width, int height, rs2_format format)
 {	
+	t1 = clock();
 	uint64_t compressedSize = 0;
 	unsigned char * data;
 
@@ -55,5 +61,10 @@ int compressFrameJpeg::compressColorFrame(unsigned char* buffer, int size, unsig
 	
 	memcpy(compressedBuf + 4, data, compressedSize);
 	memcpy(compressedBuf, &compressedSize, sizeof(unsigned int));
+	t2 = clock() - t1;
+	diffsum += t2;
+	//printf ("It took me %d clicks (%f miliseconds).\n",t2,((float)t2)/1000);
+	//printf("time measerment is: %0.2f , frameCounter: %d\n", ((float)diffsum/frameCounter)/1000, frameCounter);
+	frameCounter++;
 	return compressedSize;
 }
