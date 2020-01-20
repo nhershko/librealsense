@@ -254,7 +254,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       rs2_video_stream videoStream;
       videoStream.width = width;
       videoStream.height = height;
-      videoStream.uid = uid; //camOERTSPClient::stream_counter++;
+      videoStream.uid = uid;//camOERTSPClient::stream_counter++;
       videoStream.fmt = static_cast<rs2_format>(format);
       videoStream.fps = fps;
       videoStream.index = index;
