@@ -21,5 +21,6 @@ class decompressFrameJpeg :public IdecompressFrame
                 clock_t t1, t2;
                 float diffSum = 0;
                 int frameCounter = 0;
+                long long  fullSizeSum = 0, compressedSizeSum = 0;
 #endif
 };

@@ -75,7 +75,10 @@ void  decompressFrameJpeg::decompressColorFrame(unsigned char* buffer, int size,
         }
 		ptr+= cinfo.output_width *2;
 	}
-  
+//TODO: workaround for bad frame
+if (compressedSize > size){
+	compressedSize=0;
+} 
 	(void) jpeg_finish_decompress(&cinfo);
 #ifdef COMPRESSION_STATISTICS	
 	t2 = clock();
@@ -84,6 +87,12 @@ void  decompressFrameJpeg::decompressColorFrame(unsigned char* buffer, int size,
 	printf ("It took me %d clicks (%f miliseconds).\n",diff,((float)diff)/1000);
 	printf("decompress time measurement is: %0.2f , frameCounter: %d\n", ((float)diffSum/frameCounter)/1000, frameCounter);
 	frameCounter++;
+
+	fullSizeSum += size;
+	compressedSizeSum += compressedSize;
+	float zipRatio = fullSizeSum/(float)compressedSizeSum;
+	frameCounter++;
+	printf("gzip zip ratio is: %0.2f , frameCounter: %d %d %d\n", zipRatio, frameCounter, fullSizeSum,compressedSizeSum );
 #endif
 	printf("finish color decompression with jpeg, full size: %lu , compressed size %u \n", size, compressedSize);
 }

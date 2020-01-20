@@ -24,7 +24,7 @@ compressFrameJpeg::~compressFrameJpeg()
 
 int compressFrameJpeg::compressColorFrame(unsigned char* buffer, int size, unsigned char* compressedBuf, int width, int height, rs2_format format)
 {	
-	uint64_t compressedSize = 0;
+	long unsigned int compressedSize = 0;
 	unsigned char * data;
 #ifdef COMPRESSION_STATISTICS
 	t1 = clock();
@@ -37,7 +37,7 @@ int compressFrameJpeg::compressColorFrame(unsigned char* buffer, int size, unsig
 	cinfo.in_color_space = JCS_YCbCr;
 	jpeg_set_defaults(&cinfo);
 	jpeg_start_compress(&cinfo, TRUE);
-	long unsigned int row_stride = cinfo.image_width * cinfo.input_components;
+	uint64_t row_stride = cinfo.image_width * cinfo.input_components;
 
 	while (cinfo.next_scanline < cinfo.image_height) {
 		//TODO: add to RGB format compress 
