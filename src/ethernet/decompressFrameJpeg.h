@@ -4,6 +4,7 @@
 #include <iomanip>
 #include "IdecompressFrame.h"
 #include "jpeglib.h"
+#include <time.h>
 
 class decompressFrameJpeg :public IdecompressFrame 
 {
@@ -16,4 +17,9 @@ class decompressFrameJpeg :public IdecompressFrame
                 struct jpeg_error_mgr jerr;
 	        struct jpeg_decompress_struct cinfo;
                 JSAMPARRAY destBuffer;
+#ifdef COMPRESSION_STATISTICS
+                clock_t t1, t2;
+                float diffSum = 0;
+                int frameCounter = 0;
+#endif
 };

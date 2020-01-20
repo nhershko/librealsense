@@ -17,7 +17,10 @@ class decompressFrameGzip :public IdecompressFrame
                 void decompressColorFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf);
                 void decompressDepthFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf);
         private:
-                long long  fullSizeSum = 0, compressedSizeSum = 0, frameCounter = 0; //for ratio statistics
                 z_stream strm;
+#ifdef COMPRESSION_STATISTICS
+                long long  fullSizeSum = 0, compressedSizeSum = 0, frameCounter = 0;
+#endif
+                
 
 };

@@ -23,7 +23,7 @@ void  decompressFrameGzip::decompressDepthFrame(unsigned char* buffer, int size,
 	int windowsBits = 15;
 	int GZIP_ENCODING = 16;
 	memcpy(&compressedSize, buffer,sizeof(unsigned int));
-	//assert(compressedSize < size);
+	//assert(compressedSize < size); //TODO: return it back after bad frame bag is fixed
 	strm.zalloc = Z_NULL;
 	strm.zfree = Z_NULL;
 	strm.opaque = Z_NULL;
@@ -33,18 +33,19 @@ void  decompressFrameGzip::decompressDepthFrame(unsigned char* buffer, int size,
 	strm.avail_out = size;
 	int z_result = inflateInit2(&strm, windowsBits | GZIP_ENCODING);
 	z_result = inflate(&strm, Z_FINISH);
-	//assert(z_result != Z_STREAM_ERROR );
+	//assert(z_result != Z_STREAM_ERROR ); //TODO: return it back after bad frame bag is fixed
 	//assert(z_result != Z_BUF_ERROR);
 	//assert(z_result == Z_STREAM_END);
 	inflateEnd(&strm);
 	printf("finish depth decompression with gzip, full size: %lu , compressed size %u \n", strm.total_out, compressedSize);	
 
-	//statistic:
-	//fullSizeSum += size;
-	//compressedSizeSum += compressedSize;
-	//float zipRatio = fullSizeSum/(float)compressedSizeSum;
-	//frameCounter++;
-	//printf("gzip zip ratio is: %0.2f , frameCounter: %d\n", zipRatio, frameCounter);
+#ifdef COMPRESSION_STATISTICS
+	fullSizeSum += size;
+	compressedSizeSum += compressedSize;
+	float zipRatio = fullSizeSum/(float)compressedSizeSum;
+	frameCounter++;
+	printf("gzip zip ratio is: %0.2f , frameCounter: %d\n", zipRatio, frameCounter);
+#endif
 }
 
 void  decompressFrameGzip::decompressColorFrame(unsigned char* buffer, int size, unsigned char* uncompressedBuf) 

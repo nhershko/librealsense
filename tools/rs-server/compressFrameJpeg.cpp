@@ -8,10 +8,6 @@
 #include "jpeglib.h"
 #include <time.h>
 
-clock_t t1, t2;
-float diffsum = 0;
-int frameCounter = 0;
-
 #define MAX_INPUT_COMPONENT 3
 #define MAX_WIDTH 1280
 
@@ -28,9 +24,11 @@ compressFrameJpeg::~compressFrameJpeg()
 
 int compressFrameJpeg::compressColorFrame(unsigned char* buffer, int size, unsigned char* compressedBuf, int width, int height, rs2_format format)
 {	
-	t1 = clock();
 	uint64_t compressedSize = 0;
 	unsigned char * data;
+#ifdef COMPRESSION_STATISTICS
+	t1 = clock();
+#endif
 
 	jpeg_mem_dest(&cinfo, &data, &compressedSize);
 	cinfo.image_width = width;
@@ -42,8 +40,10 @@ int compressFrameJpeg::compressColorFrame(unsigned char* buffer, int size, unsig
 	uint64_t row_stride = cinfo.image_width * cinfo.input_components;
 
 	while (cinfo.next_scanline < cinfo.image_height) {
+		//TODO: add to RGB format compress 
 		//row_pointer[0] = & buffer[cinfo.next_scanline * row_stride];
     	//(void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
+		//Convert from YUYV to YUV
         for (int i = 0; i < cinfo.image_width; i += 2) { //input strides by 4 bytes, output strides by 6 (2 pixels)
             rowBuffer[i*3] = buffer[i*2 + 0]; // Y (unique to this pixel)
             rowBuffer[i*3 + 1] = buffer[i*2 + 1]; // U (shared between pixels)
@@ -57,14 +57,17 @@ int compressFrameJpeg::compressColorFrame(unsigned char* buffer, int size, unsig
 		jpeg_write_scanlines(&cinfo, row_pointer, 1);
 	}
 	jpeg_finish_compress(&cinfo);
-	printf("finish color compression with jpeg, full size: %lu , compressed size %u \n", size, compressedSize);
 	
 	memcpy(compressedBuf + 4, data, compressedSize);
 	memcpy(compressedBuf, &compressedSize, sizeof(unsigned int));
-	t2 = clock() - t1;
-	diffsum += t2;
-	//printf ("It took me %d clicks (%f miliseconds).\n",t2,((float)t2)/1000);
-	//printf("time measerment is: %0.2f , frameCounter: %d\n", ((float)diffsum/frameCounter)/1000, frameCounter);
+#ifdef COMPRESSION_STATISTICS	
+	t2 = clock();
+	int diff = t2 - t1;
+	diffSum += diff;
+	printf("compress took %d clicks (%f miliseconds).\n",diff,((float)diff)/1000);
+	printf("compress time measurement is: %0.2f , frameCounter: %d\n", ((float)diffSum/frameCounter)/1000, frameCounter);
 	frameCounter++;
+#endif
+	printf("finish color compression with jpeg, full size: %lu , compressed size %u \n", size, compressedSize);
 	return compressedSize;
 }

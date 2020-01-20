@@ -51,6 +51,10 @@ target_link_libraries(rs-server ${DEPENDENCIES} realsense2 ${ZLIB_LIBRARIES} ${J
 if(COMPRESSION)
     add_definitions(-DCOMPRESSION)
 endif()
+if(COMPRESSION_STATISTICS)
+    add_definitions(-DCOMPRESSION_STATISTICS)
+endif()
+
 
 set_target_properties (rs-server PROPERTIES
     FOLDER Tools

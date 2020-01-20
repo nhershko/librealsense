@@ -2,6 +2,7 @@
 
 #include "IcompressFrame.h"
 #include "jpeglib.h"
+#include <time.h>
 
 class compressFrameJpeg :public IcompressFrame 
 {
@@ -15,5 +16,10 @@ class compressFrameJpeg :public IcompressFrame
 	    struct jpeg_compress_struct cinfo;
         unsigned char *rowBuffer;
         JSAMPROW row_pointer[1];
+#ifdef COMPRESSION_STATISTICS
+        clock_t t1, t2;
+        float diffSum = 0;
+        int frameCounter = 0;
+#endif
 
 };
