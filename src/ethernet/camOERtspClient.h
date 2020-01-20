@@ -22,6 +22,8 @@ public:
     void initFunc();
     virtual bool isConnected();
 
+    static long long int getStreamProfileUniqueKey(rs2_video_stream profile);
+
 
 
 // IcamOERtsp functions

@@ -127,11 +127,11 @@ bool ip_device::init_device_data()
             std::cout << "\t@@@ add stream uid: "  << st.uid <<" at sensor: " << sensor_id << std::endl;
             
             //nhershko: check why profile with type 0
+            long long int stream_key = camOERTSPClient::getStreamProfileUniqueKey(st);
+            streams_collection[stream_key] = std::make_shared<rs_rtp_stream>(st,sensors[sensor_id]->add_video_stream(st,stream_index==0));
             
-            streams_collection[st.uid] = std::make_shared<rs_rtp_stream>(st,sensors[sensor_id]->add_video_stream(st,stream_index==0));
-            
-            std::cout << "\t@@@ added stream uid: "  << st.uid <<" of type: " << streams_collection[st.uid].get()->stream_type() << std::endl;
-            streams_uid_per_sensor[sensor_id].push_front(st.uid);
+            std::cout << "\t@@@ added stream [uid:hash] ["  << st.uid<<":"<< stream_key <<"] of type: " << streams_collection[stream_key].get()->stream_type() << std::endl;
+            streams_uid_per_sensor[sensor_id].push_front(stream_key);
         }
         std::cout << "\t@@@ done adding streams for sensor ID: " << sensor_id <<std::endl;
     }
@@ -170,6 +170,18 @@ void ip_device::polling_state_loop()
 
 }
 
+rs2_video_stream convert_stream_object(rs2::video_stream_profile sp)
+{
+    rs2_video_stream retVal;
+    retVal.fmt = sp.format();
+    retVal.type = sp.stream_type();
+    retVal.fps = sp.fps();
+    retVal.width = sp.width();
+    retVal.height = sp.height();
+    
+    return retVal;
+}
+
 void ip_device::update_sensor_state(int sensor_index,std::vector<rs2::stream_profile> updated_streams)
 {
     //check if need to close all
@@ -180,13 +192,13 @@ void ip_device::update_sensor_state(int sensor_index,std::vector<rs2::stream_pro
         rtsp_clients[sensor_index]->stop();
         rtsp_clients[sensor_index]->close();
 
-        for (int uid : streams_uid_per_sensor[sensor_index]) 
+        for (long long int key : streams_uid_per_sensor[sensor_index]) 
         {
-            if (streams_collection[uid].get()->is_enabled==false)
+            if (streams_collection[key].get()->is_enabled==false)
                 continue;
-            std::cout << "\t@@@ stopping stream uid: " << uid <<std::endl;
-            streams_collection[uid].get()->is_enabled=false;
-            inject_frames_thread[uid].join();
+            std::cout << "\t@@@ stopping stream [uid:key] " << streams_collection[key].get()->m_rs_stream.uid <<":"<<key<< "]" <<std::endl;
+            streams_collection[key].get()->is_enabled=false;
+            inject_frames_thread[key].join();
         }
         return;
     }
@@ -197,7 +209,11 @@ void ip_device::update_sensor_state(int sensor_index,std::vector<rs2::stream_pro
     {
         rs2::video_stream_profile vst(updated_streams[i]);
 
-        if(streams_collection.find(vst.unique_id()) == streams_collection.end())
+        
+
+        long long int requested_stream_key = camOERTSPClient::getStreamProfileUniqueKey(convert_stream_object(vst));
+
+        if(streams_collection.find(requested_stream_key) == streams_collection.end())
         {
             std::cout<<"\n\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n";
             std::cout<< "\t@@@ stream with uid: " << vst.unique_id() << " was not found! adding new stream" << std::endl;
@@ -205,7 +221,7 @@ void ip_device::update_sensor_state(int sensor_index,std::vector<rs2::stream_pro
             exit(-1);
         }
         
-        std::cout<< "\t@@@ starting new stream with uid: " << vst.unique_id() << " of type: " << vst.stream_type()  << std::endl;
+        std::cout<< "\t@@@ starting new stream with [uid:key] [" << vst.unique_id() <<":"<< requested_stream_key << "] of type: " << vst.stream_type()  << std::endl;
 
         //temporary nhershko workaround for start after stop
         if(!((camOERTSPClient*)rtsp_clients[sensor_index])->isConnected())
@@ -213,12 +229,12 @@ void ip_device::update_sensor_state(int sensor_index,std::vector<rs2::stream_pro
             recover_rtsp_client(sensor_index);
         }
 
-        rtp_callbacks[vst.unique_id()] = new rs_rtp_callback(streams_collection[vst.unique_id()]);
+        rtp_callbacks[requested_stream_key] = new rs_rtp_callback(streams_collection[requested_stream_key]);
         
-        rtsp_clients[sensor_index]->addStream(streams_collection[vst.unique_id()].get()->m_rs_stream ,rtp_callbacks[vst.unique_id()]);
+        rtsp_clients[sensor_index]->addStream(streams_collection[requested_stream_key].get()->m_rs_stream ,rtp_callbacks[requested_stream_key]);
         
         std::cout << "\t@@@ initiate new thread for stream: " << vst.unique_id() << "\n";    
-        inject_frames_thread[vst.unique_id()] = std::thread(&ip_device::inject_frames_loop,this,streams_collection[vst.unique_id()]);
+        inject_frames_thread[requested_stream_key] = std::thread(&ip_device::inject_frames_loop,this,streams_collection[requested_stream_key]);
     }
 
     rtsp_clients[sensor_index]->start();
