@@ -36,30 +36,12 @@
 using namespace rs2;
 using namespace rs400;
 
-
-
-//ethernet_device remote_device("0.0.0.0:8554");
-
-
-    
-
 void add_remote_device(context& ctx, std::string address) 
 {
     software_device sw_dev = ip_device::create_ip_device(address);
-    //std::shared_ptr<rs2_context> rsctx = ctx.operator std::shared_ptr<rs2_context>();
-
-
-    //sw_dev = ip_device::create_ip_device("10.12.144.74");
-
     sw_dev.add_to(ctx);
-
-    /*
-	std::cout << "Connecting to " << address << "\n";
-	remote_device.start(address);
-	std::shared_ptr<rs2_context> rsctx = ctx.operator std::shared_ptr<rs2_context>();
-	rs2_context_add_software_device(rsctx.get(), remote_device.get_device(), NULL);
-    */
 }
+
 void add_playback_device(context& ctx, device_models_list& device_models, 
     std::string& error_message, viewer_model& viewer_model, const std::string& file)
 {
