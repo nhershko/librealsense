@@ -255,9 +255,12 @@ bool refresh_devices(std::mutex& m,
 
 int main(int argc, const char** argv) try
 {
+
+    int ip=0;
     rs2::log_to_console(RS2_LOG_SEVERITY_WARN);
 
     ux_window window("Intel RealSense Viewer");
+    //ux_window ip_window("IP window");
 
     // Create RealSense Context
     context ctx;
@@ -321,11 +324,12 @@ int main(int argc, const char** argv) try
             device_names, *device_models, viewer_model, error_message);
         return true;
     };
-
+    
 
     // Closing the window
     while (window)
     {
+
         auto device_changed = refresh_devices(m, ctx, devices_connection_changes, connected_devs, 
             device_names, *device_models, viewer_model, error_message);
 
@@ -355,8 +359,54 @@ int main(int argc, const char** argv) try
         ImGui::SetNextWindowPos({ 0, viewer_model.panel_y });
 
         std::string add_source_button_text = to_string() << " " << textual_icons::plus_circle << "  Add Source\t\t\t\t\t\t\t\t\t\t\t";
-        if (ImGui::Button(add_source_button_text.c_str(), { viewer_model.panel_width - 1, viewer_model.panel_y }))
+        if (ImGui::Button(add_source_button_text.c_str(), { (viewer_model.panel_width - 1)/2.2f, viewer_model.panel_y }))
             ImGui::OpenPopup("select");
+
+        ImGui::SameLine();
+        std::string add_sw_device_button_text = to_string() << " " << textual_icons::plus_circle << "  Add SW Device\t\t\t\t\t\t\t\t\t\t\t";
+        if (ImGui::Button(add_sw_device_button_text.c_str(), { (viewer_model.panel_width - 1)/2.2f, viewer_model.panel_y }))
+            ImGui::OpenPopup("enter camera ip");
+
+        float width  = window.width()  * 0.2f;
+        float height  = window.height() * 0.2f;
+        float posx = window.width()  * 0.4f;
+        float posy = window.height() * 0.4f;
+        ImGui::SetNextWindowPos({ posx, posy });
+        ImGui::SetNextWindowSize({ width, height });
+        ImGui::SetNextWindowCollapsed(true);
+        if (ImGui::BeginPopupModal("enter camera ip"))
+        {
+            static char ip_input[256];
+            std::string ip_address="10.12.144.55:8554";
+            ImGui::NewLine();
+            ImGui::SetCursorPosX(width * 0.15f);
+            ImGui::PushItemWidth(width * 0.7f);
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, light_grey);
+            ImGui::PushStyleColor(ImGuiCol_Text, black);
+            if (ImGui::InputText("",ip_input,255))
+            {
+                ip_address=ip_input;
+            }
+            ImGui::PopItemWidth();
+            ImGui::NewLine();
+            ImGui::SetCursorPosX(10.f);
+            ImGui::PopStyleColor(2);
+            if(ImGui::Button("ok",{ 100.f, 25.f }))
+            {
+                add_remote_device(ctx, ip_address);
+                device_changed = refresh_devices(m, ctx, devices_connection_changes, connected_devs, device_names, *device_models, viewer_model, error_message);
+                auto dev = connected_devs[connected_devs.size()-1];
+                device_models->emplace_back(new device_model(dev, error_message, viewer_model));
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(width-100.f - 10.f);
+            if(ImGui::Button("cancel",{ 100.f, 25.f }))
+            {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
 
         auto new_devices_count = device_names.size() + 1;
 
@@ -372,6 +422,28 @@ int main(int argc, const char** argv) try
 
         ImGui::PushFont(window.get_font());
         ImGui::SetNextWindowSize({ viewer_model.panel_width, 20.f * new_devices_count + 8 });
+        if (ImGui::BeginPopup("ip_pop"))
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, dark_grey);
+            ImGui::Columns(2, "DevicesList", false);
+
+            if (new_devices_count > 1) ImGui::Separator();
+
+            if (ImGui::Selectable("Load Recorded Sequence", false, ImGuiSelectableFlags_SpanAllColumns))
+            {
+                if (auto ret = file_dialog_open(open_file, "ROS-bag\0*.bag\0", NULL, NULL))
+                {
+                    add_playback_device(ctx, *device_models, error_message, viewer_model, ret);
+                }
+            }
+            ImGui::NextColumn();
+            ImGui::Text("%s", "");
+            ImGui::NextColumn();
+
+            ImGui::PopStyleColor();
+            ImGui::EndPopup();
+        }
+
         if (ImGui::BeginPopup("select"))
         {
             ImGui::PushStyleColor(ImGuiCol_Text, dark_grey);
@@ -540,12 +612,16 @@ int main(int argc, const char** argv) try
             viewer_model.show_no_device_overlay(window.get_large_font(), 50, static_cast<int>(viewer_model.panel_y + 50));
         }
 
+        viewer_model.not_model.add_notification({ " 33333 :)\n",RS2_LOG_SEVERITY_INFO, RS2_NOTIFICATION_CATEGORY_UNKNOWN_ERROR });
+        ImGui::BeginPopup("aaaaaaaaa");
+
         ImGui::End();
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
 
         // Fetch and process frames from queue
         viewer_model.handle_ready_frames(viewer_rect, window, static_cast<int>(device_models->size()), error_message);
+        int a=9;
     }
 
     // Stopping post processing filter rendering thread
