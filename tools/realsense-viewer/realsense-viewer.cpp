@@ -255,12 +255,9 @@ bool refresh_devices(std::mutex& m,
 
 int main(int argc, const char** argv) try
 {
-
-    int ip=0;
     rs2::log_to_console(RS2_LOG_SEVERITY_WARN);
 
     ux_window window("Intel RealSense Viewer");
-    //ux_window ip_window("IP window");
 
     // Create RealSense Context
     context ctx;
@@ -324,7 +321,7 @@ int main(int argc, const char** argv) try
             device_names, *device_models, viewer_model, error_message);
         return true;
     };
-    
+
 
     // Closing the window
     while (window)
@@ -422,27 +419,6 @@ int main(int argc, const char** argv) try
 
         ImGui::PushFont(window.get_font());
         ImGui::SetNextWindowSize({ viewer_model.panel_width, 20.f * new_devices_count + 8 });
-        if (ImGui::BeginPopup("ip_pop"))
-        {
-            ImGui::PushStyleColor(ImGuiCol_Text, dark_grey);
-            ImGui::Columns(2, "DevicesList", false);
-
-            if (new_devices_count > 1) ImGui::Separator();
-
-            if (ImGui::Selectable("Load Recorded Sequence", false, ImGuiSelectableFlags_SpanAllColumns))
-            {
-                if (auto ret = file_dialog_open(open_file, "ROS-bag\0*.bag\0", NULL, NULL))
-                {
-                    add_playback_device(ctx, *device_models, error_message, viewer_model, ret);
-                }
-            }
-            ImGui::NextColumn();
-            ImGui::Text("%s", "");
-            ImGui::NextColumn();
-
-            ImGui::PopStyleColor();
-            ImGui::EndPopup();
-        }
 
         if (ImGui::BeginPopup("select"))
         {
@@ -612,16 +588,12 @@ int main(int argc, const char** argv) try
             viewer_model.show_no_device_overlay(window.get_large_font(), 50, static_cast<int>(viewer_model.panel_y + 50));
         }
 
-        viewer_model.not_model.add_notification({ " 33333 :)\n",RS2_LOG_SEVERITY_INFO, RS2_NOTIFICATION_CATEGORY_UNKNOWN_ERROR });
-        ImGui::BeginPopup("aaaaaaaaa");
-
         ImGui::End();
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
 
         // Fetch and process frames from queue
         viewer_model.handle_ready_frames(viewer_rect, window, static_cast<int>(device_models->size()), error_message);
-        int a=9;
     }
 
     // Stopping post processing filter rendering thread

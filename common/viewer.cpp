@@ -1928,8 +1928,7 @@ namespace rs2
 
         int buttons = window.is_fullscreen() ? 4 : 3;
 
-        ImGui::SetCursorPosX(window.width() - panel_width - panel_y * (buttons));
-        
+        ImGui::SetCursorPosX(window.width() - panel_width - panel_y * (buttons));       
         ImGui::PushStyleColor(ImGuiCol_Text, is_3d_view ? light_grey : light_blue);
         ImGui::PushStyleColor(ImGuiCol_TextSelectedBg, is_3d_view ? light_grey : light_blue);
         if (ImGui::Button("2D", { panel_y, panel_y })) 
@@ -2008,9 +2007,7 @@ namespace rs2
 
         ImGui::SetNextWindowPos({ window.width() - 100, panel_y });
         ImGui::SetNextWindowSize({ 100, 90 });
-
-
-        
+ 
         if (ImGui::BeginPopup("More Options"))
         {
             settings_open = true;
