@@ -255,11 +255,19 @@ rs2::software_device ip_device::create_ip_device(std::string ip_address)
     return sw_dev;
 }
 
+int stream_type_to_sensor_id(rs2_stream type)
+{
+    if ( type == RS2_STREAM_INFRARED || type == RS2_STREAM_DEPTH)
+        return 0;
+    return 1;
+}
+
 void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
 {
     rtp_stream.get()->is_enabled=true;
     int uid = rtp_stream.get()->m_rs_stream.uid;
     rs2_stream type = rtp_stream.get()->m_rs_stream.type;
+    int sensor_id = stream_type_to_sensor_id(type);
     
     while (rtp_stream.get()->is_enabled==true)
     {
@@ -269,10 +277,7 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
 		} 
         else 
         {				
-            //std:: cout <<"\t@@@ get frame of stream uid "<< uid << "type: " << type << std::endl;
             Tmp_Frame* frame = rtp_stream.get()->extract_frame();
-            //std:: cout <<"\t@@@ got the frame"<<std::endl;
-
 #ifdef COMPRESSION			
         if(rtp_stream.get()->m_rs_stream.width == 640 && rtp_stream.get()->m_rs_stream.height == 480)
         {
@@ -280,16 +285,14 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
             if (type==rs2_stream::RS2_STREAM_DEPTH) 
             {
 				// depth
-                //std:: cout <<"\t@@@ before com the frame"<<std::endl;
 				iDecomressDepth->decompressDepthFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(rtp_stream.get()->frame_data_buff.pixels));
-                //std:: cout <<"\t@@@ after com the frame"<<std::endl;
 			} else if(type==rs2_stream::RS2_STREAM_COLOR) {
                 iDecomressColor->decompressColorFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(rtp_stream.get()->frame_data_buff.pixels));
             } 
             else 
             {
-                std::cerr <<" BAD type"<<std::endl;
-                exit(-1);
+                //infrared
+                memcpy(rtp_stream.get()->frame_data_buff.pixels, frame->m_buffer, frame->m_size);
             }
         }
         else
@@ -301,18 +304,18 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
 #endif
 			rtp_stream.get()->frame_data_buff.timestamp = frame->m_timestamp.tv_usec;
 			rtp_stream.get()->frame_data_buff.frame_number++;
-            if (type<=SENSORS_NUMBER)
-            {
-            sensors[type-1]->set_metadata(RS2_FRAME_METADATA_FRAME_TIMESTAMP,rtp_stream.get()->frame_data_buff.timestamp);
-            sensors[type-1]->set_metadata(RS2_FRAME_METADATA_ACTUAL_FPS,rtp_stream.get()->m_rs_stream.fps);
-            sensors[type-1]->set_metadata(RS2_FRAME_METADATA_FRAME_COUNTER,rtp_stream.get()->frame_data_buff.frame_number);
             
-            //nhershko todo: consider set when frame is actualty arrive
-            sensors[type-1]->set_metadata(RS2_FRAME_METADATA_TIME_OF_ARRIVAL,
+            
+            sensors[sensor_id]->set_metadata(RS2_FRAME_METADATA_FRAME_TIMESTAMP,rtp_stream.get()->frame_data_buff.timestamp);
+            sensors[sensor_id]->set_metadata(RS2_FRAME_METADATA_ACTUAL_FPS,rtp_stream.get()->m_rs_stream.fps);
+            sensors[sensor_id]->set_metadata(RS2_FRAME_METADATA_FRAME_COUNTER,rtp_stream.get()->frame_data_buff.frame_number);
+            sensors[sensor_id]->set_metadata(RS2_FRAME_METADATA_FRAME_EMITTER_MODE,1);
+
+            //nhershko todo: set it at actuqal arrivial time
+            sensors[sensor_id]->set_metadata(RS2_FRAME_METADATA_TIME_OF_ARRIVAL,
                 std::chrono::duration<double, std::milli>(std::chrono::system_clock::now().time_since_epoch()).count());
 
-            sensors[type-1]->on_video_frame(rtp_stream.get()->frame_data_buff);
-            }          
+            sensors[sensor_id]->on_video_frame(rtp_stream.get()->frame_data_buff);
             //std::cout<<"\t@@@ added frame from type " << type << " with uid " << rtp_stream.get()->m_rs_stream.uid << " time stamp: " << (double)rtp_stream.get()->frame_data_buff.frame_number <<" profile: " << rtp_stream.get()->frame_data_buff.profile->profile->get_stream_type() << "   \n";
         }
 	}
@@ -321,21 +324,3 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
     std::cout<<"polling data at stream index " << rtp_stream.get()->m_rs_stream.uid <<" is done\n";
 
 }
-
-    //3. get sensors and streams
-    /*
-    std::vector<rs2::software_sensor> sensors;
-    //rs2::software_sensor sensors[2] = {NULL};
-    sensors.insert(sensors.end(),sw_dev.add_sensor("bla"));
-    //sensors[0] = rs2_software_device_add_sensor(sw_dev,("Depth (Remote)"));
-    
-    rs2_video_stream st = {RS2_STREAM_DEPTH,0,0,640,480,30,2,RS2_FORMAT_Z16,
-            { 640, 480,(float)640 / 2, (float)480 / 2,(float)640 / 2, (float)480 / 2,RS2_DISTORTION_BROWN_CONRADY ,{ 0,0,0,0,0 } }};
-    sensors[0].add_video_stream(st);
-
-
-    //4. for each sensor:
-    //  4.1. create and add sw sensor to sw device
-    //  4.2. add streams per sensor
-    //5. register tear_down function to sw_device dtor
-    */
