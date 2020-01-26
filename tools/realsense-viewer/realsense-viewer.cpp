@@ -269,6 +269,7 @@ int main(int argc, const char** argv) try
 
     std::shared_ptr<device_models_list> device_models = std::make_shared<device_models_list>();
     device_model* device_to_remove = nullptr;
+    std::string ip_address;
 
     viewer_model viewer_model;
     viewer_model.ctx = ctx;
@@ -363,41 +364,43 @@ int main(int argc, const char** argv) try
         if (ImGui::Button(add_sw_device_button_text.c_str(), { (viewer_model.panel_width - 1)/2.2f, viewer_model.panel_y }))
             ImGui::OpenPopup("enter camera ip");
 
-        float width  = window.width()  * 0.2f;
-        float height  = window.height() * 0.2f;
-        float posx = window.width()  * 0.4f;
+        float width = window.width() * 0.2f;
+        float height = window.height() * 0.2f;
+        float posx = window.width() * 0.4f;
         float posy = window.height() * 0.4f;
         ImGui::SetNextWindowPos({ posx, posy });
         ImGui::SetNextWindowSize({ width, height });
-        ImGui::SetNextWindowCollapsed(true);
         if (ImGui::BeginPopupModal("enter camera ip"))
         {
             static char ip_input[256];
-            std::string ip_address="10.12.144.55:8554";
+            memset(ip_input, 0, 256);
             ImGui::NewLine();
             ImGui::SetCursorPosX(width * 0.15f);
             ImGui::PushItemWidth(width * 0.7f);
             ImGui::PushStyleColor(ImGuiCol_FrameBg, light_grey);
             ImGui::PushStyleColor(ImGuiCol_Text, black);
-            if (ImGui::InputText("",ip_input,255))
+            if (ImGui::InputText("", ip_input, 255))
             {
-                ip_address=ip_input;
+                ip_address = ip_input;
             }
             ImGui::PopItemWidth();
             ImGui::NewLine();
             ImGui::SetCursorPosX(10.f);
             ImGui::PopStyleColor(2);
-            if(ImGui::Button("ok",{ 100.f, 25.f }))
+            if(ImGui::Button("ok",{100.f, 25.f}))
             {
-                add_remote_device(ctx, ip_address);
-                device_changed = refresh_devices(m, ctx, devices_connection_changes, connected_devs, device_names, *device_models, viewer_model, error_message);
-                auto dev = connected_devs[connected_devs.size()-1];
-                device_models->emplace_back(new device_model(dev, error_message, viewer_model));
-                ImGui::CloseCurrentPopup();
+                if (!ip_address.empty())
+                {
+                    add_remote_device(ctx, ip_address);
+                    device_changed = refresh_devices(m, ctx, devices_connection_changes, connected_devs, device_names, *device_models, viewer_model, error_message);
+                    auto dev = connected_devs[connected_devs.size()-1];
+                    device_models->emplace_back(new device_model(dev, error_message, viewer_model));
+                    ImGui::CloseCurrentPopup();
+                }
             }
             ImGui::SameLine();
-            ImGui::SetCursorPosX(width-100.f - 10.f);
-            if(ImGui::Button("cancel",{ 100.f, 25.f }))
+            ImGui::SetCursorPosX(width - 100.f - 10.f);
+            if(ImGui::Button("cancel",{100.f, 25.f}))
             {
                 ImGui::CloseCurrentPopup();
             }
