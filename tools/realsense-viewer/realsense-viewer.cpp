@@ -275,14 +275,14 @@ int main(int argc, const char** argv) try
 
     std::vector<device> connected_devs;
     std::mutex m;
-
+/*
     if (argc == 1) {
 	std::cout << "No camera address supplied. Exiting.\n";
 	exit(1);
     } else {
 	add_remote_device(ctx, argv[1]);
     }
-
+*/
     window.on_file_drop = [&](std::string filename)
     {
         
@@ -326,7 +326,6 @@ int main(int argc, const char** argv) try
     // Closing the window
     while (window)
     {
-
         auto device_changed = refresh_devices(m, ctx, devices_connection_changes, connected_devs, 
             device_names, *device_models, viewer_model, error_message);
 
@@ -419,7 +418,6 @@ int main(int argc, const char** argv) try
 
         ImGui::PushFont(window.get_font());
         ImGui::SetNextWindowSize({ viewer_model.panel_width, 20.f * new_devices_count + 8 });
-
         if (ImGui::BeginPopup("select"))
         {
             ImGui::PushStyleColor(ImGuiCol_Text, dark_grey);
