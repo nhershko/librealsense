@@ -276,14 +276,11 @@ int main(int argc, const char** argv) try
 
     std::vector<device> connected_devs;
     std::mutex m;
-/*
-    if (argc == 1) {
-	std::cout << "No camera address supplied. Exiting.\n";
-	exit(1);
-    } else {
+
+    if (argc == 2) {
 	add_remote_device(ctx, argv[1]);
     }
-*/
+
     window.on_file_drop = [&](std::string filename)
     {
         
