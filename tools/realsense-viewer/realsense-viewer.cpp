@@ -356,7 +356,7 @@ int main(int argc, const char** argv) try
         ImGui::SetNextWindowPos({ 0, viewer_model.panel_y });
 
         std::string add_source_button_text = to_string() << " " << textual_icons::plus_circle << "  Add Source\t\t\t\t\t\t\t\t\t\t\t";
-        if (ImGui::Button(add_source_button_text.c_str(), { (viewer_model.panel_width - 1)/2.2f, viewer_model.panel_y }))
+        if (ImGui::Button(add_source_button_text.c_str(), { viewer_model.panel_width - 1, viewer_model.panel_y }))
             ImGui::OpenPopup("select");
 
         auto new_devices_count = device_names.size() + 1;
@@ -371,7 +371,7 @@ int main(int argc, const char** argv) try
         }
 
         ImGui::PushFont(window.get_font());
-        ImGui::SetNextWindowSize({ viewer_model.panel_width, 20.f * new_devices_count + 32 });
+        ImGui::SetNextWindowSize({ viewer_model.panel_width, 20.f * new_devices_count + 34 });
         if (ImGui::BeginPopup("select"))
         {
             ImGui::PushStyleColor(ImGuiCol_Text, dark_grey);
@@ -434,9 +434,8 @@ int main(int argc, const char** argv) try
             ImGui::Separator();
             if (ImGui::Selectable("Load Software Device", false, ImGuiSelectableFlags_SpanAllColumns))
             {
-                ImGui::OpenPopup("load sw");
+                //ImGui::OpenPopup("load sw");
                 b = true;
-
             }
 
             ImGui::NextColumn();
@@ -446,9 +445,9 @@ int main(int argc, const char** argv) try
             ImGui::PopStyleColor();
             ImGui::EndPopup();
         }
-        if (b==true)//(ImGui::BeginPopupModal("load sw"))
+        if (b == true)//(ImGui::BeginPopupModal("load sw"))
         {
-            ImGui::OpenPopup("enter camera ip3");
+            ImGui::OpenPopup("Enter Camera IP");
             b=false;
             //ImGui::EndPopup();
         }
@@ -460,7 +459,7 @@ int main(int argc, const char** argv) try
         float posy = window.height() * 0.4f;
         ImGui::SetNextWindowPos({ posx, posy });
         ImGui::SetNextWindowSize({ width, height });
-        if (ImGui::BeginPopupModal("enter camera ip3"))
+        if (ImGui::BeginPopupModal("Enter Camera IP"))
         {
             static char ip_input[256];
             memset(ip_input, 0, 256);
