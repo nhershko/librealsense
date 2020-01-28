@@ -280,7 +280,6 @@ int main(int argc, const char** argv) try
     if (argc == 2)
     {
 	    add_remote_device(ctx, argv[1]);
-        //remote_device_connected = true;
     }
 
     window.on_file_drop = [&](std::string filename)
@@ -321,8 +320,6 @@ int main(int argc, const char** argv) try
             device_names, *device_models, viewer_model, error_message);
         return true;
     };
-
-    bool b = false;
 
     // Closing the window
     while (window)
@@ -431,19 +428,14 @@ int main(int argc, const char** argv) try
             ImGui::Text("%s", "");
             ImGui::NextColumn();
 
+            //////////////////////////////////////////////
             ImGui::Separator();
             if (ImGui::Selectable("Load Software Device", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups))
-            //if (ImGui::Selectable("Load Software Device", false, ImGuiSelectableFlags_SpanAllColumns ))
             {
-                //ImGui::CloseCurrentPopup();
                 ImGui::OpenPopup("Enter Camera IP");
-                //ImGui::clo();
-
-                //b = true;
             }
 
             
-            //////////////////////////////////////////////
             float width = window.width() * 0.2f;
             float height = 120; // window.height() * 0.2f;
             float posx = window.width() * 0.4f;
@@ -476,7 +468,6 @@ int main(int argc, const char** argv) try
                         device_changed = refresh_devices(m, ctx, devices_connection_changes, connected_devs, device_names, *device_models, viewer_model, error_message);
                         auto dev = connected_devs[connected_devs.size()-1];
                         device_models->emplace_back(new device_model(dev, error_message, viewer_model));
-                        //remote_device_connected = true;
                         ImGui::CloseCurrentPopup();
                     }
                 }
@@ -499,7 +490,6 @@ int main(int argc, const char** argv) try
             ImGui::PopStyleColor();
             ImGui::EndPopup();
         }
-
         ImGui::PopFont();
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
@@ -512,7 +502,6 @@ int main(int argc, const char** argv) try
 
 
         viewer_model.show_top_bar(window, viewer_rect, *device_models);
-        
 
         viewer_model.show_event_log(window.get_font(), viewer_model.panel_width,
             window.height() - (viewer_model.is_output_collapsed ? viewer_model.default_log_h : 20),
@@ -523,7 +512,6 @@ int main(int argc, const char** argv) try
         ImGui::SetNextWindowSize({ viewer_model.panel_width, window.height() - viewer_model.panel_y });
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::PushStyleColor(ImGuiCol_WindowBg, sensor_bg);
-
 
         // *********************
         // Creating window menus
@@ -613,11 +601,8 @@ int main(int argc, const char** argv) try
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
 
-
         // Fetch and process frames from queue
         viewer_model.handle_ready_frames(viewer_rect, window, static_cast<int>(device_models->size()), error_message);
-        
-
     }
 
     // Stopping post processing filter rendering thread
@@ -630,6 +615,7 @@ int main(int argc, const char** argv) try
             if (sub->streaming)
                 sub->stop(viewer_model);
         }
+        
     return EXIT_SUCCESS;
 }
 catch (const error & e)
