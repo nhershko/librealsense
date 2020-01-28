@@ -270,7 +270,6 @@ int main(int argc, const char** argv) try
     std::shared_ptr<device_models_list> device_models = std::make_shared<device_models_list>();
     device_model* device_to_remove = nullptr;
     std::string ip_address;
-    //bool remote_device_connected = false;
 
     viewer_model viewer_model;
     viewer_model.ctx = ctx;
@@ -278,7 +277,7 @@ int main(int argc, const char** argv) try
     std::vector<device> connected_devs;
     std::mutex m;
 
-    //if (argc == 2) 
+    //if (argc == 2) //todo
     {
 	    add_remote_device(ctx, argv[1]);
         //remote_device_connected = true;
@@ -323,7 +322,7 @@ int main(int argc, const char** argv) try
         return true;
     };
 
-    bool b=false;
+    bool b = false;
 
     // Closing the window
     while (window)
@@ -360,60 +359,6 @@ int main(int argc, const char** argv) try
         if (ImGui::Button(add_source_button_text.c_str(), { (viewer_model.panel_width - 1)/2.2f, viewer_model.panel_y }))
             ImGui::OpenPopup("select");
 
-        ImGui::SameLine();
-        std::string add_sw_device_button_text = to_string() << " " << textual_icons::plus_circle << "  Add SW Device\t\t\t\t\t\t\t\t\t\t\t";
-        if (ImGui::Button(add_sw_device_button_text.c_str(), { (viewer_model.panel_width - 1)/2.2f, viewer_model.panel_y }))
-        {
-            //if (remote_device_connected == false)
-            {
-                ImGui::OpenPopup("enter camera ip");
-            }
-        }
-
-        float width = window.width() * 0.2f;
-        float height = window.height() * 0.2f;
-        float posx = window.width() * 0.4f;
-        float posy = window.height() * 0.4f;
-        ImGui::SetNextWindowPos({ posx, posy });
-        ImGui::SetNextWindowSize({ width, height });
-        if (ImGui::BeginPopupModal("enter camera ip"))
-        {
-            static char ip_input[256];
-            memset(ip_input, 0, 256);
-            ImGui::NewLine();
-            ImGui::SetCursorPosX(width * 0.15f);
-            ImGui::PushItemWidth(width * 0.7f);
-            ImGui::PushStyleColor(ImGuiCol_FrameBg, light_grey);
-            ImGui::PushStyleColor(ImGuiCol_Text, black);
-            if (ImGui::InputText("", ip_input, 255))
-            {
-                ip_address = ip_input;
-            }
-            ImGui::PopItemWidth();
-            ImGui::NewLine();
-            ImGui::SetCursorPosX(10.f);
-            ImGui::PopStyleColor(2);
-            if(ImGui::Button("ok",{100.f, 25.f}))
-            {
-                if (!ip_address.empty())
-                {
-                    add_remote_device(ctx, ip_address);
-                    device_changed = refresh_devices(m, ctx, devices_connection_changes, connected_devs, device_names, *device_models, viewer_model, error_message);
-                    auto dev = connected_devs[connected_devs.size()-1];
-                    device_models->emplace_back(new device_model(dev, error_message, viewer_model));
-                    //remote_device_connected = true;
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(width - 100.f - 10.f);
-            if(ImGui::Button("cancel",{100.f, 25.f}))
-            {
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::EndPopup();
-        }
-
         auto new_devices_count = device_names.size() + 1;
 
         for (auto&& dev_model : *device_models)
@@ -442,8 +387,6 @@ int main(int argc, const char** argv) try
                 {
                     try
                     {
-                        //if (connected_devs[i].) //TODO: check if it is SW device
-                        ImGui::OpenPopup("enter camera ip"+i);
                         auto dev = connected_devs[i];
                         device_models->emplace_back(new device_model(dev, error_message, viewer_model));
                     }
@@ -456,10 +399,6 @@ int main(int argc, const char** argv) try
                         error_message = e.what();
                     }
                 }
-                //if (ImGui::BeginPopupModal("enter camera ip2"))
-                //{
-                //ImGui::EndPopup();
-                //}
 
                 if (ImGui::IsItemHovered())
                 {
@@ -476,17 +415,8 @@ int main(int argc, const char** argv) try
                     ImGui::NextColumn();
                 }
 
-                /*if (ImGui::BeginPopupModal("enter camera ip"+i))
-                {
-                    ImGui::Text("aaaaaaaaaaaaaaaaa");
-                    ImGui::EndPopup();
-                }*/
             }
 
-            //if (ImGui::BeginPopupModal("enter camera ip2"))
-            //{
-             //   ImGui::EndPopup();
-            //}
 
             if (new_devices_count > 1) ImGui::Separator();
 
@@ -505,14 +435,9 @@ int main(int argc, const char** argv) try
             if (ImGui::Selectable("Load Software Device", false, ImGuiSelectableFlags_SpanAllColumns))
             {
                 ImGui::OpenPopup("load sw");
-                b=true;
+                b = true;
 
             }
-            /*if(ImGui::BeginPopupModal("load sw2"))
-            {
-                ImGui::Text("aaaaaaaaaaaaaaaaa");
-                ImGui::EndPopup();
-            }*/
 
             ImGui::NextColumn();
             ImGui::Text("%s", "");
@@ -529,10 +454,10 @@ int main(int argc, const char** argv) try
         }
 
     //////////////////////////////////////////////
-        //float width = window.width() * 0.2f;
-        //float height = window.height() * 0.2f;
-        //float posx = window.width() * 0.4f;
-        //float posy = window.height() * 0.4f;
+        float width = window.width() * 0.2f;
+        float height = window.height() * 0.2f;
+        float posx = window.width() * 0.4f;
+        float posy = window.height() * 0.4f;
         ImGui::SetNextWindowPos({ posx, posy });
         ImGui::SetNextWindowSize({ width, height });
         if (ImGui::BeginPopupModal("enter camera ip3"))
@@ -584,13 +509,6 @@ int main(int argc, const char** argv) try
         ImGui::End();
         ImGui::PopStyleVar();
 
-
-        /*if (ImGui::BeginPopupModal("load sw"))
-        {
-            ImGui::Text("loading sw");
-            ImGui::EndPopup();
-        }*/
-
         viewer_model.show_top_bar(window, viewer_rect, *device_models);
 
         viewer_model.show_event_log(window.get_font(), viewer_model.panel_width,
@@ -602,13 +520,6 @@ int main(int argc, const char** argv) try
         ImGui::SetNextWindowSize({ viewer_model.panel_width, window.height() - viewer_model.panel_y });
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
         ImGui::PushStyleColor(ImGuiCol_WindowBg, sensor_bg);
-
-
-       /* if (ImGui::BeginPopupModal("load sw"))
-        {
-            ImGui::Text("loading sw");
-            ImGui::EndPopup();
-        }*/
 
         // *********************
         // Creating window menus
@@ -693,32 +604,14 @@ int main(int argc, const char** argv) try
 
             viewer_model.show_no_device_overlay(window.get_large_font(), 50, static_cast<int>(viewer_model.panel_y + 50));
         }
-        /*if (ImGui::BeginPopupModal("load sw"))
-        {
-            ImGui::Text("loading sw");
-            ImGui::EndPopup();
-        }*/
 
         ImGui::End();
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
 
-        /*if (ImGui::BeginPopupModal("load sw"))
-        {
-            ImGui::Text("loading sw");
-            ImGui::EndPopup();
-        }*/
-
-
         // Fetch and process frames from queue
         viewer_model.handle_ready_frames(viewer_rect, window, static_cast<int>(device_models->size()), error_message);
     }
-
-        /*if (ImGui::BeginPopupModal("load sw"))
-        {
-            ImGui::Text("loading sw");
-            ImGui::EndPopup();
-        }*/
 
     // Stopping post processing filter rendering thread
     viewer_model.ppf.stop();
