@@ -277,7 +277,7 @@ int main(int argc, const char** argv) try
     std::vector<device> connected_devs;
     std::mutex m;
 
-    //if (argc == 2) //todo
+    if (argc == 2)
     {
 	    add_remote_device(ctx, argv[1]);
         //remote_device_connected = true;
@@ -454,20 +454,21 @@ int main(int argc, const char** argv) try
 
     //////////////////////////////////////////////
         float width = window.width() * 0.2f;
-        float height = window.height() * 0.2f;
+        float height = 120; // window.height() * 0.2f;
         float posx = window.width() * 0.4f;
         float posy = window.height() * 0.4f;
         ImGui::SetNextWindowPos({ posx, posy });
         ImGui::SetNextWindowSize({ width, height });
-        if (ImGui::BeginPopupModal("Enter Camera IP"))
+        ImGui::PushStyleColor(ImGuiCol_PopupBg, dark_grey);
+        if (ImGui::BeginPopupModal("Enter Camera IP", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
         {
             static char ip_input[256];
             memset(ip_input, 0, 256);
             ImGui::NewLine();
             ImGui::SetCursorPosX(width * 0.15f);
             ImGui::PushItemWidth(width * 0.7f);
-            ImGui::PushStyleColor(ImGuiCol_FrameBg, light_grey);
-            ImGui::PushStyleColor(ImGuiCol_Text, black);
+            //ImGui::PushStyleColor(ImGuiCol_FrameBg, light_grey);
+            //ImGui::PushStyleColor(ImGuiCol_Text, black);
             if (ImGui::InputText("", ip_input, 255))
             {
                 ip_address = ip_input;
@@ -475,7 +476,7 @@ int main(int argc, const char** argv) try
             ImGui::PopItemWidth();
             ImGui::NewLine();
             ImGui::SetCursorPosX(10.f);
-            ImGui::PopStyleColor(2);
+            //ImGui::PopStyleColor(2);
             if(ImGui::Button("ok",{100.f, 25.f}))
             {
                 if (!ip_address.empty())
@@ -496,6 +497,8 @@ int main(int argc, const char** argv) try
             }
             ImGui::EndPopup();
         }
+        ImGui::PopStyleColor(1);
+
 //////////////////////////////////////////////
         
         ImGui::PopFont();
