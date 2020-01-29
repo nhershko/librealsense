@@ -6,12 +6,12 @@
 
 const int RTP_QUEUE_MAX_SIZE = 30;
 
-struct Tmp_Frame
+struct Raw_Frame
 {
-	Tmp_Frame(char* buffer, int size,  struct timeval timestamp) : m_buffer(buffer), m_size(size), m_timestamp(timestamp) {};
-	Tmp_Frame(const Tmp_Frame&);
-	Tmp_Frame& operator=(const Tmp_Frame&);
-	~Tmp_Frame()  { delete [] m_buffer; };
+	Raw_Frame(char* buffer, int size,  struct timeval timestamp) : m_buffer(buffer), m_size(size), m_timestamp(timestamp) {};
+	Raw_Frame(const Raw_Frame&);
+	Raw_Frame& operator=(const Raw_Frame&);
+	~Raw_Frame()  { delete [] m_buffer; };
 	
 	char* m_buffer;
 	unsigned int m_size;
@@ -40,7 +40,7 @@ class rs_rtp_stream
             return m_rs_stream.type;                   
         }
 
-        void insert_frame(Tmp_Frame* new_raw_frame)
+        void insert_frame(Raw_Frame* new_raw_frame)
         {
             if(queue_size()>RTP_QUEUE_MAX_SIZE)
             {
@@ -54,10 +54,10 @@ class rs_rtp_stream
             }
         }
 
-        Tmp_Frame* extract_frame()
+        Raw_Frame* extract_frame()
         {
             this->stream_lock.lock();
-            Tmp_Frame* frame = frames_queue.front();
+            Raw_Frame* frame = frames_queue.front();
 			frames_queue.pop();
             this->stream_lock.unlock();
             return frame;
@@ -94,7 +94,7 @@ class rs_rtp_stream
 
         std::mutex stream_lock;
 
-        std::queue<Tmp_Frame*> frames_queue;
+        std::queue<Raw_Frame*> frames_queue;
         // frame data buffers
         
         // pixels data 

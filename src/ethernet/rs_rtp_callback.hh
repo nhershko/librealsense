@@ -7,7 +7,7 @@
 #include <memory>
 #include <mutex>
 
-#include "rtp_stream.hh"
+#include "rs_rtp_stream.hh"
 
 class rs_rtp_callback : public rtp_callback
 {
