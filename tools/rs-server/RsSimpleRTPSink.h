@@ -2,7 +2,7 @@
 #define _RS_SIMPLE_RTP_SINK_HH
 
 #include <librealsense2/hpp/rs_internal.hpp>
-#include "SimpleRTPSink.hh"
+#include "liveMedia.hh"
 
 class RsSimpleRTPSink : public SimpleRTPSink
 {

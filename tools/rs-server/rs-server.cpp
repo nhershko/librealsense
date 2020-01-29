@@ -47,6 +47,7 @@ void sigint_handler(int sig);
 
 int main(int argc, char **argv)
 {
+  OutPacketBuffer::increaseMaxSizeTo(1280*720*3);
   signal(SIGINT, sigint_handler);
 
   // Begin by setting up our usage environment:
