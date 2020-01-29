@@ -1,7 +1,7 @@
 #ifndef _STREAM_CLIENT_STATE_H
 #define _STREAM_CLIENT_STATE_H
 
-#include "liveMedia.hh"
+#include "RsMediaSession.hh"
 
 // Define a class to hold per-stream state that we maintain throughout each stream's lifetime:
 
@@ -22,9 +22,9 @@ virtual ~StreamClientState() {
   }
 
 public:
-  MediaSubsessionIterator* iter;
-  MediaSession* session;
-  MediaSubsession* subsession;
+  RsMediaSubsessionIterator* iter;
+  RsMediaSession* session;
+  RsMediaSubsession* subsession;
 };
 
 #endif // _STREAM_CLIENT_STATE_H

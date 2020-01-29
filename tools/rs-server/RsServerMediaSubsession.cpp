@@ -18,9 +18,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // A 'ServerMediaSubsession' object that creates new, unicast, "RTPSink"s
 // on demand, from a file.
 // Implementation
-#include "RsMediaSubsession.h"
-#include "RsRawVideoRTPSink.h"
-//#include <librealsense2/h/rs_sensor.h>
+#include "RsServerMediaSubsession.h"
+#include "RsSimpleRTPSink.h"
 
 #define CAPACITY 100
 
@@ -32,13 +31,14 @@ RsServerMediaSubsession *RsServerMediaSubsession::createNew(UsageEnvironment &en
 RsServerMediaSubsession ::RsServerMediaSubsession(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile /*, rs2::frame_queue &queue*/)
     : OnDemandServerMediaSubsession(env, false), videoStreamProfile(video_stream_profile) /*,frameQueue(queue)*/
 {
-  envir() << "RsServerMediaSubsession constructor" <<this << "\n";
+  //envir() << "RsServerMediaSubsession constructor" <<this << "\n";
   frameQueue = rs2::frame_queue(CAPACITY, true);
 }
 
-RsServerMediaSubsession::~RsServerMediaSubsession() {
-  envir() << "RsServerMediaSubsession destructor" <<this << "\n";
-    //TODO:: free the queue
+RsServerMediaSubsession::~RsServerMediaSubsession()
+{
+  //envir() << "RsServerMediaSubsession destructor" <<this << "\n";
+  //TODO:: free the queue
 }
 
 rs2::frame_queue &RsServerMediaSubsession::get_frame_queue()
@@ -58,45 +58,8 @@ FramedSource *RsServerMediaSubsession::createNewStreamSource(unsigned /*clientSe
 }
 
 RTPSink *RsServerMediaSubsession ::createNewRTPSink(Groupsock *rtpGroupsock,
-                                              unsigned char rtpPayloadTypeIfDynamic,
-                                              FramedSource * /*inputSource*/)
+                                                    unsigned char rtpPayloadTypeIfDynamic,
+                                                    FramedSource * /*inputSource*/)
 {
-  unsigned int format = (unsigned int)(videoStreamProfile.format());
-  switch (videoStreamProfile.format())
-  {            
-  case  RS2_FORMAT_RGB8: 
-  {
-      pixelSize = 3;
-      return  RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile, "RGB");         
-  }           
-  case  RS2_FORMAT_BGR8: 
-  {
-    pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile, "BGR");          
-  }
-  case  RS2_FORMAT_RGBA8:  
-  {
-    pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile,  "RGBA");       
-  }         
-  case  RS2_FORMAT_BGRA8: 
-  {
-    pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile, "BGRA");        
-  }       
-  case  RS2_FORMAT_Z16:   
-  case  RS2_FORMAT_Y16: 
-  case  RS2_FORMAT_Y8:             
-  case  RS2_FORMAT_RAW16:          
-  case  RS2_FORMAT_YUYV:  
-  case  RS2_FORMAT_UYVY:
-  {
-      pixelSize = 2;
-      return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile, "YCbCr-4:2:2");         
-  }
-  default:
-     pixelSize = 0;
-     break;
-  }   
-  return NULL;
+  return RsSimpleRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 90000, "X" , "Y" , videoStreamProfile); //,1U,1,0);
 }

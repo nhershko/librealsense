@@ -100,11 +100,11 @@ if(stream_profile->width() == 640 && stream_profile->height() == 480)
 {
   if (stream_profile->stream_type() == RS2_STREAM_DEPTH)
   {
-    iCompressDepth->compressDepthFrame((unsigned char *)frame->get_data(), fFrameSize, fTo);
+    fFrameSize = iCompressDepth->compressDepthFrame((unsigned char *)frame->get_data(), fFrameSize, fTo);
   }
   else if (stream_profile->stream_type() == RS2_STREAM_COLOR)
   {
-    iCompressColor->compressColorFrame((unsigned char *)frame->get_data(), fFrameSize, fTo, stream_profile->width(),stream_profile->height(),stream_profile->format());
+    fFrameSize = iCompressColor->compressColorFrame((unsigned char *)frame->get_data(), fFrameSize, fTo, stream_profile->width(),stream_profile->height(),stream_profile->format());
   }
 }
 else{

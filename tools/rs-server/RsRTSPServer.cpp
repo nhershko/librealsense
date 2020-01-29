@@ -25,7 +25,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <GroupsockHelper.hh>
 #include "RsRTSPServer.hh"
 #include "RsServerMediaSession.h"
-#include "RsMediaSubsession.h"
+#include "RsServerMediaSubsession.h"
 
 ////////// RTSPServer implementation //////////
 

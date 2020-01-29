@@ -40,7 +40,7 @@ protected:
 public:
   StreamClientState scs;
   std::vector<rs2_video_stream> supportedProfiles;
-  std::map<int, MediaSubsession*> subsessionMap;
+  std::map<int, RsMediaSubsession*> subsessionMap;
   int commandResultCode;
   static void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString);
   static void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString);

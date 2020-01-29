@@ -30,7 +30,7 @@ void  decompressFrameGzip::decompressDepthFrame(unsigned char* buffer, int size,
 	strm.next_in = (Bytef *)buffer + sizeof(unsigned int);
 	strm.avail_in =  size;
 	strm.next_out = (Bytef *)uncompressedBuf;
-	strm.avail_out = size;
+	strm.avail_out = 640*480*2;//TODO: to remove the hard-coded
 	int z_result = inflateInit2(&strm, windowsBits | GZIP_ENCODING);
 	z_result = inflate(&strm, Z_FINISH);
 	//assert(z_result != Z_STREAM_ERROR ); //TODO: return it back after bad frame bag is fixed
