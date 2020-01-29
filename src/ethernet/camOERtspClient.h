@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <map>
+#include <condition_variable>
 
 class camOERTSPClient: public RTSPClient, IcamOERtsp
 {
@@ -24,31 +25,21 @@ public:
 
     static long long int getStreamProfileUniqueKey(rs2_video_stream profile);
 
+    // IcamOERtsp functions
+    virtual std::vector<rs2_video_stream> queryStreams();
+    virtual int addStream(rs2_video_stream stream, rtp_callback* frameCallBack);
+    virtual int start();
+    virtual int stop(rs2_video_stream stream);
+    virtual int stop();
+    virtual int close();
 
-
-// IcamOERtsp functions
-  virtual std::vector<rs2_video_stream> queryStreams();
-  virtual int addStream(rs2_video_stream stream, rtp_callback* frameCallBack);
-  virtual int start();
-  virtual int stop(rs2_video_stream stream);
-  virtual int stop();
-  virtual int close();
-
-protected:
-  
-// TODO: deside about protection level
-public:
-  StreamClientState scs;
-  std::vector<rs2_video_stream> supportedProfiles;
-  std::map<int, RsMediaSubsession*> subsessionMap;
-  int commandResultCode;
-  static void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString);
-  static void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString);
-  static void continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString);
-  static void continueAfterTEARDOWN(RTSPClient* rtspClient, int resultCode, char* resultString);
-  static void continueAfterPAUSE(RTSPClient* rtspClient, int resultCode, char* resultString);
-  static void subsessionAfterPlaying(void* clientData); // called when a stream's subsession (e.g., audio or video substream) ends
-  static void subsessionByeHandler(void* clientData, char const* reason);
+    static void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString);
+    static void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString);
+    static void continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString);
+    static void continueAfterTEARDOWN(RTSPClient* rtspClient, int resultCode, char* resultString);
+    static void continueAfterPAUSE(RTSPClient* rtspClient, int resultCode, char* resultString);
+    static void subsessionAfterPlaying(void* clientData); // called when a stream's subsession (e.g., audio or video substream) ends
+    static void subsessionByeHandler(void* clientData, char const* reason);
 
 private:
     camOERTSPClient(UsageEnvironment& env, char const* rtspURL,
@@ -57,13 +48,17 @@ private:
     // called only by createNew();
     virtual ~camOERTSPClient();
 
-    bool is_connected;
+    StreamClientState scs;
+    std::vector<rs2_video_stream> supportedProfiles;
+    std::map<int, RsMediaSubsession*> subsessionMap;
+    int commandResultCode;
     static int stream_counter;
-
     // TODO: should we have seperate mutex for each command?
-    //std::condition_variable cv;
-    //std::mutex command_mtx;
-    //bool cammand_done = false;
+    std::condition_variable cv;
+    std::mutex command_mtx;
+    bool cammand_done = false;
+    // TODO: W/A for stop - should be removed
+    bool is_connected;
 };
 #endif // _CAM_OE_RTSP_CLIENT_H
 
