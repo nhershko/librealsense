@@ -74,7 +74,6 @@ std::vector<rs2_video_stream> ip_device::query_streams(int sensor_id)
     return streams;
 }
 
-int stream_id=0;
 bool ip_device::init_device_data()
 {
     std::string url,sensor_name;

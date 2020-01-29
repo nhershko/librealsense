@@ -269,6 +269,7 @@ int main(int argc, const char** argv) try
 
     std::shared_ptr<device_models_list> device_models = std::make_shared<device_models_list>();
     device_model* device_to_remove = nullptr;
+    bool is_sw_sevice_connected = false;
     std::string ip_address;
 
     viewer_model viewer_model;
@@ -279,7 +280,8 @@ int main(int argc, const char** argv) try
 
     if (argc == 2)
     {
-	    add_remote_device(ctx, argv[1]);
+        add_remote_device(ctx, argv[1]);
+        is_sw_sevice_connected = true;
     }
 
     window.on_file_drop = [&](std::string filename)
@@ -369,7 +371,7 @@ int main(int argc, const char** argv) try
 
 
         ImGui::PushFont(window.get_font());
-        ImGui::SetNextWindowSize({ viewer_model.panel_width, 20.f * new_devices_count + 34 });
+        ImGui::SetNextWindowSize({ viewer_model.panel_width, 20.f * new_devices_count + 8 + (is_sw_sevice_connected? 0 : 26)});
         if (ImGui::BeginPopup("select"))
         {
             ImGui::PushStyleColor(ImGuiCol_Text, dark_grey);
@@ -428,59 +430,62 @@ int main(int argc, const char** argv) try
             ImGui::Text("%s", "");
             ImGui::NextColumn();
 
-            ImGui::Separator();
-            if (ImGui::Selectable("Load Software Device", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups))
+            if (!is_sw_sevice_connected)
             {
-                ImGui::OpenPopup("Enter Camera IP");
-            }
-
-            
-            float width = window.width() * 0.2f;
-            float height = 120;
-            float posx = window.width() * 0.4f;
-            float posy = window.height() * 0.4f;
-            ImGui::SetNextWindowPos({ posx, posy });
-            ImGui::SetNextWindowSize({ width, height });
-            ImGui::PushStyleColor(ImGuiCol_PopupBg, dark_grey);
-            ImGui::PushStyleColor(ImGuiCol_Text, white);
-            if (ImGui::BeginPopupModal("Enter Camera IP", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))    
-            {
-                static char ip_input[256];
-                memset(ip_input, 0, 256);
-                ImGui::NewLine();
-                ImGui::SetCursorPosX(width * 0.15f);
-                ImGui::PushItemWidth(width * 0.7f);
-                if (ImGui::InputText("", ip_input, 255))
+                ImGui::Separator();
+                if (ImGui::Selectable("Load Software Device", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups))
                 {
-                    ip_address = ip_input;
+                    ImGui::OpenPopup("Enter Camera IP");
                 }
-                ImGui::PopItemWidth();
-                ImGui::NewLine();
-                ImGui::SetCursorPosX(10.f);
-                if(ImGui::Button("ok",{100.f, 25.f}))
+
+                float width = window.width() * 0.2f;
+                float height = 120;
+                float posx = window.width() * 0.4f;
+                float posy = window.height() * 0.4f;
+                ImGui::SetNextWindowPos({ posx, posy });
+                ImGui::SetNextWindowSize({ width, height });
+                ImGui::PushStyleColor(ImGuiCol_PopupBg, dark_grey);
+                ImGui::PushStyleColor(ImGuiCol_Text, white);
+                if (ImGui::BeginPopupModal("Enter Camera IP", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))    
                 {
-                    if (!ip_address.empty())
+                    static char ip_input[256];
+                    memset(ip_input, 0, 256);
+                    ImGui::NewLine();
+                    ImGui::SetCursorPosX(width * 0.15f);
+                    ImGui::PushItemWidth(width * 0.7f);
+                    if (ImGui::InputText("", ip_input, 255))
                     {
-                        add_remote_device(ctx, ip_address);
-                        device_changed = refresh_devices(m, ctx, devices_connection_changes, connected_devs, device_names, *device_models, viewer_model, error_message);
-                        auto dev = connected_devs[connected_devs.size()-1];
-                        device_models->emplace_back(new device_model(dev, error_message, viewer_model));
+                        ip_address = ip_input;
+                    }
+                    ImGui::PopItemWidth();
+                    ImGui::NewLine();
+                    ImGui::SetCursorPosX(10.f);
+                    if(ImGui::Button("ok",{100.f, 25.f}))
+                    {
+                        if (!ip_address.empty())
+                        {
+                            add_remote_device(ctx, ip_address);
+                            is_sw_sevice_connected = true;
+                            refresh_devices(m, ctx, devices_connection_changes, connected_devs, device_names, *device_models, viewer_model, error_message);
+                            auto dev = connected_devs[connected_devs.size()-1];
+                            device_models->emplace_back(new device_model(dev, error_message, viewer_model));
+                            ImGui::CloseCurrentPopup();
+                        }
+                    }
+                    ImGui::SameLine();
+                    ImGui::SetCursorPosX(width - 100.f - 10.f);
+                    if(ImGui::Button("cancel",{100.f, 25.f}))
+                    {
                         ImGui::CloseCurrentPopup();
                     }
+                    ImGui::EndPopup();
                 }
-                ImGui::SameLine();
-                ImGui::SetCursorPosX(width - 100.f - 10.f);
-                if(ImGui::Button("cancel",{100.f, 25.f}))
-                {
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::EndPopup();
-            }
-            ImGui::PopStyleColor(2);
+                ImGui::PopStyleColor(2);
         
-            ImGui::NextColumn();
-            ImGui::Text("%s", "");
-            ImGui::NextColumn();
+                ImGui::NextColumn();
+                ImGui::Text("%s", "");
+                ImGui::NextColumn();
+            }
 
             ImGui::PopStyleColor();
             ImGui::EndPopup();
