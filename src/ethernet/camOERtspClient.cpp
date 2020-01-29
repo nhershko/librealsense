@@ -85,7 +85,7 @@ int camOERTSPClient::addStream(rs2_video_stream stream, rtp_callback* callback_o
 {
   this->envir()  << "looking for sub session \n";
   long long uniqueKey = getStreamProfileUniqueKey(stream);
-  MediaSubsession* subsession = this->subsessionMap.find(uniqueKey)->second;
+  RsMediaSubsession* subsession = this->subsessionMap.find(uniqueKey)->second;
   this->envir()  << "find sub session " << subsession  << "\n";;
   if (subsession != NULL) {
     this->envir()  << " initiate subsession"  << "\n";;
@@ -222,17 +222,17 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
     env << "Got a SDP description:\n" << sdpDescription << "\n";
 
     // Create a media session object from this SDP description:
-    scs.session = MediaSession::createNew(env, sdpDescription);
+    scs.session = RsMediaSession::createNew(env, sdpDescription);
     delete[] sdpDescription; // because we don't need it anymore
     if (scs.session == NULL) {
-      env << "Failed to create a MediaSession object from the SDP description: " << env.getResultMsg() << "\n";
+      env << "Failed to create a RsMediaSession object from the SDP description: " << env.getResultMsg() << "\n";
       break;
     } else if (!scs.session->hasSubsessions()) {
       env << "This session has no media subsessions (i.e., no \"m=\" lines)\n";
       break;
     }
 
-    scs.iter = new MediaSubsessionIterator(*scs.session);
+    scs.iter = new RsMediaSubsessionIterator(*scs.session);
     scs.subsession = scs.iter->next();
     while (scs.subsession != NULL) {
       // Get more data from the SDP string 
@@ -271,7 +271,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
 
       // TODO: update width and height in subsession?
       long long uniqueKey = getStreamProfileUniqueKey(videoStream);
-      ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, MediaSubsession*>(uniqueKey, scs.subsession));
+      ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, RsMediaSubsession*>(uniqueKey, scs.subsession));
       ((camOERTSPClient*)rtspClient)->supportedProfiles.push_back(videoStream);
       scs.subsession = scs.iter->next();
       // TODO: when to delete p?

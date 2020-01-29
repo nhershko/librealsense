@@ -18,8 +18,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // A 'ServerMediaSubsession' object that creates new, unicast, "RTPSink"s
 // on demand, from a file.
 // Implementation
-#include "RsMediaSubsession.h"
+#include "RsServerMediaSubsession.h"
 #include "RsRawVideoRTPSink.h"
+#include "RsSimpleRTPSink.h"
 //#include <librealsense2/h/rs_sensor.h>
 
 #define CAPACITY 100
@@ -61,42 +62,5 @@ RTPSink *RsServerMediaSubsession ::createNewRTPSink(Groupsock *rtpGroupsock,
                                               unsigned char rtpPayloadTypeIfDynamic,
                                               FramedSource * /*inputSource*/)
 {
-  unsigned int format = (unsigned int)(videoStreamProfile.format());
-  switch (videoStreamProfile.format())
-  {            
-  case  RS2_FORMAT_RGB8: 
-  {
-      pixelSize = 3;
-      return  RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile, "RGB");         
-  }           
-  case  RS2_FORMAT_BGR8: 
-  {
-    pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile, "BGR");          
-  }
-  case  RS2_FORMAT_RGBA8:  
-  {
-    pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile,  "RGBA");       
-  }         
-  case  RS2_FORMAT_BGRA8: 
-  {
-    pixelSize = 3;
-    return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile, "BGRA");        
-  }       
-  case  RS2_FORMAT_Z16:   
-  case  RS2_FORMAT_Y16: 
-  case  RS2_FORMAT_Y8:             
-  case  RS2_FORMAT_RAW16:          
-  case  RS2_FORMAT_YUYV:  
-  case  RS2_FORMAT_UYVY:
-  {
-      pixelSize = 2;
-      return RsRawVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 8, videoStreamProfile, "YCbCr-4:2:2");         
-  }
-  default:
-     pixelSize = 0;
-     break;
-  }   
-  return NULL;
+  return RsSimpleRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 90000,"x" /*"VND.ONVIF.METADATA"*/,"Y" /*"VND.ONVIF.METADATA"*/,videoStreamProfile);//,1U,1,0);
 }

@@ -32,7 +32,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <GroupsockHelper.hh>
 #include <signal.h>
 #include "RsSource.hh"
-#include "RsMediaSubsession.h"
+#include "RsServerMediaSubsession.h"
 #include "RsDevice.hh"
 #include "RsRTSPServer.hh"
 #include "RsServerMediaSession.h"

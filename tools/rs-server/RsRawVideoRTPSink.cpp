@@ -3,10 +3,12 @@
 #include "RsRawVideoRTPSink.h"
 
 RsRawVideoRTPSink*
-  RsRawVideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs, u_int8_t rtpPayloadFormat,
+  RsRawVideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
+        u_int8_t rtpPayloadFormat,
         // The following headers provide the 'configuration' information, for the SDP description:
         unsigned depth,
-        rs2::video_stream_profile& video_stream, char const* sampling, char const* colorimetry)
+        rs2::video_stream_profile& video_stream, 
+        char const* sampling, char const* colorimetry)
         {
             return new RsRawVideoRTPSink(env, RTPgs, rtpPayloadFormat,
                  depth, video_stream, sampling, colorimetry);
