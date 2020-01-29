@@ -428,7 +428,6 @@ int main(int argc, const char** argv) try
             ImGui::Text("%s", "");
             ImGui::NextColumn();
 
-            //////////////////////////////////////////////
             ImGui::Separator();
             if (ImGui::Selectable("Load Software Device", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups))
             {
@@ -437,7 +436,7 @@ int main(int argc, const char** argv) try
 
             
             float width = window.width() * 0.2f;
-            float height = 120; // window.height() * 0.2f;
+            float height = 120;
             float posx = window.width() * 0.4f;
             float posy = window.height() * 0.4f;
             ImGui::SetNextWindowPos({ posx, posy });
@@ -451,7 +450,6 @@ int main(int argc, const char** argv) try
                 ImGui::NewLine();
                 ImGui::SetCursorPosX(width * 0.15f);
                 ImGui::PushItemWidth(width * 0.7f);
-                //ImGui::PushStyleColor(ImGuiCol_FrameBg, light_grey);
                 if (ImGui::InputText("", ip_input, 255))
                 {
                     ip_address = ip_input;
@@ -459,7 +457,6 @@ int main(int argc, const char** argv) try
                 ImGui::PopItemWidth();
                 ImGui::NewLine();
                 ImGui::SetCursorPosX(10.f);
-                //ImGui::PopStyleColor(1);
                 if(ImGui::Button("ok",{100.f, 25.f}))
                 {
                     if (!ip_address.empty())
@@ -481,8 +478,6 @@ int main(int argc, const char** argv) try
             }
             ImGui::PopStyleColor(2);
         
-            //////////////////////////////////////////////
-
             ImGui::NextColumn();
             ImGui::Text("%s", "");
             ImGui::NextColumn();
@@ -615,7 +610,7 @@ int main(int argc, const char** argv) try
             if (sub->streaming)
                 sub->stop(viewer_model);
         }
-        
+
     return EXIT_SUCCESS;
 }
 catch (const error & e)
