@@ -19,9 +19,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // on demand, from a file.
 // Implementation
 #include "RsServerMediaSubsession.h"
-#include "RsRawVideoRTPSink.h"
 #include "RsSimpleRTPSink.h"
-//#include <librealsense2/h/rs_sensor.h>
 
 #define CAPACITY 100
 
@@ -33,12 +31,12 @@ RsServerMediaSubsession *RsServerMediaSubsession::createNew(UsageEnvironment &en
 RsServerMediaSubsession ::RsServerMediaSubsession(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile /*, rs2::frame_queue &queue*/)
     : OnDemandServerMediaSubsession(env, false), videoStreamProfile(video_stream_profile) /*,frameQueue(queue)*/
 {
-  envir() << "RsServerMediaSubsession constructor" <<this << "\n";
+  //envir() << "RsServerMediaSubsession constructor" <<this << "\n";
   frameQueue = rs2::frame_queue(CAPACITY, true);
 }
 
 RsServerMediaSubsession::~RsServerMediaSubsession() {
-  envir() << "RsServerMediaSubsession destructor" <<this << "\n";
+  //envir() << "RsServerMediaSubsession destructor" <<this << "\n";
     //TODO:: free the queue
 }
 
