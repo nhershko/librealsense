@@ -27,11 +27,14 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 ////////// RsMediaSession //////////
 
-RsMediaSession* RsMediaSession::createNew(UsageEnvironment& env,
-				      char const* sdpDescription) {
-  RsMediaSession* newSession = new RsMediaSession(env);
-  if (newSession != NULL) {
-    if (!newSession->initializeWithSDP(sdpDescription)) {
+RsMediaSession *RsMediaSession::createNew(UsageEnvironment &env,
+                                          char const *sdpDescription)
+{
+  RsMediaSession *newSession = new RsMediaSession(env);
+  if (newSession != NULL)
+  {
+    if (!newSession->initializeWithSDP(sdpDescription))
+    {
       delete newSession;
       return NULL;
     }
@@ -39,74 +42,74 @@ RsMediaSession* RsMediaSession::createNew(UsageEnvironment& env,
   return newSession;
 }
 
-RsMediaSession::RsMediaSession(UsageEnvironment& env)
-  : MediaSession(env)
-  {
- 
+RsMediaSession::RsMediaSession(UsageEnvironment &env)
+    : MediaSession(env)
+{
 }
 
 RsMediaSession::~RsMediaSession()
 {
- 
 }
 
-MediaSubsession* RsMediaSession::createNewMediaSubsession() {
+MediaSubsession *RsMediaSession::createNewMediaSubsession()
+{
   // default implementation:
   return new RsMediaSubsession(*this);
 }
 
 ////////// RsMediaSubsessionIterator //////////
 
-RsMediaSubsessionIterator::RsMediaSubsessionIterator(RsMediaSession const& session)
-  : fOurSession(session) {
+RsMediaSubsessionIterator::RsMediaSubsessionIterator(RsMediaSession const &session)
+    : fOurSession(session)
+{
   reset();
 }
 
-RsMediaSubsessionIterator::~RsMediaSubsessionIterator() {
+RsMediaSubsessionIterator::~RsMediaSubsessionIterator()
+{
 }
 
-RsMediaSubsession* RsMediaSubsessionIterator::next() {
-  RsMediaSubsession* result = fNextPtr;
+RsMediaSubsession *RsMediaSubsessionIterator::next()
+{
+  RsMediaSubsession *result = fNextPtr;
 
-  if (fNextPtr != NULL) fNextPtr = (RsMediaSubsession*)(fNextPtr->fNext);
+  if (fNextPtr != NULL)
+    fNextPtr = (RsMediaSubsession *)(fNextPtr->fNext);
 
   return result;
 }
 
-void RsMediaSubsessionIterator::reset() {
-  fNextPtr = (RsMediaSubsession*)(fOurSession.fSubsessionsHead);
+void RsMediaSubsessionIterator::reset()
+{
+  fNextPtr = (RsMediaSubsession *)(fOurSession.fSubsessionsHead);
 }
-
-
-
-
 
 ////////// MediaSubsession //////////
 
-RsMediaSubsession::RsMediaSubsession(RsMediaSession& parent)
-  : MediaSubsession(parent)
-  {
+RsMediaSubsession::RsMediaSubsession(RsMediaSession &parent)
+    : MediaSubsession(parent)
+{
 }
 
 RsMediaSubsession::~RsMediaSubsession()
 {
-  
 }
 
-Boolean RsMediaSubsession::createSourceObjects(int useSpecialRTPoffset) {
-  if (strcmp(fCodecName, "Y") == 0) {
-	       // This subsession uses our custom RTP payload format:
-         char* mimeType
-	  = new char[strlen(mediumName()) + strlen(codecName()) + 2] ;
-	sprintf(mimeType, "%s/%s", mediumName(), codecName());
-	fReadSource = fRTPSource
-	  = SimpleRTPSource::createNew(env(), fRTPSocket, fRTPPayloadFormat,
-				       fRTPTimestampFrequency, mimeType);
-	delete[] mimeType;
-	       return True;
-	     } else {
-	       // This subsession uses some other RTP payload format - perhaps one that we already implement:
-	       return MediaSubsession::createSourceObjects(useSpecialRTPoffset);
-	     }
+Boolean RsMediaSubsession::createSourceObjects(int useSpecialRTPoffset)
+{
+  if (strcmp(fCodecName, "Y") == 0)
+  {
+    // This subsession uses our custom RTP payload format:
+    char *mimeType = new char[strlen(mediumName()) + strlen(codecName()) + 2];
+    sprintf(mimeType, "%s/%s", mediumName(), codecName());
+    fReadSource = fRTPSource = SimpleRTPSource::createNew(env(), fRTPSocket, fRTPPayloadFormat,
+                                                          fRTPTimestampFrequency, mimeType);
+    delete[] mimeType;
+    return True;
+  }
+  else
+  {
+    // This subsession uses some other RTP payload format - perhaps one that we already implement:
+    return MediaSubsession::createSourceObjects(useSpecialRTPoffset);
+  }
 }
-

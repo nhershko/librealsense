@@ -35,9 +35,10 @@ RsServerMediaSubsession ::RsServerMediaSubsession(UsageEnvironment &env, rs2::vi
   frameQueue = rs2::frame_queue(CAPACITY, true);
 }
 
-RsServerMediaSubsession::~RsServerMediaSubsession() {
+RsServerMediaSubsession::~RsServerMediaSubsession()
+{
   //envir() << "RsServerMediaSubsession destructor" <<this << "\n";
-    //TODO:: free the queue
+  //TODO:: free the queue
 }
 
 rs2::frame_queue &RsServerMediaSubsession::get_frame_queue()
@@ -57,8 +58,8 @@ FramedSource *RsServerMediaSubsession::createNewStreamSource(unsigned /*clientSe
 }
 
 RTPSink *RsServerMediaSubsession ::createNewRTPSink(Groupsock *rtpGroupsock,
-                                              unsigned char rtpPayloadTypeIfDynamic,
-                                              FramedSource * /*inputSource*/)
+                                                    unsigned char rtpPayloadTypeIfDynamic,
+                                                    FramedSource * /*inputSource*/)
 {
-  return RsSimpleRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 90000,"x" /*"VND.ONVIF.METADATA"*/,"Y" /*"VND.ONVIF.METADATA"*/,videoStreamProfile);//,1U,1,0);
+  return RsSimpleRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 90000, "X" , "Y" , videoStreamProfile); //,1U,1,0);
 }

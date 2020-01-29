@@ -21,30 +21,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 //  For media streamers, use "ServerMediaSession" instead.)
 // C++ header
 
-/* NOTE: To support receiving your own custom RTP payload format, you must first define a new
-   subclass of "MultiFramedRTPSource" (or "BasicUDPSource") that implements it.
-   Then define your own subclass of "MediaSession" and "MediaSubsession", as follows:
-   - In your subclass of "MediaSession" (named, for example, "myMediaSession"):
-       - Define and implement your own static member function
-           static myMediaSession* createNew(UsageEnvironment& env, char const* sdpDescription);
-	 and call this - instead of "MediaSession::createNew()" - in your application,
-	 when you create a new "MediaSession" object.
-       - Reimplement the "createNewMediaSubsession()" virtual function, as follows:
-           MediaSubsession* myMediaSession::createNewMediaSubsession() { return new myMediaSubsession(*this); }
-   - In your subclass of "MediaSubsession" (named, for example, "myMediaSubsession"):
-       - Reimplement the "createSourceObjects()" virtual function, perhaps similar to this:
-           Boolean myMediaSubsession::createSourceObjects(int useSpecialRTPoffset) {
-	     if (strcmp(fCodecName, "X-MY-RTP-PAYLOAD-FORMAT") == 0) {
-	       // This subsession uses our custom RTP payload format:
-	       fReadSource = fRTPSource = myRTPPayloadFormatRTPSource::createNew( <parameters> );
-	       return True;
-	     } else {
-	       // This subsession uses some other RTP payload format - perhaps one that we already implement:
-	       return ::createSourceObjects(useSpecialRTPoffset);
-	     }
-	   }  
-*/
-
 #ifndef _RS_MEDIA_SESSION_HH
 #define _RS_MEDIA_SESSION_HH
 
@@ -52,44 +28,45 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class RsMediaSubsession; // forward
 
-class RsMediaSession: public MediaSession {
+class RsMediaSession : public MediaSession
+{
 public:
-  static RsMediaSession* createNew(UsageEnvironment& env,
-				 char const* sdpDescription);
- 
+  static RsMediaSession *createNew(UsageEnvironment &env,
+                                   char const *sdpDescription);
+
 protected:
-  RsMediaSession(UsageEnvironment& env);
-      // called only by createNew();
+  RsMediaSession(UsageEnvironment &env);
+  // called only by createNew();
   virtual ~RsMediaSession();
 
-  virtual MediaSubsession* createNewMediaSubsession();
+  virtual MediaSubsession *createNewMediaSubsession();
 
   friend class RsMediaSubsessionIterator;
 };
 
-
-class RsMediaSubsessionIterator {
+class RsMediaSubsessionIterator
+{
 public:
-  RsMediaSubsessionIterator(RsMediaSession const& session);
+  RsMediaSubsessionIterator(RsMediaSession const &session);
   virtual ~RsMediaSubsessionIterator();
 
-  RsMediaSubsession* next(); // NULL if none
+  RsMediaSubsession *next(); // NULL if none
   void reset();
 
 private:
-  RsMediaSession const& fOurSession;
-  RsMediaSubsession* fNextPtr;
+  RsMediaSession const &fOurSession;
+  RsMediaSubsession *fNextPtr;
 };
 
-
-class RsMediaSubsession: public MediaSubsession {
+class RsMediaSubsession : public MediaSubsession
+{
 protected:
   friend class RsMediaSession;
   friend class RsMediaSubsessionIterator;
-  RsMediaSubsession(RsMediaSession& parent);
+  RsMediaSubsession(RsMediaSession &parent);
   virtual ~RsMediaSubsession();
   virtual Boolean createSourceObjects(int useSpecialRTPoffset);
-    // create "fRTPSource" and "fReadSource" member objects, after we've been initialized via SDP
+  // create "fRTPSource" and "fReadSource" member objects, after we've been initialized via SDP
 };
 
 #endif
