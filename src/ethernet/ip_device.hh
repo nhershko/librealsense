@@ -6,7 +6,7 @@
 #include "camOERtspClient.h"
 #include "software-device.h"
 
-#include "rtp_stream.hh"
+#include "rs_rtp_stream.hh"
 
 #include "IdecompressFrame.h"
 #include "decompressFrameFactory.h"
@@ -16,8 +16,6 @@
 #define MAX_ACTIVE_STREAMS 4
 
 #define SENSORS_NUMBER 2
-
-
 
 class ip_device
     {
