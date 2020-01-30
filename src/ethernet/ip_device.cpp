@@ -279,8 +279,6 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
         {				
             Raw_Frame* frame = rtp_stream.get()->extract_frame();
 #ifdef COMPRESSION			
-        if(rtp_stream.get()->m_rs_stream.width == 640 && rtp_stream.get()->m_rs_stream.height == 480)
-        {
             //check if depth image
             if (type==rs2_stream::RS2_STREAM_DEPTH) 
             {
@@ -294,13 +292,8 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
                 //infrared
                 memcpy(rtp_stream.get()->frame_data_buff.pixels, frame->m_buffer, frame->m_size);
             }
-        }
-        else
-        {
-#endif
+#else
 				memcpy(rtp_stream.get()->frame_data_buff.pixels, frame->m_buffer, frame->m_size);
-#ifdef COMPRESSION
-        }
 #endif
 			rtp_stream.get()->frame_data_buff.timestamp = frame->m_timestamp.tv_usec;
 			rtp_stream.get()->frame_data_buff.frame_number++;

@@ -1,6 +1,7 @@
 #include "camOESink.h"
 #include "stdio.h"
 #include <string>
+#include "../../tools/rs-server/RsCommon.hh"
 
 #define WRITE_FRAMES_TO_FILE 0
 
@@ -12,7 +13,7 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession, int buf
   : MediaSink(env),
     fSubsession(subsession) {
   fStreamId = strDup(streamId);
-  fBufferSize = bufferSize;
+  fBufferSize = bufferSize+sizeof(rs_over_ethernet_data_header);
   fReceiveBuffer = new u_int8_t[bufferSize];
   std::string url_str = fStreamId;
   // Remove last "/"
@@ -69,16 +70,24 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 */
   //envir() << "********* frame ************\n";
   //if (fFrameCallBack != NULL)
-  if (this->m_rtp_callback != NULL)
+  rs_over_ethernet_data_header *header = (rs_over_ethernet_data_header *)fReceiveBuffer;
+  if (header->size == frameSize - sizeof(rs_over_ethernet_data_header))
   {
-    this->m_rtp_callback->on_frame(fReceiveBuffer, frameSize, presentationTime);
+    if (this->m_rtp_callback != NULL)
+    {
+      this->m_rtp_callback->on_frame(fReceiveBuffer+sizeof(rs_over_ethernet_data_header), header->size, presentationTime);
+    }
+    else
+    {
+      // TODO: error, no call back
+      envir() << "Frame call back is NULL\n";
+    }
   }
   else
   {
-    // TODO: error, no call back
-    envir() << "Frame call back is NULL\n";
+    envir() << "corrupted frame!!!: data size is "<<header->size<<" frame size is "<< frameSize <<"\n";
   }
-  
+
   //fwrite(fReceiveBuffer, frameSize, 1, fp);
   // Then continue, to request the next frame of data:
   continuePlaying();
