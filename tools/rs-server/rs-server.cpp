@@ -86,8 +86,8 @@ int main(int argc, char **argv)
     {
       rs2::video_stream_profile stream = stream_profile.second;
       //TODO: expose all streams when host is ready
-      if (stream.format() == RS2_FORMAT_Z16 || stream.format() == RS2_FORMAT_Y8 || stream.format() == RS2_FORMAT_Y16 || stream.format() == RS2_FORMAT_RAW16 || stream.format() == RS2_FORMAT_YUYV || stream.format() == RS2_FORMAT_UYVY)
-      {
+      //if (stream.format() == RS2_FORMAT_Z16 || stream.format() == RS2_FORMAT_Y8 || stream.format() == RS2_FORMAT_Y16 || stream.format() == RS2_FORMAT_RAW16 || stream.format() == RS2_FORMAT_YUYV || stream.format() == RS2_FORMAT_UYVY)
+      //{
         if (stream.fps() == 6)
         {
           if ((stream.width() == 1280 && stream.height() == 720) ||(stream.width() == 640 && stream.height() == 480)||(stream.width() == 480 && stream.height() == 270) ||(stream.width() == 424 && stream.height() == 240))
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
           continue;
           }
         }
-      }
+      //}
       *env<<"Ignoring stream: format: "<<stream.format()<<" width: "<<stream.width()<<" height: "<<stream.height()<<" fps: "<<stream.fps()<<"\n";
     }
 
