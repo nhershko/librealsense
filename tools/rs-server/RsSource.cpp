@@ -25,7 +25,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <GroupsockHelper.hh>
 #include <librealsense2/h/rs_sensor.h>
 #include "BasicUsageEnvironment.hh"
-#include "compressFrameFactory.h"
+#include <compression/compression_factory.h>
 #include <map>
 
 RsDeviceSource *
@@ -40,8 +40,13 @@ RsDeviceSource::RsDeviceSource(UsageEnvironment &env, rs2::video_stream_profile 
   frames_queue = &queue;
   stream_profile = &video_stream_profile;
 #ifdef COMPRESSION
-  iCompressColor = compressFrameFactory::create(zipMethod::Jpeg);
-  iCompressDepth = compressFrameFactory::create(zipMethod::gzip);
+  if(video_stream_profile.stream_type() == RS2_STREAM_COLOR || video_stream_profile.stream_type() == RS2_STREAM_INFRARED) {
+      iCompress = CompressionFactory::create(zipMethod::Jpeg, video_stream_profile.width(), video_stream_profile.height(), video_stream_profile.format());
+  } else if(video_stream_profile.stream_type() == RS2_STREAM_DEPTH ) {
+      iCompress = CompressionFactory::create(zipMethod::gzip, video_stream_profile.width(), video_stream_profile.height(), video_stream_profile.format());
+  } else {
+    envir() << "error: unsupported compression for this stream type\n";
+  }
 #endif
 }
 
@@ -96,24 +101,15 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
   }
   gettimeofday(&fPresentationTime, NULL); // If you have a more accurate time - e.g., from an encoder - then use that instead.
 #ifdef COMPRESSION
-if(stream_profile->width() == 640 && stream_profile->height() == 480)
-{
-  if (stream_profile->stream_type() == RS2_STREAM_DEPTH)
-  {
-    fFrameSize = iCompressDepth->compressDepthFrame((unsigned char *)frame->get_data(), fFrameSize, fTo);
-  }
-  else if (stream_profile->stream_type() == RS2_STREAM_COLOR)
-  {
-    fFrameSize = iCompressColor->compressColorFrame((unsigned char *)frame->get_data(), fFrameSize, fTo, stream_profile->width(),stream_profile->height(),stream_profile->format());
-  }
-}
-else{
+  if(stream_profile->width() == 640 && stream_profile->height() == 480) {
+    iCompress->compressBuffer((unsigned char *)frame->get_data(), fFrameSize, fTo);
+  } else {
 #endif
     //envir() << "got new frame: frame size is " << fFrameSize <<  "stream type is is " << stream_profile->stream_type() << "stream resolution is" <<  stream_profile->width() << "," << stream_profile->height() << "\n";
     memmove(fTo, frame->get_data(), fFrameSize);
     //envir() << "after memove frame \n";
 #ifdef COMPRESSION
-  }
+}
 #endif
   // After delivering the data, inform the reader that it is now available:
   FramedSource::afterGetting(this);

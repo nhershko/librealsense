@@ -105,9 +105,7 @@ int camOERTSPClient::addStream(rs2_video_stream stream, rtp_callback* callback_o
         
         if (this->commandResultCode == 0)
         {
-          // TODO: change size according to BPP
-          //
-          subsession->sink = camOESink::createNew(this->envir(), *subsession, stream.width*stream.height*2, this->url());
+          subsession->sink = camOESink::createNew(this->envir(), *subsession, stream, this->url());
         // perhaps use your own custom "MediaSink" subclass instead
           if (subsession->sink == NULL) {
             this->envir() << "Failed to create a data sink for the subsession: " << this->envir().getResultMsg() << "\n";
