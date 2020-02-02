@@ -1,4 +1,7 @@
 #include "RsSimpleRTPSink.h"
+#include <iostream>
+#include <string>
+#include <sstream>
 
 RsSimpleRTPSink *
 RsSimpleRTPSink::createNew(UsageEnvironment &env, Groupsock *RTPgs,
@@ -14,6 +17,29 @@ RsSimpleRTPSink::createNew(UsageEnvironment &env, Groupsock *RTPgs,
   return new RsSimpleRTPSink(env, RTPgs, rtpPayloadFormat, rtpTimestampFrequency, sdpMediaTypeString, rtpPayloadFormatName,
                              video_stream, numChannels, allowMultipleFramesPerPacket, doNormalMBitRule);
 }
+
+// TODO Michal: oveload with other types if needed
+std::string getSdpLineFOrField(const char* name, int val)
+{
+  std::ostringstream oss;
+  oss << name << "=" << val << ";";
+  return oss.str();
+}
+
+std::string getSdpLineForVideoStream(rs2::video_stream_profile &video_stream)
+{
+  std::string str;
+  str.append(getSdpLineFOrField("width", video_stream.width()));
+  str.append(getSdpLineFOrField("height", video_stream.height()));
+  str.append(getSdpLineFOrField("format", video_stream.format()));
+  str.append(getSdpLineFOrField("uid", video_stream.unique_id()));
+  str.append(getSdpLineFOrField("fps", video_stream.fps()));
+  str.append(getSdpLineFOrField("stream_index", video_stream.stream_index()));
+  str.append(getSdpLineFOrField("stream_type", video_stream.stream_type()));
+  //str.append(getSdpLineFOrField("is_compressed", 0));
+  return str;
+}
+
 
 RsSimpleRTPSink ::RsSimpleRTPSink(UsageEnvironment &env, Groupsock *RTPgs,
                                   unsigned char rtpPayloadFormat,
@@ -31,10 +57,10 @@ RsSimpleRTPSink ::RsSimpleRTPSink(UsageEnvironment &env, Groupsock *RTPgs,
   // Then use this 'config' string to construct our "a=fmtp:" SDP line:
   unsigned fmtpSDPLineMaxSize = 200; // 200 => more than enough space
   fFmtpSDPLine = new char[fmtpSDPLineMaxSize];
-  sprintf(fFmtpSDPLine, "a=fmtp:%d sampling=%s;depth=%u;width=%d;height=%d;format=%d;uid=%d;fps=%u;index=%d;stream_type=%d;colorimetry=%s\r\n",
-          rtpPayloadType(), "0", "0",
-          video_stream.width(), video_stream.height(), video_stream.format(), video_stream.unique_id(),
-          video_stream.fps(), video_stream.stream_index(), video_stream.stream_type(), "0");
+  std::string sdpStr =  getSdpLineForVideoStream(video_stream);
+  sprintf(fFmtpSDPLine, "a=fmtp:%d;%s\r\n",
+          rtpPayloadType(),
+          sdpStr.c_str());
 }
 
 char const *RsSimpleRTPSink::auxSDPLine()

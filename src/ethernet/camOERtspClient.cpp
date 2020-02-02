@@ -43,23 +43,6 @@ camOERTSPClient::camOERTSPClient(UsageEnvironment& env, char const* rtspURL,
 camOERTSPClient::~camOERTSPClient() {
 }
 
-// TODO: should we have seperate mutex for each command?
-// std::condition_variable cv;
-// std::mutex command_mtx;
-// bool cammand_done = false;
-
-// Forward function definitions:
-
-// RTSP 'response handlers':
-//void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString);
-//void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString);
-//void continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString);
-//void continueAfterTEARDOWN(RTSPClient* rtspClient, int resultCode, char* resultString);
-//void continueAfterPAUSE(RTSPClient* rtspClient, int resultCode, char* resultString);
-
-//void subsessionAfterPlaying(void* clientData); // called when a stream's subsession (e.g., audio or video substream) ends
-//void subsessionByeHandler(void* clientData, char const* reason);
-
 std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
 {
   // TODO - handle in a function
@@ -241,7 +224,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       const char* strFormatVal = scs.subsession->attrVal_str("format");
       const char* strUidVal = scs.subsession->attrVal_str("uid");
       const char* strFpsVal = scs.subsession->attrVal_str("fps");
-      const char* strIndexVal = scs.subsession->attrVal_str("index");
+      const char* strIndexVal = scs.subsession->attrVal_str("stream_index");
       const char* strStreamTypeVal = scs.subsession->attrVal_str("stream_type");
 
       int width = strWidthVal != "" ? std::stoi(strWidthVal) : 0;
