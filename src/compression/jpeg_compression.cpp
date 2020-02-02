@@ -90,10 +90,9 @@ int JpegCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 	}
 	jpeg_finish_compress(&cinfo);
 	
-	memcpy(compressedBuf + 4, data, compressedSize);
-	memcpy(compressedBuf, &compressedSize, sizeof(unsigned int));
+	memcpy(compressedBuf, data, compressedSize);
 	if (compframeCounter%50 == 0) {
-		printf("finish color compression with jpeg, full size: %lu , compressed size %u, frame counter: \n", size, compressedSize, compframeCounter);
+		printf("finish jpeg color compression, size: %lu, compressed size %u, frameNum: %d \n", size, compressedSize, compframeCounter);
 	}
 #ifdef COMPRESSION_STATISTICS	
 	tCompEnd = clock();
@@ -107,18 +106,16 @@ int JpegCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 }
 
 
-void  JpegCompression::decompressBuffer(unsigned char* buffer, int size, unsigned char* uncompressedBuf) 
+void  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSize, unsigned char* uncompressedBuf) 
 {	
 	unsigned char * ptr =  uncompressedBuf;
-	unsigned char* data = buffer + sizeof(unsigned int);
-	uint64_t compressedSize = 0;
+	unsigned char* data = buffer;
 	uint jpegHeader, res;
 #ifdef COMPRESSION_STATISTICS
 	tDecompBegin = clock();
 #endif
-	memcpy(&compressedSize, buffer, sizeof(unsigned int));
 	jpeg_mem_src(&dinfo, data , compressedSize);
-	memcpy(&jpegHeader, buffer+sizeof(unsigned int), sizeof(unsigned int));
+	memcpy(&jpegHeader, buffer, sizeof(unsigned int));
 	if (jpegHeader != 0xE0FFD8FF) { //check header integrity if = E0FF D8FF - the First 4 bytes jpeg standards. 
 		printf("Error: not a jpeg frame, skip frame\n");
 		return;
@@ -159,18 +156,14 @@ void  JpegCompression::decompressBuffer(unsigned char* buffer, int size, unsigne
 	}
 	(void) jpeg_finish_decompress(&dinfo);
 	if (decompframeCounter%50 == 0) {
-		printf("finish color decompression with jpeg, full size: %lu , compressed size %u, frame counter: \n", size, compressedSize, decompframeCounter);
+		printf("finish jpeg color decompression, size: %lu, compressed size %u, frameNum: %d \n",dinfo.output_width*dinfo.output_height*2, compressedSize, decompframeCounter);
 	}
-	//TODO: workaround for bad frame
-	if (compressedSize > size){
-		compressedSize=0;
-	} 
 
 #ifdef COMPRESSION_STATISTICS	
 	tDecompEnd = clock();
 	decompTimeDiff += tDecompEnd - tDecompBegin;
 
-	fullSizeSum += size;
+	fullSizeSum += m_width*m_height*2; //TODO: change to bpp 
 	compressedSizeSum += compressedSize;
 	decompframeCounter ++;
 	if (decompframeCounter%50 == 0) {

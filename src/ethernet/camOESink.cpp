@@ -86,7 +86,7 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
     if(fstream.width == 640 && fstream.height == 480)
     { 
       iCompress->decompressBuffer(fReceiveBuffer, frameSize, fto);
-      this->m_rtp_callback->on_frame(fto, frameSize, presentationTime);
+      this->m_rtp_callback->on_frame(fto, fstream.width*fstream.height*2, presentationTime);//todo: change to bpp
     }
     else 
     {

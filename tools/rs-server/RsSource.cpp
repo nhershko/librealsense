@@ -102,7 +102,7 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
   gettimeofday(&fPresentationTime, NULL); // If you have a more accurate time - e.g., from an encoder - then use that instead.
 #ifdef COMPRESSION
   if(stream_profile->width() == 640 && stream_profile->height() == 480) {
-    iCompress->compressBuffer((unsigned char *)frame->get_data(), fFrameSize, fTo);
+    fFrameSize = iCompress->compressBuffer((unsigned char *)frame->get_data(), fFrameSize, fTo);
   } else {
 #endif
     //envir() << "got new frame: frame size is " << fFrameSize <<  "stream type is is " << stream_profile->stream_type() << "stream resolution is" <<  stream_profile->width() << "," << stream_profile->height() << "\n";

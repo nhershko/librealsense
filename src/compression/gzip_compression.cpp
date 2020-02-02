@@ -24,7 +24,7 @@ int GzipCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 	strm.opaque = Z_NULL;
 	strm.next_in = (Bytef *)buffer;
 	strm.avail_in =  size;
-	strm.next_out = (Bytef *)compressedBuf + sizeof(unsigned int);
+	strm.next_out = (Bytef *)compressedBuf;
 	strm.avail_out = size;
 	int z_result = deflateInit2 (&strm, Z_BEST_SPEED/*Z_DEFAULT_COMPRESSION*/, Z_DEFLATED, windowsBits | GZIP_ENCODING, 8, Z_DEFAULT_STRATEGY);
 	if(z_result != Z_OK) {
@@ -36,11 +36,10 @@ int GzipCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 		printf("error: compress frame with gzip failed\n");
 		return -1;
 	}
+	int compressedSize = strm.total_out;
 	deflateEnd(&strm);
-	unsigned int compressedSize = strm.total_out;
-	memcpy(compressedBuf, &compressedSize, sizeof(unsigned int));
 	if (compframeCounter%50 == 0) {
-		printf("finish depth compression with gzip, full size: %lu , compressed size %u, frame counter: \n", size, compressedSize, compframeCounter);
+		printf("finish gzip depth compression, size: %lu, compressed size %u, frameNum: %d \n",size, compressedSize, compframeCounter);
 	}
 #ifdef COMPRESSION_STATISTICS	
 	tCompEnd = clock();
@@ -53,39 +52,33 @@ int GzipCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 	return compressedSize;
 }
 
-void  GzipCompression::decompressBuffer(unsigned char* buffer, int size, unsigned char* uncompressedBuf) 
+void  GzipCompression::decompressBuffer(unsigned char* buffer, int compressedSize, unsigned char* uncompressedBuf) 
 {	
-	unsigned int compressedSize;
 #ifdef COMPRESSION_STATISTICS
 	tDecompBegin = clock();
 #endif
-	memcpy(&compressedSize, buffer,sizeof(unsigned int));
-	if(compressedSize > size){
-		printf("error: corrupted frame\n");
-		return;
-	}
 	strm.zalloc = Z_NULL;
 	strm.zfree = Z_NULL;
 	strm.opaque = Z_NULL;
-	strm.next_in = (Bytef *)buffer + sizeof(unsigned int);
-	strm.avail_in =  size;
+	strm.next_in = (Bytef *)buffer;
+	strm.avail_in =  compressedSize;
 	strm.next_out = (Bytef *)uncompressedBuf;
-	strm.avail_out = size;
+	strm.avail_out = m_width*m_height*2; //change to bpp
 	int z_result = inflateInit2(&strm, windowsBits | GZIP_ENCODING);
 	z_result = inflate(&strm, Z_FINISH);
-	if(z_result != Z_STREAM_END) {
+	if(z_result == Z_STREAM_ERROR || z_result == Z_BUF_ERROR) {
 		printf("error: decompress frame with gzip failed\n");
 		return;
 	}
 	inflateEnd(&strm);
 	if (decompframeCounter%50 == 0) {
-		printf("finish color decompression with gzip, full size: %lu , compressed size %u, frame counter: \n", strm.total_out, compressedSize, decompframeCounter);
+		printf("finish gzip depth decompression, size: %lu, compressed size %u, frameNum: %d \n", strm.total_out, compressedSize, decompframeCounter);
 	}
 #ifdef COMPRESSION_STATISTICS
 	tDecompEnd = clock();
 	decompTimeDiff += tDecompEnd - tDecompBegin;
 
-	fullSizeSum += size;
+	fullSizeSum += m_width*m_height*2;//change to bpp
 	compressedSizeSum += compressedSize;
 	decompframeCounter++;
 	if (decompframeCounter%50 == 0) {

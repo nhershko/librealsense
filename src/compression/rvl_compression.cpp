@@ -81,7 +81,7 @@ int RvlCompression::compressBuffer(unsigned char* buffer, int size, unsigned cha
 		*pBuffer++ = word << 4 * (8 - nibblesWritten);
 	int compressedSize = int((char*)pBuffer - (char*)pHead);
 	if (compframeCounter%50 == 0) {
-		printf("finish color compression with RVL, full size: %lu , compressed size %u, frame counter: \n", size, compressedSize, compframeCounter);
+		printf("finish rvl depth compression, size: %lu, compressed size %u, frameNum: %d \n", size, compressedSize, compframeCounter);
 	}
 	memcpy(compressedBuf, &compressedSize, sizeof(unsigned int));
 #ifdef COMPRESSION_STATISTICS	
@@ -89,7 +89,7 @@ int RvlCompression::compressBuffer(unsigned char* buffer, int size, unsigned cha
 	int diff = tCompEnd - tCompBegin;
 	compTimeDiff += diff;
 	if (compframeCounter%50 == 0) {
-		printf("gzip compress time measurement is: %0.2f, average: %0.2f, frameCounter: %d\n",((float)diff)/1000, ((float)compTimeDiff/compframeCounter)/1000, compframeCounter);
+		printf("rvl compress time measurement is: %0.2f, average: %0.2f, frameCounter: %d\n",((float)diff)/1000, ((float)compTimeDiff/compframeCounter)/1000, compframeCounter);
 	}
 	compframeCounter++;
 #endif
@@ -127,7 +127,7 @@ void RvlCompression::decompressBuffer(unsigned char* buffer, int size, unsigned 
 		}
 	}
 	if (decompframeCounter%50 == 0) {
-		printf("finish color decompression with rvl, full size: %lu , compressed size %u, frame counter: \n", size, compressedSize, decompframeCounter);
+		printf("finish rvl depth compression, size: %lu, compressed size %u, frameNum: %d \n", size, compressedSize, decompframeCounter);
 	}
 #ifdef COMPRESSION_STATISTICS
 	tDecompEnd = clock();
