@@ -6,7 +6,7 @@
 
 #include <iostream>
 #include <thread>
-#include <condition_variable>
+//#include <condition_variable>
 #include <vector>
 #include <string>
 #include <math.h>
@@ -43,23 +43,6 @@ camOERTSPClient::camOERTSPClient(UsageEnvironment& env, char const* rtspURL,
 camOERTSPClient::~camOERTSPClient() {
 }
 
-// TODO: should we have seperate mutex for each command?
-std::condition_variable cv;
-std::mutex command_mtx;
-bool cammand_done = false;
-
-// Forward function definitions:
-
-// RTSP 'response handlers':
-//void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString);
-//void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString);
-//void continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString);
-//void continueAfterTEARDOWN(RTSPClient* rtspClient, int resultCode, char* resultString);
-//void continueAfterPAUSE(RTSPClient* rtspClient, int resultCode, char* resultString);
-
-//void subsessionAfterPlaying(void* clientData); // called when a stream's subsession (e.g., audio or video substream) ends
-//void subsessionByeHandler(void* clientData, char const* reason);
-
 std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
 {
   // TODO - handle in a function
@@ -73,7 +56,7 @@ std::vector<rs2_video_stream> camOERTSPClient::queryStreams()
     this->envir() << "in sendDescribe after sending command\n";
     // wait for continueAfterDESCRIBE to finish
     std::unique_lock<std::mutex> lck(command_mtx);
-    cv.wait(lck, []{return cammand_done;}); 
+    cv.wait(lck, [this]{return cammand_done;}); 
     // for the next command
     cammand_done = false; 
 
@@ -99,7 +82,7 @@ int camOERTSPClient::addStream(rs2_video_stream stream, rtp_callback* callback_o
         unsigned res = this->sendSetupCommand(*subsession, this->continueAfterSETUP, False, REQUEST_STREAMING_OVER_TCP); 
         // wait for continueAfterSETUP to finish
         std::unique_lock<std::mutex> lck(command_mtx);
-        cv.wait(lck, []{return cammand_done;}); 
+        cv.wait(lck, [this]{return cammand_done;}); 
         // for the next command
         cammand_done = false;
         
@@ -135,7 +118,7 @@ int camOERTSPClient::start()
   unsigned res = this->sendPlayCommand(*this->scs.session, this->continueAfterPLAY);
   // wait for continueAfterPLAY to finish
   std::unique_lock<std::mutex> lck(command_mtx);
-  cv.wait(lck, []{return cammand_done;}); 
+  cv.wait(lck, [this]{return cammand_done;}); 
   // for the next command
   cammand_done = false;
   return this->commandResultCode;
@@ -148,7 +131,7 @@ int camOERTSPClient::stop(rs2_video_stream stream)
   unsigned res = this->sendPauseCommand(*subsession, this->continueAfterPAUSE);
   // wait for continueAfterPAUSE to finish
   std::unique_lock<std::mutex> lck(command_mtx);
-  cv.wait(lck, []{return cammand_done;}); 
+  cv.wait(lck, [this]{return cammand_done;}); 
   // for the next command
   cammand_done = false; 
   return this->commandResultCode;
@@ -159,7 +142,7 @@ int camOERTSPClient::stop()
   unsigned res = this->sendPauseCommand(*this->scs.session, this->continueAfterPAUSE);
   // wait for continueAfterPAUSE to finish
   std::unique_lock<std::mutex> lck(command_mtx);
-  cv.wait(lck, []{return cammand_done;}); 
+  cv.wait(lck, [this]{return cammand_done;}); 
   // for the next command
   cammand_done = false;
   return this->commandResultCode;
@@ -171,7 +154,7 @@ int camOERTSPClient::close()
   unsigned res = this->sendTeardownCommand(*this->scs.session, this->continueAfterTEARDOWN);
   // wait for continueAfterTEARDOWN to finish
   std::unique_lock<std::mutex> lck(command_mtx);
-  cv.wait(lck, []{return cammand_done;}); 
+  cv.wait(lck, [this]{return cammand_done;}); 
   // for the next command
   cammand_done = false;
   is_connected = false;
@@ -206,10 +189,10 @@ bool camOERTSPClient::isConnected()
 
 // TODO: Error handling
 void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString) {
+  UsageEnvironment& env = rtspClient->envir(); // alias
+  StreamClientState& scs = ((camOERTSPClient*)rtspClient)->scs; // alias
+  camOERTSPClient* camOeRtspClient = ((camOERTSPClient*)rtspClient); // alias
   do {
-    UsageEnvironment& env = rtspClient->envir(); // alias
-    StreamClientState& scs = ((camOERTSPClient*)rtspClient)->scs; // alias
-
     if (resultCode != 0) {
       env << "Failed to get a SDP description: " << resultString << "\n";
       delete[] resultString;
@@ -239,7 +222,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       const char* strFormatVal = scs.subsession->attrVal_str("format");
       const char* strUidVal = scs.subsession->attrVal_str("uid");
       const char* strFpsVal = scs.subsession->attrVal_str("fps");
-      const char* strIndexVal = scs.subsession->attrVal_str("index");
+      const char* strIndexVal = scs.subsession->attrVal_str("stream_index");
       const char* strStreamTypeVal = scs.subsession->attrVal_str("stream_type");
 
       int width = strWidthVal != "" ? std::stoi(strWidthVal) : 0;
@@ -269,8 +252,8 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
 
       // TODO: update width and height in subsession?
       long long uniqueKey = getStreamProfileUniqueKey(videoStream);
-      ((camOERTSPClient*)rtspClient)->subsessionMap.insert(std::pair<int, RsMediaSubsession*>(uniqueKey, scs.subsession));
-      ((camOERTSPClient*)rtspClient)->supportedProfiles.push_back(videoStream);
+      camOeRtspClient->subsessionMap.insert(std::pair<int, RsMediaSubsession*>(uniqueKey, scs.subsession));
+      camOeRtspClient->supportedProfiles.push_back(videoStream);
       scs.subsession = scs.iter->next();
       // TODO: when to delete p?
     }
@@ -278,10 +261,10 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
   } while (0);
 
   {
-    std::lock_guard<std::mutex> lck(command_mtx);
-    cammand_done = true;
+    std::lock_guard<std::mutex> lck(camOeRtspClient->command_mtx);
+    camOeRtspClient->cammand_done = true;
   }
-  cv.notify_one();
+  camOeRtspClient->cv.notify_one();
 
   // An unrecoverable error occurred with this stream.
   // TODO: 
@@ -291,52 +274,55 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
 void camOERTSPClient::continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString) {
   UsageEnvironment& env = rtspClient->envir(); // alias
   StreamClientState& scs = ((camOERTSPClient*)rtspClient)->scs; // alias
+  camOERTSPClient* camOeRtspClient = ((camOERTSPClient*)rtspClient); // alias
   env << "continueAfterSETUP " << resultCode << " " << resultString <<"\n";
   ((camOERTSPClient*)rtspClient)->commandResultCode = resultCode;
   {
-    std::lock_guard<std::mutex> lck(command_mtx);
-    cammand_done = true;
+    std::lock_guard<std::mutex> lck(camOeRtspClient->command_mtx);
+    camOeRtspClient->cammand_done = true;
   }
-  cv.notify_one();
+  camOeRtspClient->cv.notify_one();
 }
 
 void camOERTSPClient::continueAfterPLAY(RTSPClient* rtspClient, int resultCode, char* resultString)
 {
   UsageEnvironment& env = rtspClient->envir(); // alias
+  camOERTSPClient* camOeRtspClient = ((camOERTSPClient*)rtspClient); // alias
   env << "continueAfterPLAY " << resultCode << " " << resultString <<"\n";
   ((camOERTSPClient*)rtspClient)->commandResultCode = resultCode;
   {
-    std::lock_guard<std::mutex> lck(command_mtx);
-    cammand_done = true;
+    std::lock_guard<std::mutex> lck(camOeRtspClient->command_mtx);
+    camOeRtspClient->cammand_done = true;
   }
-  cv.notify_one();
-
+  camOeRtspClient->cv.notify_one();
 }
 
 void camOERTSPClient::continueAfterTEARDOWN(RTSPClient* rtspClient, int resultCode, char* resultString)
 {
   UsageEnvironment& env = rtspClient->envir(); // alias
+  camOERTSPClient* camOeRtspClient = ((camOERTSPClient*)rtspClient); // alias
   env << "continueAfterTEARDOWN " << resultCode << " " << resultString <<"\n";
   ((camOERTSPClient*)rtspClient)->commandResultCode = resultCode;
   // In order to start the next UID from 0
   //camOERTSPClient::stream_counter = 0;
   {
-    std::lock_guard<std::mutex> lck(command_mtx);
-    cammand_done = true;
+    std::lock_guard<std::mutex> lck(camOeRtspClient->command_mtx);
+    camOeRtspClient->cammand_done = true;
   }
-  cv.notify_one();
+  camOeRtspClient->cv.notify_one();
 }
 
 void camOERTSPClient::continueAfterPAUSE(RTSPClient* rtspClient, int resultCode, char* resultString)
 {
   UsageEnvironment& env = rtspClient->envir(); // alias
+  camOERTSPClient* camOeRtspClient = ((camOERTSPClient*)rtspClient); // alias
   env << "continueAfterPAUSE " << resultCode << " " << resultString <<"\n";
   ((camOERTSPClient*)rtspClient)->commandResultCode = resultCode;
   {
-    std::lock_guard<std::mutex> lck(command_mtx);
-    cammand_done = true;
+    std::lock_guard<std::mutex> lck(camOeRtspClient->command_mtx);
+    camOeRtspClient->cammand_done = true;
   }
-  cv.notify_one();
+  camOeRtspClient->cv.notify_one();
 }
 
 // TODO: implementation
