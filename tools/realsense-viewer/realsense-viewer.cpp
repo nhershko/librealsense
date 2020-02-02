@@ -455,7 +455,7 @@ int main(int argc, const char** argv) try
                     ImGui::NewLine();
                     ImGui::SetCursorPosX(width * 0.15f);
                     ImGui::PushItemWidth(width * 0.7f);
-                    if (ImGui::InputText("", ip_input, 255), ImGuiInputTextFlags_CharsNoBlank)
+                    if (ImGui::InputText("", ip_input, 255))//ImGuiInputTextFlags_CharsNoBlank
                     {
                         ip_address = ip_input;
                     }
