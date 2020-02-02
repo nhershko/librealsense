@@ -434,9 +434,9 @@ int main(int argc, const char** argv) try
             if (!is_sw_sevice_connected)
             {
                 ImGui::Separator();
-                if (ImGui::Selectable("Load Software Device", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups))
+                if (ImGui::Selectable("Add IP Device", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups))
                 {
-                    ImGui::OpenPopup("Enter Camera IP");
+                    ImGui::OpenPopup("Enter Device IP");
                 }
 
                 float width = window.width() * 0.2f;
@@ -447,7 +447,7 @@ int main(int argc, const char** argv) try
                 ImGui::SetNextWindowSize({ width, height });
                 ImGui::PushStyleColor(ImGuiCol_PopupBg, dark_grey);
                 ImGui::PushStyleColor(ImGuiCol_Text, white);
-                if (ImGui::BeginPopupModal("Enter Camera IP", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))    
+                if (ImGui::BeginPopupModal("Enter Device IP", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))    
                 {
                     //ImGui::close
                     static char ip_input[256];
