@@ -25,31 +25,40 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <GroupsockHelper.hh>
 #include <librealsense2/h/rs_sensor.h>
 #include "BasicUsageEnvironment.hh"
-#include "compressFrameFactory.h"
 #include "RsCommon.hh"
 #include <cassert>
-#include <map>
+#include <compression/compression_factory.h>
 
-RsDeviceSource *
-RsDeviceSource::createNew(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile, rs2::frame_queue &queue)
+    RsDeviceSource *
+    RsDeviceSource::createNew(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile, rs2::frame_queue &queue)
 {
   return new RsDeviceSource(env, video_stream_profile, queue);
 }
 
 RsDeviceSource::RsDeviceSource(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile, rs2::frame_queue &queue) : FramedSource(env)
 {
-  envir() << "RsDeviceSource constructor " <<this <<"\n";
+  envir() << "RsDeviceSource constructor " << this << "\n";
   frames_queue = &queue;
   stream_profile = &video_stream_profile;
 #ifdef COMPRESSION
-  iCompressColor = compressFrameFactory::create(zipMethod::Jpeg);
-  iCompressDepth = compressFrameFactory::create(zipMethod::gzip);
+  if (video_stream_profile.stream_type() == RS2_STREAM_COLOR || video_stream_profile.stream_type() == RS2_STREAM_INFRARED)
+  {
+    iCompress = CompressionFactory::create(zipMethod::Jpeg, video_stream_profile.width(), video_stream_profile.height(), video_stream_profile.format());
+  }
+  else if (video_stream_profile.stream_type() == RS2_STREAM_DEPTH)
+  {
+    iCompress = CompressionFactory::create(zipMethod::gzip, video_stream_profile.width(), video_stream_profile.height(), video_stream_profile.format());
+  }
+  else
+  {
+    envir() << "error: unsupported compression for this stream type\n";
+  }
 #endif
 }
 
 RsDeviceSource::~RsDeviceSource()
 {
-  envir() << "RsDeviceSource destructor " <<this <<"\n";
+  envir() << "RsDeviceSource destructor " << this << "\n";
 }
 
 void RsDeviceSource::doGetNextFrame()
@@ -72,7 +81,7 @@ void RsDeviceSource::doGetNextFrame()
   }
   catch (const std::exception &e)
   {
-    envir() <<"RsDeviceSource: "<< e.what() << '\n';
+    envir() << "RsDeviceSource: " << e.what() << '\n';
   }
 }
 
@@ -90,23 +99,16 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
   gettimeofday(&fPresentationTime, NULL); // If you have a more accurate time - e.g., from an encoder - then use that instead.
   rs_over_ethernet_data_header header;
 #ifdef COMPRESSION
-  if (stream_profile->stream_type() == RS2_STREAM_DEPTH)
-  {
-    fFrameSize = iCompressDepth->compressDepthFrame((unsigned char *)frame->get_data(), frame->get_data_size(), fTo + sizeof(header));
-  }
-  else if (stream_profile->stream_type() == RS2_STREAM_COLOR)
-  {
-    fFrameSize = iCompressColor->compressColorFrame((unsigned char *)frame->get_data(), frame->get_data_size(), fTo + sizeof(header), stream_profile->width(),stream_profile->height(),stream_profile->format());
-  }
+  fFrameSize = iCompress->compressBuffer((unsigned char *)frame->get_data(), frame->get_data_size(), fTo + sizeof(header));
 #else
-    fFrameSize = frame->get_data_size();
-    memmove(fTo + sizeof(header), frame->get_data(), fFrameSize);
-    
-    //envir() << "after memove frame \n";
+  fFrameSize = frame->get_data_size();
+  memmove(fTo + sizeof(header), frame->get_data(), fFrameSize);
 #endif
+
   header.size = fFrameSize;
   fFrameSize += sizeof(header);
-  memmove(fTo, &header, sizeof(header));assert(fMaxSize>fFrameSize);
+  memmove(fTo, &header, sizeof(header));
+  assert(fMaxSize > fFrameSize); //TODO: to remove on release
   // After delivering the data, inform the reader that it is now available:
   FramedSource::afterGetting(this);
 }

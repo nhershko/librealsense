@@ -35,7 +35,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <rs.hpp> // Include RealSense Cross Platform API
 #include <mutex>
 #include <condition_variable>
-#include "compressFrameFactory.h"
+#include <compression/icompression.h>
 
 class RsDeviceSource : public FramedSource
 {
@@ -56,7 +56,7 @@ private:
   rs2::frame_queue *frames_queue;
   rs2::video_stream_profile *stream_profile;
 #ifdef COMPRESSION
-  IcompressFrame * iCompressColor,* iCompressDepth;
+  ICompression * iCompress;
 #endif
 };
 

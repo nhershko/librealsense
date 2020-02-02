@@ -40,12 +40,11 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 
 # target_link_libraries(${PROJECT_NAME} ${DEPENDENCIES})
 
-find_package(ZLIB REQUIRED)
-find_package(JPEG REQUIRED)
 
 target_link_libraries(${PROJECT_NAME} 
     PRIVATE ${DEPENDENCIES}
 	realsense2
+	realsense2-compression
 	#BasicUsageEnvironment
 	#UsageEnvironment
 	#groupsock
@@ -56,10 +55,6 @@ target_link_libraries(${PROJECT_NAME}
 
 if(COMPRESSION)
     add_definitions(-DCOMPRESSION)
-endif()
-
-if(COMPRESSION_STATISTICS)
-    add_definitions(-DCOMPRESSION_STATISTICS)
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC "rtsp_client/*.h")

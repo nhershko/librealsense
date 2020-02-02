@@ -48,11 +48,6 @@ ip_device::ip_device(std::string ip_address, rs2::software_device sw_device)
     this->sw_dev = sw_device;
     this->is_device_alive = true;
 
-    #ifdef COMPRESSION
-	iDecomressColor = decompressFrameFactory::create(zipMethod::Jpeg);
-	iDecomressDepth = decompressFrameFactory::create(zipMethod::gzip);
-    #endif
-
     //init device data
     init_device_data();
 
@@ -278,23 +273,7 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
         else 
         {				
             Raw_Frame* frame = rtp_stream.get()->extract_frame();
-#ifdef COMPRESSION			
-            //check if depth image
-            if (type==rs2_stream::RS2_STREAM_DEPTH) 
-            {
-				// depth
-				iDecomressDepth->decompressDepthFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(rtp_stream.get()->frame_data_buff.pixels));
-			} else if(type==rs2_stream::RS2_STREAM_COLOR) {
-                iDecomressColor->decompressColorFrame((unsigned char *)frame->m_buffer, frame->m_size, (unsigned char*)(rtp_stream.get()->frame_data_buff.pixels));
-            } 
-            else 
-            {
-                //infrared
-                memcpy(rtp_stream.get()->frame_data_buff.pixels, frame->m_buffer, frame->m_size);
-            }
-#else
-				memcpy(rtp_stream.get()->frame_data_buff.pixels, frame->m_buffer, frame->m_size);
-#endif
+			memcpy(rtp_stream.get()->frame_data_buff.pixels, frame->m_buffer, frame->m_size);
 			rtp_stream.get()->frame_data_buff.timestamp = frame->m_timestamp.tv_usec;
 			rtp_stream.get()->frame_data_buff.frame_number++;
             
