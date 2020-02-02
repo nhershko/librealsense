@@ -91,13 +91,12 @@ int JpegCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 	jpeg_finish_compress(&cinfo);
 	
 	memcpy(compressedBuf, data, compressedSize);
-	if (compframeCounter%50 == 0) {
+	if (compframeCounter++%50 == 0) {
 		printf("finish jpeg color compression, size: %lu, compressed size %u, frameNum: %d \n", size, compressedSize, compframeCounter);
 	}
 #ifdef COMPRESSION_STATISTICS	
 	tCompEnd = clock();
 	compTimeDiff += tCompEnd - tCompBegin;
-	compframeCounter++;
 	if (compframeCounter%50 == 0) {
 		printf("jpeg compress time measurement is: %0.2f, average: %0.2f, frameCounter: %d\n",((float)(tCompEnd - tCompBegin))/1000, ((float)compTimeDiff/compframeCounter)/1000, compframeCounter);
 	}
@@ -155,7 +154,7 @@ void  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSiz
 		}
 	}
 	(void) jpeg_finish_decompress(&dinfo);
-	if (decompframeCounter%50 == 0) {
+	if (decompframeCounter++%50 == 0) {
 		printf("finish jpeg color decompression, size: %lu, compressed size %u, frameNum: %d \n",dinfo.output_width*dinfo.output_height*2, compressedSize, decompframeCounter);
 	}
 
@@ -165,7 +164,6 @@ void  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSiz
 
 	fullSizeSum += m_width*m_height*2; //TODO: change to bpp 
 	compressedSizeSum += compressedSize;
-	decompframeCounter ++;
 	if (decompframeCounter%50 == 0) {
 		printf("jpeg decompress zip ratio is: %0.2f , frameCounter: %d\n", fullSizeSum/(float)compressedSizeSum, decompframeCounter);
 		printf("jpeg decompress time measurement is: %0.2f, average: %0.2f, frameCounter: %d\n",((float)(tDecompEnd - tDecompBegin))/1000, ((float)decompTimeDiff/decompframeCounter)/1000, decompframeCounter);

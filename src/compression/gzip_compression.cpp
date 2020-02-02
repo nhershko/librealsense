@@ -38,13 +38,12 @@ int GzipCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 	}
 	int compressedSize = strm.total_out;
 	deflateEnd(&strm);
-	if (compframeCounter%50 == 0) {
+	if (compframeCounter++%50 == 0) {
 		printf("finish gzip depth compression, size: %lu, compressed size %u, frameNum: %d \n",size, compressedSize, compframeCounter);
 	}
 #ifdef COMPRESSION_STATISTICS	
 	tCompEnd = clock();
 	compTimeDiff += tCompEnd - tCompBegin;
-	compframeCounter++;
 	if (compframeCounter%50 == 0) {
 		printf("gzip compress time measurement is: %0.2f, average: %0.2f, frameCounter: %d\n",((float)(tCompEnd - tCompBegin))/1000, ((float)compTimeDiff/compframeCounter)/1000, compframeCounter);
 	}
@@ -71,7 +70,7 @@ void  GzipCompression::decompressBuffer(unsigned char* buffer, int compressedSiz
 		return;
 	}
 	inflateEnd(&strm);
-	if (decompframeCounter%50 == 0) {
+	if (decompframeCounter++%50 == 0) {
 		printf("finish gzip depth decompression, size: %lu, compressed size %u, frameNum: %d \n", strm.total_out, compressedSize, decompframeCounter);
 	}
 #ifdef COMPRESSION_STATISTICS
@@ -80,7 +79,6 @@ void  GzipCompression::decompressBuffer(unsigned char* buffer, int compressedSiz
 
 	fullSizeSum += m_width*m_height*2;//change to bpp
 	compressedSizeSum += compressedSize;
-	decompframeCounter++;
 	if (decompframeCounter%50 == 0) {
 		printf("gzip decompress zip ratio is: %0.2f , frameCounter: %d\n", fullSizeSum/(float)compressedSizeSum, decompframeCounter);
 		printf("gzip decompress time measurement is: %0.2f, average: %0.2f, frameCounter: %d\n",((float)(tDecompEnd - tDecompBegin))/1000, ((float)decompTimeDiff/decompframeCounter)/1000, decompframeCounter);

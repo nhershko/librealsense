@@ -80,7 +80,7 @@ int RvlCompression::compressBuffer(unsigned char* buffer, int size, unsigned cha
 	if (nibblesWritten) // last few values
 		*pBuffer++ = word << 4 * (8 - nibblesWritten);
 	int compressedSize = int((char*)pBuffer - (char*)pHead);
-	if (compframeCounter%50 == 0) {
+	if (compframeCounter++%50 == 0) {
 		printf("finish rvl depth compression, size: %lu, compressed size %u, frameNum: %d \n", size, compressedSize, compframeCounter);
 	}
 	memcpy(compressedBuf, &compressedSize, sizeof(unsigned int));
@@ -91,7 +91,6 @@ int RvlCompression::compressBuffer(unsigned char* buffer, int size, unsigned cha
 	if (compframeCounter%50 == 0) {
 		printf("rvl compress time measurement is: %0.2f, average: %0.2f, frameCounter: %d\n",((float)diff)/1000, ((float)compTimeDiff/compframeCounter)/1000, compframeCounter);
 	}
-	compframeCounter++;
 #endif
 	return compressedSize;
 }
@@ -126,7 +125,7 @@ void RvlCompression::decompressBuffer(unsigned char* buffer, int size, unsigned 
 			previous = current;
 		}
 	}
-	if (decompframeCounter%50 == 0) {
+	if (decompframeCounter++%50 == 0) {
 		printf("finish rvl depth compression, size: %lu, compressed size %u, frameNum: %d \n", size, compressedSize, decompframeCounter);
 	}
 #ifdef COMPRESSION_STATISTICS
@@ -135,7 +134,6 @@ void RvlCompression::decompressBuffer(unsigned char* buffer, int size, unsigned 
 
 	fullSizeSum += size;
 	compressedSizeSum += compressedSize;
-	decompframeCounter++;
 
 	if (decompframeCounter%50 == 0) {
 		printf("rvl decompress zip ratio is: %0.2f , frameCounter: %d\n", fullSizeSum/(float)compressedSizeSum, decompframeCounter);

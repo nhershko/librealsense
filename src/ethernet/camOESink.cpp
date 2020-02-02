@@ -1,6 +1,7 @@
 #include "camOESink.h"
 #include "stdio.h"
 #include <string>
+#include "../../tools/rs-server/RsCommon.hh"
 
 #define WRITE_FRAMES_TO_FILE 0
 
@@ -13,7 +14,7 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
     fSubsession(subsession) {
   fstream = stream;
   fStreamId = strDup(streamId);
-  fBufferSize = stream.width*stream.height*2; // TODO: change size according to BPP
+  fBufferSize = stream.width*stream.height*2 +sizeof(rs_over_ethernet_data_header);; // TODO: change size according to BPP
   fReceiveBuffer = new u_int8_t[fBufferSize];
   fto = new u_int8_t[fBufferSize];
   std::string url_str = fStreamId;
@@ -80,28 +81,29 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 */
   //envir() << "********* frame ************\n";
   //if (fFrameCallBack != NULL)
-  if (this->m_rtp_callback != NULL)
+  rs_over_ethernet_data_header *header = (rs_over_ethernet_data_header *)fReceiveBuffer;
+  if (header->size == frameSize - sizeof(rs_over_ethernet_data_header))
   {
-#ifdef COMPRESSION
-    if(fstream.width == 640 && fstream.height == 480)
-    { 
-      iCompress->decompressBuffer(fReceiveBuffer, frameSize, fto);
-      this->m_rtp_callback->on_frame(fto, fstream.width*fstream.height*2, presentationTime);//todo: change to bpp
-    }
-    else 
+    if (this->m_rtp_callback != NULL)
     {
-#endif
-    this->m_rtp_callback->on_frame(fReceiveBuffer, frameSize, presentationTime);
 #ifdef COMPRESSION
+      iCompress->decompressBuffer(fReceiveBuffer +sizeof(rs_over_ethernet_data_header), header->size, fto);
+      this->m_rtp_callback->on_frame(fto, fstream.width * fstream.height *2, presentationTime);//todo: change to bpp
+#else
+    this->m_rtp_callback->on_frame(fReceiveBuffer+sizeof(rs_over_ethernet_data_header), header->size, presentationTime);
+#endif     
     }
-#endif
+    else
+    {
+      // TODO: error, no call back
+      envir() << "Frame call back is NULL\n";
+    }
   }
   else
   {
-    // TODO: error, no call back
-    envir() << "Frame call back is NULL\n";
+    envir() << "corrupted frame!!!: data size is "<<header->size<<" frame size is "<< frameSize <<"\n";
   }
-  
+
   //fwrite(fReceiveBuffer, frameSize, 1, fp);
   // Then continue, to request the next frame of data:
   continuePlaying();
