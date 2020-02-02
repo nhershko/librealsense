@@ -4,21 +4,24 @@
 
 #define WRITE_FRAMES_TO_FILE 0
 
-camOESink* camOESink::createNew(UsageEnvironment& env, MediaSubsession& subsession, int bufferSize, char const* streamId) {
-  return new camOESink(env, subsession, bufferSize, streamId);
+camOESink* camOESink::createNew(UsageEnvironment& env, MediaSubsession& subsession, rs2_video_stream stream, char const* streamId) {
+  return new camOESink(env, subsession,stream , streamId);
 }
 
-camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession, int bufferSize, char const* streamId)
+camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_video_stream stream, char const* streamId)
   : MediaSink(env),
     fSubsession(subsession) {
+  fstream = stream;
   fStreamId = strDup(streamId);
-  fBufferSize = bufferSize;
-  fReceiveBuffer = new u_int8_t[bufferSize];
+  fBufferSize = stream.width*stream.height*2; // TODO: change size according to BPP
+  fReceiveBuffer = new u_int8_t[fBufferSize];
+  fto = new u_int8_t[fBufferSize];
   std::string url_str = fStreamId;
   // Remove last "/"
   url_str = url_str.substr(0, url_str.size()-1);
   std::size_t stream_name_index = url_str.find_last_of("/") + 1;
   std::string stream_name = url_str.substr(stream_name_index, url_str.size());
+
   /*if (stream_name.compare("depth") == 0)
   {
     fp = fopen("file_depth.bin", "ab");
@@ -27,7 +30,15 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession, int buf
   {
     fp = fopen("file_rgb.bin", "ab");
   }*/
-
+#ifdef COMPRESSION
+  if(fstream.type == RS2_STREAM_COLOR || fstream.type == RS2_STREAM_INFRARED) {
+      iCompress = CompressionFactory::create(zipMethod::Jpeg, fstream.width, fstream.height, fstream.fmt);
+  } else if(fstream.type == RS2_STREAM_DEPTH ) {
+      iCompress = CompressionFactory::create(zipMethod::gzip, fstream.width, fstream.height, fstream.fmt);
+  } else {
+    envir() << "error: unsupported compression for this stream type\n";
+  }
+#endif
   envir() << "create new sink";
 
 }
@@ -71,7 +82,19 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   //if (fFrameCallBack != NULL)
   if (this->m_rtp_callback != NULL)
   {
+#ifdef COMPRESSION
+    if(fstream.width == 640 && fstream.height == 480)
+    { 
+      iCompress->decompressBuffer(fReceiveBuffer, frameSize, fto);
+      this->m_rtp_callback->on_frame(fto, fstream.width*fstream.height*2, presentationTime);//todo: change to bpp
+    }
+    else 
+    {
+#endif
     this->m_rtp_callback->on_frame(fReceiveBuffer, frameSize, presentationTime);
+#ifdef COMPRESSION
+    }
+#endif
   }
   else
   {

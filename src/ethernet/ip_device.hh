@@ -7,10 +7,7 @@
 #include "software-device.h"
 
 #include "rs_rtp_stream.hh"
-
-#include "IdecompressFrame.h"
-#include "decompressFrameFactory.h"
-
+#include <list>
 #include "rs_rtp_callback.hh"
 
 #define MAX_ACTIVE_STREAMS 4
@@ -52,8 +49,6 @@ class ip_device
         
         
         rs2::software_device sw_dev;
-
-        IdecompressFrame *iDecomressColor, *iDecomressDepth;
 
         std::thread sw_device_status_check;
 
