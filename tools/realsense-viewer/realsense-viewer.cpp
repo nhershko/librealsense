@@ -323,6 +323,7 @@ int main(int argc, const char** argv) try
         return true;
     };
 
+
     // Closing the window
     while (window)
     {
@@ -448,21 +449,26 @@ int main(int argc, const char** argv) try
                 ImGui::PushStyleColor(ImGuiCol_Text, white);
                 if (ImGui::BeginPopupModal("Enter Camera IP", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))    
                 {
+                    //ImGui::close
                     static char ip_input[256];
                     memset(ip_input, 0, 256);
                     ImGui::NewLine();
                     ImGui::SetCursorPosX(width * 0.15f);
                     ImGui::PushItemWidth(width * 0.7f);
-                    if (ImGui::InputText("", ip_input, 255))
+                    if (ImGui::InputText("", ip_input, 255), ImGuiInputTextFlags_CharsNoBlank)
                     {
                         ip_address = ip_input;
                     }
                     ImGui::PopItemWidth();
                     ImGui::NewLine();
                     ImGui::SetCursorPosX(10.f);
-                    if(ImGui::Button("ok",{100.f, 25.f}))
-                    {
-                        if (!ip_address.empty())
+                    //if (ip_address == "123")
+                    //{
+                    //    ImGui::ButtonEx("ok",{100.f, 25.f}, ImGuiButtonFlags_Disabled);
+                    //}
+                    //else
+                    //{
+                        if (ImGui::ButtonEx("ok",{100.f, 25.f}))//ImGuiButtonFlags_Repeat
                         {
                             add_remote_device(ctx, ip_address);
                             is_sw_sevice_connected = true;
@@ -471,7 +477,7 @@ int main(int argc, const char** argv) try
                             device_models->emplace_back(new device_model(dev, error_message, viewer_model));
                             ImGui::CloseCurrentPopup();
                         }
-                    }
+                    //}
                     ImGui::SameLine();
                     ImGui::SetCursorPosX(width - 100.f - 10.f);
                     if(ImGui::Button("cancel",{100.f, 25.f}))
