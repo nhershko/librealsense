@@ -372,7 +372,7 @@ int main(int argc, const char** argv) try
 
 
         ImGui::PushFont(window.get_font());
-        ImGui::SetNextWindowSize({ viewer_model.panel_width, 20.f * new_devices_count + 8 + (is_sw_sevice_connected? 0 : 26)});
+        ImGui::SetNextWindowSize({ viewer_model.panel_width, 20.f * new_devices_count + 8 + (is_sw_sevice_connected? 0 : 24)});
         if (ImGui::BeginPopup("select"))
         {
             ImGui::PushStyleColor(ImGuiCol_Text, dark_grey);
@@ -439,14 +439,17 @@ int main(int argc, const char** argv) try
                     ImGui::OpenPopup("Enter Device IP");
                 }
 
-                float width = window.width() * 0.2f;
-                float height = 120;
-                float posx = window.width() * 0.4f;
-                float posy = window.height() * 0.4f;
+                float width = 280;
+                float height = 125;
+                float posx = window.width() * 0.5f - width * 0.5f;
+                float posy = window.height() * 0.5f - height * 0.5f;
                 ImGui::SetNextWindowPos({ posx, posy });
                 ImGui::SetNextWindowSize({ width, height });
-                ImGui::PushStyleColor(ImGuiCol_PopupBg, dark_grey);
-                ImGui::PushStyleColor(ImGuiCol_Text, white);
+                ImGui::PushStyleColor(ImGuiCol_PopupBg, sensor_bg);
+                ImGui::PushStyleColor(ImGuiCol_TextSelectedBg, white);
+                ImGui::PushStyleColor(ImGuiCol_Text, light_grey);
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 1);
+
                 if (ImGui::BeginPopupModal("Enter Device IP", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))    
                 {
                     //ImGui::close
@@ -461,7 +464,7 @@ int main(int argc, const char** argv) try
                     }
                     ImGui::PopItemWidth();
                     ImGui::NewLine();
-                    ImGui::SetCursorPosX(10.f);
+                    ImGui::SetCursorPosX(width * 0.5f - 105);
                     //if (ip_address == "123")
                     //{
                     //    ImGui::ButtonEx("ok",{100.f, 25.f}, ImGuiButtonFlags_Disabled);
@@ -479,14 +482,15 @@ int main(int argc, const char** argv) try
                         }
                     //}
                     ImGui::SameLine();
-                    ImGui::SetCursorPosX(width - 100.f - 10.f);
+                    ImGui::SetCursorPosX(width * 0.5f + 5);
                     if(ImGui::Button("cancel",{100.f, 25.f}))
                     {
                         ImGui::CloseCurrentPopup();
                     }
                     ImGui::EndPopup();
                 }
-                ImGui::PopStyleColor(2);
+                ImGui::PopStyleColor(3);
+                ImGui::PopStyleVar(1);
         
                 ImGui::NextColumn();
                 ImGui::Text("%s", "");
