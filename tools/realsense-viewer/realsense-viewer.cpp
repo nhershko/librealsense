@@ -434,7 +434,7 @@ int main(int argc, const char** argv) try
             if (!is_sw_sevice_connected)
             {
                 ImGui::Separator();
-                if (ImGui::Selectable("Add IP Device", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups))
+                if (ImGui::Selectable("Add IP Device", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups))//
                 {
                     ImGui::OpenPopup("Enter Device IP");
                 }
@@ -465,12 +465,12 @@ int main(int argc, const char** argv) try
                     ImGui::PopItemWidth();
                     ImGui::NewLine();
                     ImGui::SetCursorPosX(width * 0.5f - 105);
-                    //if (ip_address == "123")
-                    //{
-                    //    ImGui::ButtonEx("ok",{100.f, 25.f}, ImGuiButtonFlags_Disabled);
-                    //}
-                    //else
-                    //{
+                    if (ip_address.empty())//=="123"
+                    {
+                        ImGui::ButtonEx("ok",{100.f, 25.f}, ImGuiButtonFlags_Disabled);
+                    }
+                    else
+                    {
                         if (ImGui::ButtonEx("ok",{100.f, 25.f}))//ImGuiButtonFlags_Repeat
                         {
                             add_remote_device(ctx, ip_address);
@@ -480,7 +480,7 @@ int main(int argc, const char** argv) try
                             device_models->emplace_back(new device_model(dev, error_message, viewer_model));
                             ImGui::CloseCurrentPopup();
                         }
-                    //}
+                    }
                     ImGui::SameLine();
                     ImGui::SetCursorPosX(width * 0.5f + 5);
                     if(ImGui::Button("cancel",{100.f, 25.f}))
