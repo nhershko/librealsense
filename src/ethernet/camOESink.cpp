@@ -88,7 +88,7 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
     {
 #ifdef COMPRESSION
       iCompress->decompressBuffer(fReceiveBuffer +sizeof(rs_over_ethernet_data_header), header->size, fto);
-      this->m_rtp_callback->on_frame(fto, fstream.width * fstream.height *2, presentationTime);//todo: change to bpp
+      this->m_rtp_callback->on_frame(fto, fstream.width * fstream.height *fstream.bpp, presentationTime);//todo: change to bpp
 #else
     this->m_rtp_callback->on_frame(fReceiveBuffer+sizeof(rs_over_ethernet_data_header), header->size, presentationTime);
 #endif     

@@ -78,7 +78,6 @@ std::string RsSensor::get_sensor_name()
 	}
 }
 
-// TODO Michal: check if we can get this function from librealsense
 int RsSensor::getStreamProfileBpp(rs2_format format)
 {
 	int bpp = 0;
