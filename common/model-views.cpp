@@ -5338,12 +5338,35 @@ namespace rs2
         if(dev.supports(RS2_CAMERA_INFO_NAME))
             ss << dev.get_info(RS2_CAMERA_INFO_NAME);
         ImGui::Text(" %s", ss.str().c_str());
-        if (dev.supports(RS2_CAMERA_INFO_USB_TYPE_DESCRIPTOR))
+        /*if (dev.supports(RS2_CAMERA_INFO_USB_TYPE_DESCRIPTOR))
         {
             std::string desc = dev.get_info(RS2_CAMERA_INFO_USB_TYPE_DESCRIPTOR);
             ss.str("");
             ss << "   " << textual_icons::usb_type << " " << desc;
             ImGui::SameLine();
+            if (!starts_with(desc, "3.")) ImGui::PushStyleColor(ImGuiCol_Text, yellow);
+            else ImGui::PushStyleColor(ImGuiCol_Text, light_grey);
+            ImGui::Text(" %s", ss.str().c_str());
+            ImGui::PopStyleColor();
+            ss.str("");
+            ss << "The camera was detected by the OS as connected to a USB " << desc << " port";
+            ImGui::PushFont(window.get_font());
+            ImGui::PushStyleColor(ImGuiCol_Text, light_grey);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip(" %s", ss.str().c_str());
+            ImGui::PopStyleColor();
+            ImGui::PopFont();
+        }*/
+        if (dev.supports(RS2_CAMERA_INFO_USB_TYPE_DESCRIPTOR))
+        {
+            std::string desc = dev.get_info(RS2_CAMERA_INFO_USB_TYPE_DESCRIPTOR);
+            ss.str("");
+            ss << "   " << textual_icons::usb_type << " " << desc;
+            //float a= panel_width;
+            ImGui::SameLine();
+            //float b = ImGui::GetCursorPosX();
+            //if (a - b < 100)
+            //    ImGui::NewLine();
             if (!starts_with(desc, "3.")) ImGui::PushStyleColor(ImGuiCol_Text, yellow);
             else ImGui::PushStyleColor(ImGuiCol_Text, light_grey);
             ImGui::Text(" %s", ss.str().c_str());
