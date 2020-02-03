@@ -271,6 +271,7 @@ int main(int argc, const char** argv) try
     device_model* device_to_remove = nullptr;
     bool is_ip_device_connected = false;
     std::string ip_address;
+    bool close_ip_popup = false;
 
     viewer_model viewer_model;
     viewer_model.ctx = ctx;
@@ -479,6 +480,7 @@ int main(int argc, const char** argv) try
                             refresh_devices(m, ctx, devices_connection_changes, connected_devs, device_names, *device_models, viewer_model, error_message);
                             auto dev = connected_devs[connected_devs.size()-1];
                             device_models->emplace_back(new device_model(dev, error_message, viewer_model));
+                            close_ip_popup = true;
                             ImGui::CloseCurrentPopup();
                         }
                     }
@@ -486,6 +488,7 @@ int main(int argc, const char** argv) try
                     ImGui::SetCursorPosX(width * 0.5f + 5);
                     if(ImGui::Button("cancel",{100.f, 25.f}))
                     {
+                        close_ip_popup = true;
                         ImGui::CloseCurrentPopup();
                     }
                     ImGui::EndPopup();
@@ -498,6 +501,11 @@ int main(int argc, const char** argv) try
                 ImGui::NextColumn();
             }
 
+            if (close_ip_popup)
+            {
+                ImGui::CloseCurrentPopup();
+                close_ip_popup = false;
+            }
             ImGui::PopStyleColor();
             ImGui::EndPopup();
         }
