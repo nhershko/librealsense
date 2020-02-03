@@ -457,6 +457,8 @@ int main(int argc, const char** argv) try
                     ImGui::NewLine();
                     ImGui::SetCursorPosX(width * 0.15f);
                     ImGui::PushItemWidth(width * 0.7f);
+                    if (ImGui::GetWindowIsFocused() && !ImGui::IsAnyItemActive()) 
+                        ImGui::SetKeyboardFocusHere();
                     if (ImGui::InputText("", ip_input, 255, ImGuiInputTextFlags_CharsDecimal))
                     {
                         ip_address = ip_input;
