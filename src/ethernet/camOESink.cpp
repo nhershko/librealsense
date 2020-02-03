@@ -6,7 +6,7 @@
 #define WRITE_FRAMES_TO_FILE 0
 
 camOESink* camOESink::createNew(UsageEnvironment& env, MediaSubsession& subsession, rs2_video_stream stream, char const* streamId) {
-  return new camOESink(env, subsession,stream , streamId);
+  return new camOESink(env, subsession, stream, streamId);
 }
 
 camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_video_stream stream, char const* streamId)
@@ -14,7 +14,7 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
     fSubsession(subsession) {
   fstream = stream;
   fStreamId = strDup(streamId);
-  fBufferSize = stream.width*stream.height*2 +sizeof(rs_over_ethernet_data_header);; // TODO: change size according to BPP
+  fBufferSize = stream.width*stream.height*stream.bpp + sizeof(rs_over_ethernet_data_header);
   fReceiveBuffer = new u_int8_t[fBufferSize];
   fto = new u_int8_t[fBufferSize];
   std::string url_str = fStreamId;

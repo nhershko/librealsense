@@ -1,4 +1,5 @@
 #include "RsSimpleRTPSink.h"
+#include "RsSensor.hh"
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -36,6 +37,7 @@ std::string getSdpLineForVideoStream(rs2::video_stream_profile &video_stream)
   str.append(getSdpLineFOrField("fps", video_stream.fps()));
   str.append(getSdpLineFOrField("stream_index", video_stream.stream_index()));
   str.append(getSdpLineFOrField("stream_type", video_stream.stream_type()));
+  str.append(getSdpLineFOrField("bpp", RsSensor::getStreamProfileBpp(video_stream.format())));
   //str.append(getSdpLineFOrField("is_compressed", 0));
   return str;
 }
