@@ -454,7 +454,8 @@ int main(int argc, const char** argv) try
                 if (ImGui::BeginPopupModal("Enter Device IP", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))    
                 {
                     static char ip_input[256];
-                    memset(ip_input, 0, 256);
+                    std::copy(ip_address.begin(), ip_address.end(), ip_input);
+                    ip_input[ip_address.size()] = '\0';
                     ImGui::NewLine();
                     ImGui::SetCursorPosX(width * 0.15f);
                     ImGui::PushItemWidth(width * 0.7f);
@@ -488,6 +489,7 @@ int main(int argc, const char** argv) try
                     ImGui::SetCursorPosX(width * 0.5f + 5);
                     if(ImGui::Button("cancel",{100.f, 25.f}))
                     {
+                        ip_address = "";
                         close_ip_popup = true;
                         ImGui::CloseCurrentPopup();
                     }
