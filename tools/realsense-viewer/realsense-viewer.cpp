@@ -269,7 +269,7 @@ int main(int argc, const char** argv) try
 
     std::shared_ptr<device_models_list> device_models = std::make_shared<device_models_list>();
     device_model* device_to_remove = nullptr;
-    bool is_sw_sevice_connected = false;
+    bool is_ip_device_connected = false;
     std::string ip_address;
 
     viewer_model viewer_model;
@@ -281,7 +281,7 @@ int main(int argc, const char** argv) try
     if (argc == 2)
     {
         add_remote_device(ctx, argv[1]);
-        is_sw_sevice_connected = true;
+        is_ip_device_connected = true;
     }
 
     window.on_file_drop = [&](std::string filename)
@@ -372,7 +372,7 @@ int main(int argc, const char** argv) try
 
 
         ImGui::PushFont(window.get_font());
-        ImGui::SetNextWindowSize({ viewer_model.panel_width, 20.f * new_devices_count + 8 + (is_sw_sevice_connected? 0 : 24)});
+        ImGui::SetNextWindowSize({ viewer_model.panel_width, 20.f * new_devices_count + 8 + (is_ip_device_connected? 0 : 24)});
         if (ImGui::BeginPopup("select"))
         {
             ImGui::PushStyleColor(ImGuiCol_Text, dark_grey);
@@ -431,7 +431,7 @@ int main(int argc, const char** argv) try
             ImGui::Text("%s", "");
             ImGui::NextColumn();
 
-            if (!is_sw_sevice_connected)
+            if (!is_ip_device_connected)
             {
                 ImGui::Separator();
                 if (ImGui::Selectable("Add IP Device", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups))//
@@ -452,7 +452,6 @@ int main(int argc, const char** argv) try
 
                 if (ImGui::BeginPopupModal("Enter Device IP", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))    
                 {
-                    //ImGui::close
                     static char ip_input[256];
                     memset(ip_input, 0, 256);
                     ImGui::NewLine();
@@ -462,9 +461,6 @@ int main(int argc, const char** argv) try
                     {
                         ip_address = ip_input;
                     }
-                    //std::stringstream ss;
-                    //ss << ip_address;
-                    //ImGui::Text(" %s", ss.str().c_str());
                     ImGui::PopItemWidth();
                     ImGui::NewLine();
                     ImGui::SetCursorPosX(width * 0.5f - 105);
@@ -477,7 +473,7 @@ int main(int argc, const char** argv) try
                         if (ImGui::ButtonEx("ok",{100.f, 25.f}))
                         {
                             add_remote_device(ctx, ip_address);
-                            is_sw_sevice_connected = true;
+                            is_ip_device_connected = true;
                             refresh_devices(m, ctx, devices_connection_changes, connected_devs, device_names, *device_models, viewer_model, error_message);
                             auto dev = connected_devs[connected_devs.size()-1];
                             device_models->emplace_back(new device_model(dev, error_message, viewer_model));

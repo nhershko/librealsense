@@ -247,7 +247,6 @@ rs2::software_device ip_device::create_ip_device(std::string ip_address)
     std::string camera_name = "Intel RealSense DXXX";
     std::string serial_number = "12345678";
     std::string usb_type = "0.0";
-    //ip_dev->sw_dev.update_info(RS2_CAMERA_INFO_NAME, "IP Device" + " \n " + camera_name);
     ip_dev->sw_dev.update_info(RS2_CAMERA_INFO_NAME, camera_name + " \n IP Device");
     ip_dev->sw_dev.register_info(rs2_camera_info::RS2_CAMERA_INFO_SERIAL_NUMBER, serial_number);
     //std::string usb_type_str(librealsense::platform::usb_spec_names.at(librealsense::platform::usb_spec::usb3_type));
