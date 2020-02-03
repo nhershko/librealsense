@@ -14,6 +14,7 @@ public:
 	std::unordered_map<long long int, rs2::video_stream_profile> getStreamProfiles() { return m_stream_profiles; }
 	long long int getStreamProfileKey(rs2::stream_profile profile);
 	std::string get_sensor_name();
+	static int getStreamProfileBpp(rs2_format format);
 
 private:
 	rs2::sensor m_sensor;

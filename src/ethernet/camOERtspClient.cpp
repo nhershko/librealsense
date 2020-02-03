@@ -224,6 +224,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       const char* strFpsVal = scs.subsession->attrVal_str("fps");
       const char* strIndexVal = scs.subsession->attrVal_str("stream_index");
       const char* strStreamTypeVal = scs.subsession->attrVal_str("stream_type");
+      const char* strBppVal = scs.subsession->attrVal_str("bpp");
 
       int width = strWidthVal != "" ? std::stoi(strWidthVal) : 0;
       int height = strHeightVal != "" ? std::stoi(strHeightVal) : 0;
@@ -232,6 +233,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       int fps = strFpsVal != "" ? std::stoi(strFpsVal) : 0;
       int index = strIndexVal != "" ? std::stoi(strIndexVal) : 0;
       int stream_type = strStreamTypeVal != "" ? std::stoi(strStreamTypeVal): 0;
+      int bpp = strBppVal != "" ? std::stoi(strBppVal): 0;
       rs2_video_stream videoStream;
       videoStream.width = width;
       videoStream.height = height;
@@ -240,15 +242,13 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       videoStream.fps = fps;
       videoStream.index = index;
       videoStream.type = static_cast<rs2_stream>(stream_type);
+      videoStream.bpp = bpp;
     
       std::string url_str = rtspClient->url();
       // Remove last "/"
       url_str = url_str.substr(0, url_str.size()-1);
       std::size_t stream_name_index = url_str.find_last_of("/") + 1;
-      std::string stream_name = url_str.substr(stream_name_index, url_str.size());
-
-      //nhershko: hard coded fixes
-      videoStream.bpp=2;      
+      std::string stream_name = url_str.substr(stream_name_index, url_str.size());      
 
       // TODO: update width and height in subsession?
       long long uniqueKey = getStreamProfileUniqueKey(videoStream);

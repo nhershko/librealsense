@@ -77,3 +77,45 @@ std::string RsSensor::get_sensor_name()
 		return "Unknown Sensor";
 	}
 }
+
+int RsSensor::getStreamProfileBpp(rs2_format format)
+{
+	int bpp = 0;
+	switch (format)
+	{            
+		case  RS2_FORMAT_RGB8: 
+		{
+			bpp = 3;
+			break;
+		}           
+		case  RS2_FORMAT_BGR8: 
+		{
+			bpp = 3;
+			break;
+		}
+		case  RS2_FORMAT_RGBA8:  
+		{
+			bpp = 3;
+			break;
+		}         
+		case  RS2_FORMAT_BGRA8: 
+		{
+			bpp = 3;
+			break;
+		}       
+		case  RS2_FORMAT_Z16:   
+		case  RS2_FORMAT_Y16: 
+		case  RS2_FORMAT_Y8:             
+		case  RS2_FORMAT_RAW16:          
+		case  RS2_FORMAT_YUYV:  
+		case  RS2_FORMAT_UYVY:
+		{
+			bpp = 2;
+			break;
+		}
+		default:
+			bpp = 0;
+			break;
+	}   
+	return bpp;
+}
