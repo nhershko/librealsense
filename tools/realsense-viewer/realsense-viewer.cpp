@@ -458,20 +458,23 @@ int main(int argc, const char** argv) try
                     ImGui::NewLine();
                     ImGui::SetCursorPosX(width * 0.15f);
                     ImGui::PushItemWidth(width * 0.7f);
-                    if (ImGui::InputText("", ip_input, 255))//ImGuiInputTextFlags_CharsNoBlank
+                    if (ImGui::InputText("", ip_input, 255, ImGuiInputTextFlags_CharsDecimal))
                     {
                         ip_address = ip_input;
                     }
+                    //std::stringstream ss;
+                    //ss << ip_address;
+                    //ImGui::Text(" %s", ss.str().c_str());
                     ImGui::PopItemWidth();
                     ImGui::NewLine();
                     ImGui::SetCursorPosX(width * 0.5f - 105);
-                    if (ip_address.empty())//=="123"
+                    if (ip_address.size() < 7)
                     {
                         ImGui::ButtonEx("ok",{100.f, 25.f}, ImGuiButtonFlags_Disabled);
                     }
                     else
                     {
-                        if (ImGui::ButtonEx("ok",{100.f, 25.f}))//ImGuiButtonFlags_Repeat
+                        if (ImGui::ButtonEx("ok",{100.f, 25.f}))
                         {
                             add_remote_device(ctx, ip_address);
                             is_sw_sevice_connected = true;
