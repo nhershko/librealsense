@@ -36,6 +36,8 @@
 using namespace rs2;
 using namespace rs400;
 
+#define MIN_IP_SIZE 7 //TODO: Ester - update size when host name is supported
+
 void add_remote_device(context& ctx, std::string address) 
 {
     software_device sw_dev = ip_device::create_ip_device(address);
@@ -468,7 +470,7 @@ int main(int argc, const char** argv) try
                     ImGui::PopItemWidth();
                     ImGui::NewLine();
                     ImGui::SetCursorPosX(width * 0.5f - 105);
-                    if (ip_address.size() < 7) //TODO: Ester - update size when host name is supported
+                    if (ip_address.size() < MIN_IP_SIZE)
                     {
                         ImGui::ButtonEx("ok",{100.f, 25.f}, ImGuiButtonFlags_Disabled);
                     }
