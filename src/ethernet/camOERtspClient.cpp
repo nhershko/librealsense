@@ -252,7 +252,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       deviceData.name = strCamNameVal;
       deviceData.usb_type = strUsbTypeVal;  
       camOeRtspClient->setDeviceData(deviceData);        
-
+      
       // TODO: update width and height in subsession?
       long long uniqueKey = getStreamProfileUniqueKey(videoStream);
       // TODO Michal: should the map key be long long? 
