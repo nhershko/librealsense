@@ -19,6 +19,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // on demand, from a file.
 // Implementation
 #include "RsServerMediaSubsession.h"
+#include "RsServerMediaSession.h"
 #include "RsSimpleRTPSink.h"
 
 #define CAPACITY 100
@@ -61,5 +62,6 @@ RTPSink *RsServerMediaSubsession ::createNewRTPSink(Groupsock *rtpGroupsock,
                                                     unsigned char rtpPayloadTypeIfDynamic,
                                                     FramedSource * /*inputSource*/)
 {
-  return RsSimpleRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 90000, "X" , "Y" , videoStreamProfile); //,1U,1,0);
+  RsSensor sensor = ((RsServerMediaSession*)this->fParentSession)->getRsSensor();
+  return RsSimpleRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 90000, "X" , "Y" , videoStreamProfile, sensor); //,1U,1,0);
 }

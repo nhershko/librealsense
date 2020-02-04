@@ -1,5 +1,4 @@
 #include "RsSimpleRTPSink.h"
-#include "RsSensor.hh"
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -11,34 +10,48 @@ RsSimpleRTPSink::createNew(UsageEnvironment &env, Groupsock *RTPgs,
                            char const *sdpMediaTypeString,
                            char const *rtpPayloadFormatName,
                            rs2::video_stream_profile &video_stream,
+                           // TODO Michal: this is a W/A for passing the sensor's metadata
+                           RsSensor sensor,
                            unsigned numChannels,
                            Boolean allowMultipleFramesPerPacket,
                            Boolean doNormalMBitRule)
 {
   return new RsSimpleRTPSink(env, RTPgs, rtpPayloadFormat, rtpTimestampFrequency, sdpMediaTypeString, rtpPayloadFormatName,
-                             video_stream, numChannels, allowMultipleFramesPerPacket, doNormalMBitRule);
+                             video_stream, sensor, numChannels, allowMultipleFramesPerPacket, doNormalMBitRule);
 }
 
 // TODO Michal: oveload with other types if needed
-std::string getSdpLineFOrField(const char* name, int val)
+std::string getSdpLineForField(const char* name, int val)
 {
   std::ostringstream oss;
   oss << name << "=" << val << ";";
   return oss.str();
 }
 
-std::string getSdpLineForVideoStream(rs2::video_stream_profile &video_stream)
+std::string getSdpLineForField(const char* name, const char* val)
+{
+  std::ostringstream oss;
+  oss << name << "=" << val << ";";
+  return oss.str();
+}
+
+std::string getSdpLineForVideoStream(rs2::video_stream_profile &video_stream, RsSensor &sensor)
 {
   std::string str;
-  str.append(getSdpLineFOrField("width", video_stream.width()));
-  str.append(getSdpLineFOrField("height", video_stream.height()));
-  str.append(getSdpLineFOrField("format", video_stream.format()));
-  str.append(getSdpLineFOrField("uid", video_stream.unique_id()));
-  str.append(getSdpLineFOrField("fps", video_stream.fps()));
-  str.append(getSdpLineFOrField("stream_index", video_stream.stream_index()));
-  str.append(getSdpLineFOrField("stream_type", video_stream.stream_type()));
-  str.append(getSdpLineFOrField("bpp", RsSensor::getStreamProfileBpp(video_stream.format())));
-  //str.append(getSdpLineFOrField("is_compressed", 0));
+  str.append(getSdpLineForField("width", video_stream.width()));
+  str.append(getSdpLineForField("height", video_stream.height()));
+  str.append(getSdpLineForField("format", video_stream.format()));
+  str.append(getSdpLineForField("uid", video_stream.unique_id()));
+  str.append(getSdpLineForField("fps", video_stream.fps()));
+  str.append(getSdpLineForField("stream_index", video_stream.stream_index()));
+  str.append(getSdpLineForField("stream_type", video_stream.stream_type()));
+  str.append(getSdpLineForField("bpp", RsSensor::getStreamProfileBpp(video_stream.format())));
+  //str.append(getSdpLineForField("is_compressed", 0));
+  rs2::sensor rs_sensor = sensor.getRsSensor();
+  str.append(getSdpLineForField("cam_serial_num", rs_sensor.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER)));
+  str.append(getSdpLineForField("cam_name", rs_sensor.get_info(RS2_CAMERA_INFO_NAME)));
+  str.append(getSdpLineForField("usb_type", rs_sensor.get_info(RS2_CAMERA_INFO_USB_TYPE_DESCRIPTOR)));
+
   return str;
 }
 
@@ -49,17 +62,18 @@ RsSimpleRTPSink ::RsSimpleRTPSink(UsageEnvironment &env, Groupsock *RTPgs,
                                   char const *sdpMediaTypeString,
                                   char const *rtpPayloadFormatName,
                                   rs2::video_stream_profile &video_stream,
+                                  RsSensor sensor,
                                   unsigned numChannels,
                                   Boolean allowMultipleFramesPerPacket,
                                   Boolean doNormalMBitRule)
     : SimpleRTPSink(env, RTPgs, rtpPayloadFormat, rtpTimestampFrequency, sdpMediaTypeString, rtpPayloadFormatName,
                     numChannels, allowMultipleFramesPerPacket, doNormalMBitRule)
 {
-  env << "RsRawVideoRTPSink constructor\n";
+  env << "RsSimpleVideoRTPSink constructor\n";
   // Then use this 'config' string to construct our "a=fmtp:" SDP line:
   unsigned fmtpSDPLineMaxSize = 200; // 200 => more than enough space
   fFmtpSDPLine = new char[fmtpSDPLineMaxSize];
-  std::string sdpStr =  getSdpLineForVideoStream(video_stream);
+  std::string sdpStr =  getSdpLineForVideoStream(video_stream, sensor);
   sprintf(fFmtpSDPLine, "a=fmtp:%d;%s\r\n",
           rtpPayloadType(),
           sdpStr.c_str());

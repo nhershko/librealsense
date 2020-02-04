@@ -225,6 +225,10 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       const char* strIndexVal = scs.subsession->attrVal_str("stream_index");
       const char* strStreamTypeVal = scs.subsession->attrVal_str("stream_type");
       const char* strBppVal = scs.subsession->attrVal_str("bpp");
+   
+      const char* strSerialNumVal = scs.subsession->attrVal_str("cam_serial_num");
+      const char* strCamNameVal = scs.subsession->attrVal_str("cam_name");
+      const char* strUsbTypeVal = scs.subsession->attrVal_str("usb_type");
 
       int width = strWidthVal != "" ? std::stoi(strWidthVal) : 0;
       int height = strHeightVal != "" ? std::stoi(strHeightVal) : 0;
@@ -237,21 +241,21 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       rs2_video_stream videoStream;
       videoStream.width = width;
       videoStream.height = height;
-      videoStream.uid = uid;//camOERTSPClient::stream_counter++;
+      videoStream.uid = uid;
       videoStream.fmt = static_cast<rs2_format>(format);
       videoStream.fps = fps;
       videoStream.index = index;
       videoStream.type = static_cast<rs2_stream>(stream_type);
       videoStream.bpp = bpp;
-    
-      std::string url_str = rtspClient->url();
-      // Remove last "/"
-      url_str = url_str.substr(0, url_str.size()-1);
-      std::size_t stream_name_index = url_str.find_last_of("/") + 1;
-      std::string stream_name = url_str.substr(stream_name_index, url_str.size());      
+      device_data deviceData;
+      deviceData.serial_num = strSerialNumVal;
+      deviceData.name = strCamNameVal;
+      deviceData.usb_type = strUsbTypeVal;  
+      camOeRtspClient->setDeviceData(deviceData);        
 
       // TODO: update width and height in subsession?
       long long uniqueKey = getStreamProfileUniqueKey(videoStream);
+      // TODO Michal: should the map key be long long? 
       camOeRtspClient->subsessionMap.insert(std::pair<int, RsMediaSubsession*>(uniqueKey, scs.subsession));
       camOeRtspClient->supportedProfiles.push_back(videoStream);
       scs.subsession = scs.iter->next();

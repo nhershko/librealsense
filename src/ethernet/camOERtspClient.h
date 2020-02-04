@@ -24,6 +24,7 @@ public:
     virtual bool isConnected();
 
     static long long int getStreamProfileUniqueKey(rs2_video_stream profile);
+    device_data setDeviceData(device_data data) { fDeviceData = data; }
 
     // IcamOERtsp functions
     virtual std::vector<rs2_video_stream> queryStreams();
@@ -32,6 +33,7 @@ public:
     virtual int stop(rs2_video_stream stream);
     virtual int stop();
     virtual int close();
+    virtual device_data getDeviceData() { return fDeviceData; }
 
     static void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString);
     static void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString);
@@ -59,6 +61,8 @@ private:
     bool cammand_done = false;
     // TODO: W/A for stop - should be removed
     bool is_connected;
+    device_data fDeviceData;
+
 };
 #endif // _CAM_OE_RTSP_CLIENT_H
 
