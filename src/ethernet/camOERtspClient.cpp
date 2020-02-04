@@ -187,6 +187,11 @@ bool camOERTSPClient::isConnected()
   return is_connected;
 }
 
+void camOERTSPClient::setDeviceData(device_data data)
+{ 
+   fDeviceData = data; 
+}
+
 // TODO: Error handling
 void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultString) {
   UsageEnvironment& env = rtspClient->envir(); // alias
@@ -251,7 +256,7 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       deviceData.serial_num = strSerialNumVal;
       deviceData.name = strCamNameVal;
       deviceData.usb_type = strUsbTypeVal;  
-      //camOeRtspClient->setDeviceData(deviceData);        
+      camOeRtspClient->setDeviceData(deviceData);        
       
       // TODO: update width and height in subsession?
       long long uniqueKey = getStreamProfileUniqueKey(videoStream);

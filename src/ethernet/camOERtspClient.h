@@ -24,7 +24,7 @@ public:
     virtual bool isConnected();
 
     static long long int getStreamProfileUniqueKey(rs2_video_stream profile);
-    device_data setDeviceData(device_data data) { fDeviceData = data; }
+    void setDeviceData(device_data data);
 
     // IcamOERtsp functions
     virtual std::vector<rs2_video_stream> queryStreams();
