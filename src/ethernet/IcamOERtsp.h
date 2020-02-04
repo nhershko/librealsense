@@ -5,6 +5,12 @@
 #include <librealsense2/hpp/rs_internal.hpp>
 #include "rtp_callback.hh"
 #include <vector>
+typedef struct device_data
+{
+    std::string serial_num;
+    std::string name;
+    std::string usb_type;
+} device_data;
 
 class IcamOERtsp
 {
@@ -15,7 +21,7 @@ class IcamOERtsp
         virtual int stop(rs2_video_stream stream) = 0;
         virtual int stop() = 0;
         virtual int close() = 0;
-        
+        virtual device_data getDeviceData() = 0;
 };
 
 #endif // _I_CAMOE_RTSP_H
