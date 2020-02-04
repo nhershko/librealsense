@@ -463,7 +463,7 @@ int main(int argc, const char** argv) try
                     ImGui::PushItemWidth(width * 0.7f);
                     if (ImGui::GetWindowIsFocused() && !ImGui::IsAnyItemActive()) 
                         ImGui::SetKeyboardFocusHere();
-                    if (ImGui::InputText("", ip_input, 255, ImGuiInputTextFlags_CharsDecimal)) //TODO: Ester - enable leeters when host name is supported 
+                    if (ImGui::InputText("", ip_input, 255, ImGuiInputTextFlags_CharsDecimal)) //TODO: Ester - enable leeters when host name is supported
                     {
                         ip_address = ip_input;
                     }
