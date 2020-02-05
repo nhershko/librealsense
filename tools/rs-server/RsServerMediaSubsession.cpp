@@ -62,6 +62,6 @@ RTPSink *RsServerMediaSubsession ::createNewRTPSink(Groupsock *rtpGroupsock,
                                                     unsigned char rtpPayloadTypeIfDynamic,
                                                     FramedSource * /*inputSource*/)
 {
-  RsSensor sensor = ((RsServerMediaSession*)this->fParentSession)->getRsSensor();
-  return RsSimpleRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 90000, "X" , "Y" , videoStreamProfile, sensor); //,1U,1,0);
+  rs2::device device = ((RsServerMediaSession*)this->fParentSession)->getRsSensor().getDevice();
+  return RsSimpleRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic, 90000, "X" , "Y" , videoStreamProfile, device); //,1U,1,0);
 }

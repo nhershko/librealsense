@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include <math.h>
+#include <algorithm>
 
 #define RTSP_CLIENT_VERBOSITY_LEVEL 1 // by default, print verbose output from each "RTSPClient"
 #define REQUEST_STREAMING_OVER_TCP 0 // TODO - uderstand this
@@ -255,8 +256,11 @@ void camOERTSPClient::continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCo
       device_data deviceData;
       deviceData.serial_num = strSerialNumVal;
       deviceData.name = strCamNameVal;
+      // Return spaces back to string after getting it from the SDP
+      // TODO Michal: Decide what character to use for replacing spaces
+      std::replace(deviceData.name.begin(), deviceData.name.end(), '^', ' ');
       deviceData.usb_type = strUsbTypeVal;  
-      camOeRtspClient->setDeviceData(deviceData);        
+      camOeRtspClient->setDeviceData(deviceData); 
       
       // TODO: update width and height in subsession?
       long long uniqueKey = getStreamProfileUniqueKey(videoStream);
