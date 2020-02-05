@@ -54,7 +54,7 @@ rs2::video_stream_profile RsServerMediaSubsession::get_stream_profile()
 
 FramedSource *RsServerMediaSubsession::createNewStreamSource(unsigned /*clientSessionId*/, unsigned &estBitrate)
 {
-  estBitrate = 5000; // kbps, estimate //TODO:: to calculate the right value
+  estBitrate = 20000; // kbps, estimate //TODO:: to calculate the right value
   return RsDeviceSource::createNew(envir(), videoStreamProfile, frameQueue);
 }
 
