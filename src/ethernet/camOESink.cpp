@@ -5,17 +5,19 @@
 
 #define WRITE_FRAMES_TO_FILE 0
 
-camOESink* camOESink::createNew(UsageEnvironment& env, MediaSubsession& subsession, rs2_video_stream stream, char const* streamId) {
-  return new camOESink(env, subsession, stream, streamId);
+camOESink* camOESink::createNew(UsageEnvironment& env, MediaSubsession& subsession, rs2_video_stream stream, memory_pool* memPool,char const* streamId) {
+  return new camOESink(env, subsession,stream ,memPool, streamId);
 }
 
-camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_video_stream stream, char const* streamId)
-  : MediaSink(env),
-    fSubsession(subsession) {
+camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_video_stream stream, memory_pool* mem_pool, char const* streamId)
+  : MediaSink(env),memPool(mem_pool),fSubsession(subsession) 
+  {
   fstream = stream;
   fStreamId = strDup(streamId);
   fBufferSize = stream.width*stream.height*stream.bpp + sizeof(rs_over_ethernet_data_header);
-  fReceiveBuffer = new u_int8_t[fBufferSize];
+  fReceiveBuffer = (memPool->getNextMem());//new u_int8_t[fBufferSize];  
+  //fReceiveBuffer = new u_int8_t[fBufferSize];
+  //envir()<<"first fReceiveBuffer: "<<fReceiveBuffer<<"\n";
   fto = new u_int8_t[fBufferSize];
   std::string url_str = fStreamId;
   // Remove last "/"
@@ -45,7 +47,7 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
 }
 
 camOESink::~camOESink() {
-  delete[] fReceiveBuffer;
+  //delete[] fReceiveBuffer;
   delete[] fStreamId;
   //fclose(fp);
 }
@@ -114,6 +116,8 @@ Boolean camOESink::continuePlaying() {
   if (fSource == NULL) return False; // sanity check (should not happen)
 
   // Request the next frame of data from our input source.  "afterGettingFrame()" will get called later, when it arrives:
+  fReceiveBuffer = (memPool->getNextMem());
+  //envir()<<"fReceiveBuffer: "<<fReceiveBuffer<<"\n";
   fSource->getNextFrame(fReceiveBuffer, fBufferSize,
                         afterGettingFrame, this,
                         onSourceClosure, this);

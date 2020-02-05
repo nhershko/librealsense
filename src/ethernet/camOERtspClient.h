@@ -11,6 +11,7 @@
 #include <vector>
 #include <map>
 #include <condition_variable>
+#include "memory_pool.h"
 
 class camOERTSPClient: public RTSPClient, IcamOERtsp
 {
@@ -20,7 +21,7 @@ public:
 				  portNumBits tunnelOverHTTPPortNum = 0);
     void describe();
     void setup(rs2_video_stream stream);
-    void initFunc();
+    void initFunc(memory_pool* pool);
     virtual bool isConnected();
 
     static long long int getStreamProfileUniqueKey(rs2_video_stream profile);
@@ -62,6 +63,7 @@ private:
     // TODO: W/A for stop - should be removed
     bool is_connected;
     device_data fDeviceData;
+    memory_pool* memPool;
 
 };
 #endif // _CAM_OE_RTSP_CLIENT_H

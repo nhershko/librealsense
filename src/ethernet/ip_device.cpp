@@ -1,10 +1,6 @@
 #include "ip_device.hh"
 #include <librealsense2/rs.hpp>
 
-void ip_device_deleter(void* p) 
-{
-
-}
 
 rs2_intrinsics get_hard_coded_sensor_intrinsics(rs2_video_stream stream)
 {
@@ -29,7 +25,7 @@ void ip_device::recover_rtsp_client(int sensor_index)
     {
         rtsp_clients[1] = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/color").c_str(),"ethernet_device");
 	}
-    ((camOERTSPClient*)rtsp_clients[sensor_index])->initFunc();
+    ((camOERTSPClient*)rtsp_clients[sensor_index])->initFunc(&rs_rtp_stream::get_memory_pool());
     ((camOERTSPClient*)rtsp_clients[sensor_index])->queryStreams();
     
     std::cout <<"\t@@@ done\n";
@@ -91,7 +87,7 @@ bool ip_device::init_device_data()
         }
 
         rtsp_clients[sensor_id] = camOERTSPClient::getRtspClient(url.c_str(),"ip_device_device");
-	    ((camOERTSPClient*)rtsp_clients[sensor_id])->initFunc();
+	    ((camOERTSPClient*)rtsp_clients[sensor_id])->initFunc(&rs_rtp_stream::get_memory_pool());
 
         std::cout << "\t@@@ adding new sensor of type id: " << sensor_id << std::endl;
 
@@ -123,7 +119,7 @@ bool ip_device::init_device_data()
             //nhershko: check why profile with type 0
             long long int stream_key = camOERTSPClient::getStreamProfileUniqueKey(st);
             streams_collection[stream_key] = std::make_shared<rs_rtp_stream>(st,sensors[sensor_id]->add_video_stream(st,stream_index==0));
-            
+            memPool = &rs_rtp_stream::get_memory_pool();
             std::cout << "\t@@@ added stream [uid:hash] ["  << st.uid<<":"<< stream_key <<"] of type: " << streams_collection[stream_key].get()->stream_type() << std::endl;
             streams_uid_per_sensor[sensor_id].push_front(stream_key);
         }
@@ -279,7 +275,8 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
         else 
         {				
             Raw_Frame* frame = rtp_stream.get()->extract_frame();
-			memcpy(rtp_stream.get()->frame_data_buff.pixels, frame->m_buffer, frame->m_size);
+            rtp_stream.get()->frame_data_buff.pixels = frame->m_buffer;
+			//memcpy(rtp_stream.get()->frame_data_buff.pixels, frame->m_buffer, frame->m_size);
 			rtp_stream.get()->frame_data_buff.timestamp = frame->m_timestamp.tv_usec;
 			rtp_stream.get()->frame_data_buff.frame_number++;
             
