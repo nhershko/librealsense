@@ -18,6 +18,7 @@
 #include <array>
 #include <mutex>
 #include <set>
+
 //#include "ethernet/ethernet-device.h"
 
 #include "ethernet/ip_device.hh"
@@ -189,7 +190,7 @@ bool refresh_devices(std::mutex& m,
 
             bool added = false;
             if (device_models.size() == 0 &&
-                dev.supports(RS2_CAMERA_INFO_NAME) && std::string(dev.get_info(RS2_CAMERA_INFO_NAME)) != "Platform Camera" && std::string(dev.get_info(RS2_CAMERA_INFO_NAME)).find("IP Device") ==std::string::npos)
+                dev.supports(RS2_CAMERA_INFO_NAME) && std::string(dev.get_info(RS2_CAMERA_INFO_NAME)) != "Platform Camera" && std::string(dev.get_info(RS2_CAMERA_INFO_NAME)).find("IP Device") == std::string::npos)
             {
                 device_models.emplace_back(new device_model(dev, error_message, viewer_model));
                 viewer_model.not_model.add_log(to_string() << (*device_models.rbegin())->dev.get_info(RS2_CAMERA_INFO_NAME) << " was selected as a default device");
@@ -362,7 +363,6 @@ int main(int argc, const char** argv) try
             ImGui::OpenPopup("select");
 
         auto new_devices_count = device_names.size() + 1;
-
 
         for (auto&& dev_model : *device_models)
         {
