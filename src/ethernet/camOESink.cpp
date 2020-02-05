@@ -15,7 +15,7 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
   fstream = stream;
   fStreamId = strDup(streamId);
   fBufferSize = stream.width*stream.height*stream.bpp + sizeof(rs_over_ethernet_data_header);
-  fReceiveBuffer = (memPool->getNextMem());//new u_int8_t[fBufferSize];  
+  fReceiveBuffer = nullptr;
   //fReceiveBuffer = new u_int8_t[fBufferSize];
   //envir()<<"first fReceiveBuffer: "<<fReceiveBuffer<<"\n";
   fto = new u_int8_t[fBufferSize];
@@ -47,7 +47,7 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
 }
 
 camOESink::~camOESink() {
-  //delete[] fReceiveBuffer;
+  memPool->returnMem(fReceiveBuffer);
   delete[] fStreamId;
   //fclose(fp);
 }
@@ -81,8 +81,6 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   envir() << "\n";
 #endif
 */
-  //envir() << "********* frame ************\n";
-  //if (fFrameCallBack != NULL)
   rs_over_ethernet_data_header *header = (rs_over_ethernet_data_header *)fReceiveBuffer;
   if (header->size == frameSize - sizeof(rs_over_ethernet_data_header))
   {
@@ -98,11 +96,13 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
     else
     {
       // TODO: error, no call back
+      memPool->returnMem(fReceiveBuffer);
       envir() << "Frame call back is NULL\n";
     }
   }
   else
   {
+    memPool->returnMem(fReceiveBuffer);
     envir() << "corrupted frame!!!: data size is "<<header->size<<" frame size is "<< frameSize <<"\n";
   }
 
@@ -117,7 +117,10 @@ Boolean camOESink::continuePlaying() {
 
   // Request the next frame of data from our input source.  "afterGettingFrame()" will get called later, when it arrives:
   fReceiveBuffer = (memPool->getNextMem());
-  //envir()<<"fReceiveBuffer: "<<fReceiveBuffer<<"\n";
+  if (fReceiveBuffer == nullptr)
+  {
+    return false;
+  }
   fSource->getNextFrame(fReceiveBuffer, fBufferSize,
                         afterGettingFrame, this,
                         onSourceClosure, this);

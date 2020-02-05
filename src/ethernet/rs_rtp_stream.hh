@@ -98,7 +98,7 @@ class rs_rtp_stream
 
         
         static void frame_deleter(void* p) { 
-            //get_memory_pool().returnMem((unsigned char*)p);
+                get_memory_pool().returnMem((unsigned char*)p);
             }
 
         std::mutex stream_lock;

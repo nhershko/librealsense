@@ -5,7 +5,7 @@
 #include <queue>
 #include <iostream>
 
-#define POOL_SIZE 1000
+#define POOL_SIZE 10000 //TODO:: to define the right value
 class memory_pool
 {
 
@@ -19,15 +19,22 @@ public:
             //memset(mem,'X',1280 * 720 * 3);
             pool.push(mem);
         }
+        std::cout<<"memory_pool: pool size is: "<<pool.size()<<"\n";
     }
 
     unsigned char *getNextMem()
     {
         unsigned char *mem = nullptr;
+
+        std::cout<<"before getMem: pool size is: "<<pool.size()<<"\n";
         if (!pool.empty())
         {
             mem = pool.front();
             pool.pop();
+        }
+        else
+        {
+            std::cout<< "pool is empty\n";
         }
         return mem;
     }
@@ -37,6 +44,7 @@ public:
         if (mem != nullptr)
         {
             pool.push(mem);
+            std::cout<<"after returnMem: pool size is: "<<pool.size()<<"\n";
         }
         else
         {
@@ -46,7 +54,7 @@ public:
 
     ~memory_pool()
     {
-        for (int i = 0; i < POOL_SIZE; i++)
+        while (!pool.empty())
         {
             unsigned char *mem = pool.front();
             pool.pop();
