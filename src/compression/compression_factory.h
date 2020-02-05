@@ -11,5 +11,5 @@ typedef enum zipMethod {
 class CompressionFactory
 {
     public: 
-        static ICompression* create(zipMethod  zipMeth, int width, int height, rs2_format format);
+        static ICompression* getObject(int width, int height, rs2_format format, rs2_stream stream_type);
 };

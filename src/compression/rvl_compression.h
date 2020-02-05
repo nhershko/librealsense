@@ -6,7 +6,7 @@ class RvlCompression :public ICompression
 {
     public: 
         int compressBuffer(unsigned char* buffer, int size, unsigned char* compressedBuf);
-        void decompressBuffer(unsigned char* buffer, int size, unsigned char* uncompressedBuf);
+        int decompressBuffer(unsigned char* buffer, int size, unsigned char* uncompressedBuf);
         RvlCompression(int width, int height, rs2_format format);
     private:
         int EncodeVLE(int value);

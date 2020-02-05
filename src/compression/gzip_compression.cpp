@@ -48,10 +48,10 @@ int GzipCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 		printf("gzip compress time measurement is: %0.2f, average: %0.2f, frameCounter: %d\n",((float)(tCompEnd - tCompBegin))/1000, ((float)compTimeDiff/compframeCounter)/1000, compframeCounter);
 	}
 #endif
-	return compressedSize;
+	return strm.total_out;
 }
 
-void  GzipCompression::decompressBuffer(unsigned char* buffer, int compressedSize, unsigned char* uncompressedBuf) 
+int  GzipCompression::decompressBuffer(unsigned char* buffer, int compressedSize, unsigned char* uncompressedBuf) 
 {	
 #ifdef COMPRESSION_STATISTICS
 	tDecompBegin = clock();
@@ -67,7 +67,7 @@ void  GzipCompression::decompressBuffer(unsigned char* buffer, int compressedSiz
 	z_result = inflate(&strm, Z_FINISH);
 	if(z_result == Z_STREAM_ERROR || z_result == Z_BUF_ERROR) {
 		printf("error: decompress frame with gzip failed\n");
-		return;
+		return -1;
 	}
 	inflateEnd(&strm);
 	if (decompframeCounter++%50 == 0) {
@@ -84,4 +84,5 @@ void  GzipCompression::decompressBuffer(unsigned char* buffer, int compressedSiz
 		printf("gzip decompress time measurement is: %0.2f, average: %0.2f, frameCounter: %d\n",((float)(tDecompEnd - tDecompBegin))/1000, ((float)decompTimeDiff/decompframeCounter)/1000, decompframeCounter);
 	}
 #endif
+	return strm.total_out;
 }
