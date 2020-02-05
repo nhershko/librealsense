@@ -41,18 +41,7 @@ RsDeviceSource::RsDeviceSource(UsageEnvironment &env, rs2::video_stream_profile 
   frames_queue = &queue;
   stream_profile = &video_stream_profile;
 #ifdef COMPRESSION
-  if (video_stream_profile.stream_type() == RS2_STREAM_COLOR || video_stream_profile.stream_type() == RS2_STREAM_INFRARED)
-  {
-    iCompress = CompressionFactory::create(zipMethod::Jpeg, video_stream_profile.width(), video_stream_profile.height(), video_stream_profile.format());
-  }
-  else if (video_stream_profile.stream_type() == RS2_STREAM_DEPTH)
-  {
-    iCompress = CompressionFactory::create(zipMethod::gzip, video_stream_profile.width(), video_stream_profile.height(), video_stream_profile.format());
-  }
-  else
-  {
-    envir() << "error: unsupported compression for this stream type\n";
-  }
+  iCompress = CompressionFactory::getObject(video_stream_profile.width(), video_stream_profile.height(), video_stream_profile.format(), video_stream_profile.stream_type());
 #endif
 }
 

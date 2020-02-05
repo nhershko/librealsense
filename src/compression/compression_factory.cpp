@@ -5,8 +5,16 @@
 #include "jpeg_compression.h"
 #include "compression_factory.h"
 
-ICompression* CompressionFactory::create(zipMethod  zipMeth, int width, int height, rs2_format format)
-{
+ICompression* CompressionFactory::getObject(int width, int height, rs2_format format, rs2_stream stream_type)
+{ 	
+	printf("format %d", format);
+	zipMethod zipMeth;
+	if(stream_type == RS2_STREAM_COLOR || stream_type == RS2_STREAM_INFRARED) {
+		zipMeth = zipMethod::Jpeg;
+   	} else if(stream_type == RS2_STREAM_DEPTH ) {
+        zipMeth = zipMethod::gzip;
+  	}//todo:set default compression for unknown format 
+
 	switch(zipMeth)
 	{
 		case zipMethod::gzip:

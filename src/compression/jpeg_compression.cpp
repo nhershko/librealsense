@@ -105,7 +105,7 @@ int JpegCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 }
 
 
-void  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSize, unsigned char* uncompressedBuf) 
+int  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSize, unsigned char* uncompressedBuf) 
 {	
 	unsigned char * ptr =  uncompressedBuf;
 	unsigned char* data = buffer;
@@ -117,12 +117,12 @@ void  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSiz
 	memcpy(&jpegHeader, buffer, sizeof(unsigned int));
 	if (jpegHeader != 0xE0FFD8FF) { //check header integrity if = E0FF D8FF - the First 4 bytes jpeg standards. 
 		printf("Error: not a jpeg frame, skip frame\n");
-		return;
+		return -1;
 	}
 	res =  jpeg_read_header(&dinfo, TRUE);
 	if (!res) {
 		printf("Error: jpeg_read_header failed\n");
-		return;
+		return -1;
 	}
 	if (m_format == RS2_FORMAT_RGB8) {
 		dinfo.out_color_space = JCS_RGB;
@@ -132,7 +132,7 @@ void  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSiz
 	res =  jpeg_start_decompress(&dinfo);
 	if (!res) {
 		printf("error: jpeg_start_decompress failed \n");
-		return;
+		return -1;
 	}
 	uint64_t row_stride = dinfo.output_width * dinfo.output_components;
 	while (dinfo.output_scanline < dinfo.output_height) {
@@ -150,7 +150,7 @@ void  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSiz
 			convertYUVtoYUYV(&ptr);
 		} else {
 			printf("unsupport format on jpeg compression");
-			return;
+			return -1;
 		}
 	}
 	(void) jpeg_finish_decompress(&dinfo);
@@ -169,5 +169,5 @@ void  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSiz
 		printf("jpeg decompress time measurement is: %0.2f, average: %0.2f, frameCounter: %d\n",((float)(tDecompEnd - tDecompBegin))/1000, ((float)decompTimeDiff/decompframeCounter)/1000, decompframeCounter);
 	}
 #endif
-	
+	return dinfo.output_width*dinfo.output_height*2;
 }

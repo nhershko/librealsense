@@ -32,13 +32,7 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
     fp = fopen("file_rgb.bin", "ab");
   }*/
 #ifdef COMPRESSION
-  if(fstream.type == RS2_STREAM_COLOR || fstream.type == RS2_STREAM_INFRARED) {
-      iCompress = CompressionFactory::create(zipMethod::Jpeg, fstream.width, fstream.height, fstream.fmt);
-  } else if(fstream.type == RS2_STREAM_DEPTH ) {
-      iCompress = CompressionFactory::create(zipMethod::gzip, fstream.width, fstream.height, fstream.fmt);
-  } else {
-    envir() << "error: unsupported compression for this stream type\n";
-  }
+  iCompress = CompressionFactory::getObject(fstream.width, fstream.height, fstream.fmt, fstream.type);
 #endif
   envir() << "create new sink";
 
