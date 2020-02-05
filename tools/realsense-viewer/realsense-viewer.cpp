@@ -18,7 +18,6 @@
 #include <array>
 #include <mutex>
 #include <set>
-#include <stdio.h>
 //#include "ethernet/ethernet-device.h"
 
 #include "ethernet/ip_device.hh"
@@ -53,7 +52,6 @@ void add_playback_device(context& ctx, device_models_list& device_models,
     {
         auto dev = ctx.load_device(file);
         was_loaded = true;
-        std::cout<<"111111111111111111111111111111111"<<std::endl;
         device_models.emplace_back(new device_model(dev, error_message, viewer_model)); //Will cause the new device to appear in the left panel
         if (auto p = dev.as<playback>())
         {
@@ -193,7 +191,6 @@ bool refresh_devices(std::mutex& m,
             if (device_models.size() == 0 &&
                 dev.supports(RS2_CAMERA_INFO_NAME) && std::string(dev.get_info(RS2_CAMERA_INFO_NAME)) != "Platform Camera" && std::string(dev.get_info(RS2_CAMERA_INFO_NAME)).find("IP Device") ==std::string::npos)
             {
-                        std::cout<<"222222222222222222222222222222222222222"<<std::endl;
                 device_models.emplace_back(new device_model(dev, error_message, viewer_model));
                 viewer_model.not_model.add_log(to_string() << (*device_models.rbegin())->dev.get_info(RS2_CAMERA_INFO_NAME) << " was selected as a default device");
                 added = true;
@@ -209,7 +206,6 @@ bool refresh_devices(std::mutex& m,
                         RS2_LOG_SEVERITY_INFO, RS2_NOTIFICATION_CATEGORY_UNKNOWN_ERROR }, 
                         [&device_models, &viewer_model, &error_message, dev]{
                             auto device = dev;
-                                    std::cout<<"33333333333333333333333333333333333333333"<<std::endl;
                             device_models.emplace_back(
                                 new device_model(device, error_message, viewer_model));
                         });
@@ -367,10 +363,7 @@ int main(int argc, const char** argv) try
 
         auto new_devices_count = device_names.size() + 1;
 
-        /*for (auto d:device_names)
-        {
-            std::cout<<d<<std::endl;
-        }*/
+
         for (auto&& dev_model : *device_models)
         {
             auto connected_devs_itr = std::find_if(begin(connected_devs), end(connected_devs),
@@ -399,7 +392,6 @@ int main(int argc, const char** argv) try
                     try
                     {
                         auto dev = connected_devs[i];
-                                std::cout<<"44444444444444444444444444444444444444"<<std::endl;
                         device_models->emplace_back(new device_model(dev, error_message, viewer_model));
                     }
                     catch (const error& e)
@@ -486,16 +478,11 @@ int main(int argc, const char** argv) try
                     {
                         if (ImGui::ButtonEx("ok",{100.f, 25.f}))
                         {
-                            std::cout<<"AAAAAAAAAAAAA "<<device_models->size()<<std::endl;
                             add_remote_device(ctx, ip_address);
                             is_ip_device_connected = true;
-                            std::cout<<"BBBBBBBBBBBBBBB "<<device_models->size()<<std::endl;
                             refresh_devices(m, ctx, devices_connection_changes, connected_devs, device_names, *device_models, viewer_model, error_message);
                             auto dev = connected_devs[connected_devs.size()-1];
-                            std::cout<<"CCCCCCCCCCCCCC "<<device_models->size()<<std::endl;
                             device_models->emplace_back(new device_model(dev, error_message, viewer_model));
-                            //refresh_devices(m, ctx, devices_connection_changes, connected_devs, device_names, *device_models, viewer_model, error_message);
-                            std::cout<<"DDDDDDDDDDDDDDD "<<device_models->size()<<std::endl;
                             close_ip_popup = true;
                             ImGui::CloseCurrentPopup();
                         }
@@ -556,7 +543,6 @@ int main(int argc, const char** argv) try
 
         if (device_models->size() > 0)
         {
-            //std::cout<<"&&&&&&&&&&&&&&&&&&&&& "<<device_models->size()<<std::endl;
             std::vector<std::function<void()>> draw_later;
             auto windows_width = ImGui::GetContentRegionMax().x;
 
