@@ -10,7 +10,7 @@ public:
 	RsDevice();
 	~RsDevice();
 	std::vector<RsSensor> &getSensors() { return m_sensors; }
-
+	rs2::device getRs2Device() { return m_device; }
 private:
 	rs2::device m_device;
 	std::vector<RsSensor> m_sensors;

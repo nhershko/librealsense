@@ -25,11 +25,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 ////////// ServerMediaSession //////////
 
-RsServerMediaSession *RsServerMediaSession ::createNew(UsageEnvironment &env, RsSensor &sensor,
+RsServerMediaSession *RsServerMediaSession ::createNew(UsageEnvironment &env, RsSensor &sensor, RsDevice& device,
                                                        char const *streamName, char const *info,
                                                        char const *description, Boolean isSSM, char const *miscSDPLines)
 {
-  return new RsServerMediaSession(env, sensor, streamName, info, description,
+  return new RsServerMediaSession(env, sensor, device, streamName, info, description,
                                   isSSM, miscSDPLines);
 }
 
@@ -38,11 +38,12 @@ char const *const libVersionStr = LIVEMEDIA_LIBRARY_VERSION_STRING;
 
 RsServerMediaSession::RsServerMediaSession(UsageEnvironment &env,
                                            RsSensor &sensor,
+                                           RsDevice &device,
                                            char const *streamName,
                                            char const *info,
                                            char const *description,
                                            Boolean isSSM, char const *miscSDPLines)
-    : ServerMediaSession(env, streamName, info, description, isSSM, miscSDPLines), rsSensor(sensor), isActive(false)
+    : rsDevice(device), ServerMediaSession(env, streamName, info, description, isSSM, miscSDPLines), rsSensor(sensor), isActive(false)
 {
 }
 
