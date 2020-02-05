@@ -2,9 +2,10 @@
 #include <math.h>
 #include "RsDevice.hh"
 
-RsSensor::RsSensor(rs2::sensor sensor)
+RsSensor::RsSensor(rs2::sensor sensor, rs2::device device)
 {
 	m_sensor = sensor;
+	m_device = device;
 	for (rs2::stream_profile stream_profile : m_sensor.get_stream_profiles())
 	{
 		if (stream_profile.is<rs2::video_stream_profile>())

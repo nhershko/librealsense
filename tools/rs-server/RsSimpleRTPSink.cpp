@@ -12,7 +12,7 @@ RsSimpleRTPSink::createNew(UsageEnvironment &env, Groupsock *RTPgs,
                            char const *rtpPayloadFormatName,
                            rs2::video_stream_profile &video_stream,
                            // TODO Michal: this is a W/A for passing the sensor's metadata
-                           RsDevice &device,
+                           rs2::device &device,
                            unsigned numChannels,
                            Boolean allowMultipleFramesPerPacket,
                            Boolean doNormalMBitRule)
@@ -36,7 +36,7 @@ std::string getSdpLineForField(const char* name, const char* val)
   return oss.str();
 }
 
-std::string getSdpLineForVideoStream(rs2::video_stream_profile &video_stream, RsDevice &device)
+std::string getSdpLineForVideoStream(rs2::video_stream_profile &video_stream, rs2::device &device)
 {
   std::string str;
   str.append(getSdpLineForField("width", video_stream.width()));
@@ -47,10 +47,9 @@ std::string getSdpLineForVideoStream(rs2::video_stream_profile &video_stream, Rs
   str.append(getSdpLineForField("stream_index", video_stream.stream_index()));
   str.append(getSdpLineForField("stream_type", video_stream.stream_type()));
   str.append(getSdpLineForField("bpp", RsSensor::getStreamProfileBpp(video_stream.format())));
-  rs2::device rs_device = device.getRs2Device();
-  str.append(getSdpLineForField("cam_serial_num", rs_device.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER)));
-  str.append(getSdpLineForField("usb_type", rs_device.get_info(RS2_CAMERA_INFO_USB_TYPE_DESCRIPTOR)));
-  std::string name = rs_device.get_info(RS2_CAMERA_INFO_NAME);
+  str.append(getSdpLineForField("cam_serial_num", device.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER)));
+  str.append(getSdpLineForField("usb_type", device.get_info(RS2_CAMERA_INFO_USB_TYPE_DESCRIPTOR)));
+  std::string name = device.get_info(RS2_CAMERA_INFO_NAME);
   // We don't want to sent spaces over SDP
   // TODO Michal: Decide what character to use for replacing spaces
   std::replace(name.begin(), name.end(), ' ', '^');
@@ -66,7 +65,7 @@ RsSimpleRTPSink ::RsSimpleRTPSink(UsageEnvironment &env, Groupsock *RTPgs,
                                   char const *sdpMediaTypeString,
                                   char const *rtpPayloadFormatName,
                                   rs2::video_stream_profile &video_stream,
-                                  RsDevice &device,
+                                  rs2::device &device,
                                   unsigned numChannels,
                                   Boolean allowMultipleFramesPerPacket,
                                   Boolean doNormalMBitRule)

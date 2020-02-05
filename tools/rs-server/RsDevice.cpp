@@ -22,7 +22,7 @@ RsDevice::RsDevice()
 	//get RS sensors
 	for (auto &sensor : m_device.query_sensors())
 	{
-		m_sensors.push_back(RsSensor(sensor));
+		m_sensors.push_back(RsSensor(sensor, m_device));
 	}
 }
 

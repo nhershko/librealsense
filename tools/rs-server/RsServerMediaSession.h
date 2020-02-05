@@ -32,7 +32,6 @@ class RsServerMediaSession : public ServerMediaSession
 public:
   static RsServerMediaSession *createNew(UsageEnvironment &env,
                                          RsSensor &sensor,
-                                         RsDevice &device,
                                          char const *streamName = NULL,
                                          char const *info = NULL,
                                          char const *description = NULL,
@@ -41,16 +40,14 @@ public:
   RsSensor &getRsSensor();
   int openRsCamera(std::unordered_map<long long int, rs2::frame_queue> &streamProfiles);
   int closeRsCamera();
-  RsDevice getDevice() { return rsDevice; }
 
 protected:
-  RsServerMediaSession(UsageEnvironment &env, RsSensor &sensor, RsDevice &device, char const *streamName,
+  RsServerMediaSession(UsageEnvironment &env, RsSensor &sensor, char const *streamName,
                        char const *info, char const *description,
                        Boolean isSSM, char const *miscSDPLines);
   virtual ~RsServerMediaSession();
 
 private:
-  RsDevice rsDevice;
   RsSensor rsSensor;
   bool isActive;
   //std::map<int, rs2::frame_queue> streamProfiles;

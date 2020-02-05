@@ -68,13 +68,13 @@ int main(int argc, char **argv)
     RsServerMediaSession *sms;
     if (sensorIndex == 0) //TODO: to move to generic exposure when host is ready
     {
-      sms = RsServerMediaSession::createNew(*env, sensor, device, "depth" /*sensor.get_sensor_name().data()*/, "",
+      sms = RsServerMediaSession::createNew(*env, sensor, "depth" /*sensor.get_sensor_name().data()*/, "",
                                             "Session streamed by \"realsense streamer\"",
                                             True);
     }
     else if (sensorIndex == 1)
     {
-      sms = RsServerMediaSession::createNew(*env, sensor, device, "color" /*sensor.get_sensor_name().data()*/, "",
+      sms = RsServerMediaSession::createNew(*env, sensor, "color" /*sensor.get_sensor_name().data()*/, "",
                                             "Session streamed by \"realsense streamer\"",
                                             True);
     }
