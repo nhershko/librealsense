@@ -10,7 +10,7 @@
 
 #define MAX_INPUT_COMPONENT 3
 
-JpegCompression::JpegCompression(int width, int height, rs2_format format) 
+JpegCompression::JpegCompression(int width, int height, rs2_format format)
 {
 	cinfo.err = jpeg_std_error(&jerr);
 	dinfo.err = jpeg_std_error(&jerr);
@@ -154,7 +154,7 @@ int  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSize
 		}
 	}
 	(void) jpeg_finish_decompress(&dinfo);
-	int uncompressedSize = dinfo.output_width*dinfo.output_height*2;
+	int uncompressedSize = dinfo.output_width*dinfo.output_height*2;//TODO: change to bpp 
 	if (decompframeCounter++%50 == 0) {
 		printf("finish jpeg color decompression, size: %lu, compressed size %u, frameNum: %d \n",uncompressedSize, compressedSize, decompframeCounter);
 	}

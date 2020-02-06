@@ -16,7 +16,7 @@ int LZCompression::compressBuffer(unsigned char* buffer, int size, unsigned char
 #ifdef COMPRESSION_STATISTICS
 	tCompBegin = clock();
 #endif
-	const int max_dst_size = LZ4_compressBound(size);
+    const int max_dst_size = LZ4_compressBound(size);
     const int compressed_data_size = LZ4_compress_default((const char *)buffer, (char*)compressedBuf, size, max_dst_size);
     if (compressed_data_size <= 0) {
 		printf("error: 0 or negative result from LZ4_compress_default() indicates a failure trying to compress the data. ");
