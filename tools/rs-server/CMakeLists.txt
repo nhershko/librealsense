@@ -55,6 +55,8 @@ set_target_properties (rs-server PROPERTIES
     FOLDER Tools
 )
 
+target_compile_definitions(rs-server PUBLIC RESPONSE_BUFFER_SIZE=30000)
+
 install(
     TARGETS
 

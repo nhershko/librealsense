@@ -33,6 +33,8 @@ IcamOERtsp* camOERTSPClient::getRtspClient(char const* rtspURL,
 	char const* applicationName, portNumBits tunnelOverHTTPPortNum) {
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
   UsageEnvironment* env = BasicUsageEnvironment::createNew(*scheduler); 
+
+  RTSPClient::responseBufferSize = 30000;
   return (IcamOERtsp*) new camOERTSPClient(*env, rtspURL, RTSP_CLIENT_VERBOSITY_LEVEL, applicationName, tunnelOverHTTPPortNum);
   //return rtspClient;
 }

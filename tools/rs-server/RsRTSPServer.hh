@@ -51,6 +51,8 @@ public:
     RsRTSPClientConnection(RTSPServer &ourServer, int clientSocket, struct sockaddr_in clientAddr);
     virtual ~RsRTSPClientConnection();
 
+    //unsigned char fResponseBuffer[30000];
+
     friend class RsRTSPServer;
     friend class RsRTSPClientSession;
   };
