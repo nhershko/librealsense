@@ -34,6 +34,21 @@ target_link_libraries(${PROJECT_NAME}
 	${JPEG_LIBRARIES}
 )
 
+find_package(PkgConfig)
+
+pkg_check_modules(LZ4_PKGCONF liblz4)
+
+find_path(LZ4_INCLUDE_DIRS
+  NAMES lz4frame.h
+  PATHS ${LZ4_PKGCONF_INCLUDE_DIRS}
+)
+
+
+find_library(LZ4_LIBRARIES
+  NAMES lz4
+  PATHS ${LZ4_PKGCONF_LIBRARY_DIRS}
+)
+
 if(COMPRESSION)
     add_definitions(-DCOMPRESSION)
 endif()
