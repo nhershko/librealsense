@@ -26,7 +26,7 @@ public:
     {
         unsigned char *mem = nullptr;
 
-        std::cout<<"before getMem: pool size is: "<<pool.size()<<"\n";
+        //std::cout<<"before getMem: pool size is: "<<pool.size()<<"\n";
         if (!pool.empty())
         {
             mem = pool.front();
@@ -44,7 +44,7 @@ public:
         if (mem != nullptr)
         {
             pool.push(mem);
-            std::cout<<"after returnMem: pool size is: "<<pool.size()<<"\n";
+            //std::cout<<"after returnMem: pool size is: "<<pool.size()<<"\n";
         }
         else
         {
