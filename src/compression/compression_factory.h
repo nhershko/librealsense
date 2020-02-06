@@ -6,6 +6,7 @@ typedef enum zipMethod {
     gzip,
     rvl,
     Jpeg,
+    lz,
 } zipMethod;
 
 class CompressionFactory

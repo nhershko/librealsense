@@ -97,7 +97,7 @@ int RvlCompression::compressBuffer(unsigned char* buffer, int size, unsigned cha
 
 int RvlCompression::decompressBuffer(unsigned char* buffer, int size, unsigned char* uncompressedBuf) 
 {
-	short* uncompressedBuf2 = (short*)uncompressedBuf;
+	short* currentPtr = (short*)uncompressedBuf;
 	pBuffer = (int*)buffer + 1;
 	nibblesWritten = 0;
 	short current, previous = 0;
@@ -112,7 +112,7 @@ int RvlCompression::decompressBuffer(unsigned char* buffer, int size, unsigned c
 		int zeros = decodeVLE();
 		numPixelsToDecode -= zeros;
 		for (; zeros; zeros--)
-			*uncompressedBuf2++ = 0;
+			*currentPtr++ = 0;
 		int nonzeros = decodeVLE();
 		numPixelsToDecode -= nonzeros;
 		for (; nonzeros; nonzeros--)
@@ -120,11 +120,11 @@ int RvlCompression::decompressBuffer(unsigned char* buffer, int size, unsigned c
 			int positive = decodeVLE();
 			int delta = (positive >> 1) ^ -(positive & 1);
 			current = previous + delta;
-			*uncompressedBuf2++ = current;
+			*currentPtr++ = current;
 			previous = current;
 		}
 	}
-	int uncompressedSize = int((char*)uncompressedBuf - (char*)uncompressedBuf2);
+	int uncompressedSize = int((char*)currentPtr - (char*)uncompressedBuf);
 	if (decompframeCounter++%50 == 0) {
 		printf("finish rvl depth compression, size: %lu, compressed size %u, frameNum: %d \n", uncompressedSize, compressedSize, decompframeCounter);
 	}
