@@ -29,6 +29,8 @@ class ip_device
     private:
 
         volatile bool is_device_alive;
+
+        memory_pool* memPool;
     
         std::string ip_address;
 

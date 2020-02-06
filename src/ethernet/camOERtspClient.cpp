@@ -91,7 +91,7 @@ int camOERTSPClient::addStream(rs2_video_stream stream, rtp_callback* callback_o
         
         if (this->commandResultCode == 0)
         {
-          subsession->sink = camOESink::createNew(this->envir(), *subsession, stream, this->url());
+          subsession->sink = camOESink::createNew(this->envir(), *subsession, stream, memPool,this->url());
         // perhaps use your own custom "MediaSink" subclass instead
           if (subsession->sink == NULL) {
             this->envir() << "Failed to create a data sink for the subsession: " << this->envir().getResultMsg() << "\n";
@@ -178,11 +178,12 @@ void schedulerThread(camOERTSPClient* rtspClientInstance)
     rtspClientInstance->envir().taskScheduler().doEventLoop(&eventLoopWatchVariable);
 }
 
-void camOERTSPClient::initFunc()
+void camOERTSPClient::initFunc(memory_pool* pool)
 {
    std::thread thread_scheduler(schedulerThread, this);
    thread_scheduler.detach();
    is_connected=true;
+   memPool = pool;
 }
 
 bool camOERTSPClient::isConnected()

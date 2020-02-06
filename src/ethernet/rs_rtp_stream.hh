@@ -88,9 +88,18 @@ class rs_rtp_stream
 
         rs2_software_video_frame frame_data_buff;
 
+        static memory_pool& get_memory_pool()
+        {
+            static memory_pool memory_pool_instance = memory_pool();
+            return memory_pool_instance;
+        }
+
     private:
 
-        static void frame_deleter(void* p) {}
+        
+        static void frame_deleter(void* p) { 
+                get_memory_pool().returnMem((unsigned char*)p);
+            }
 
         std::mutex stream_lock;
 
