@@ -41,7 +41,10 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
 }
 
 camOESink::~camOESink() {
-  memPool->returnMem(fReceiveBuffer);
+  if (fReceiveBuffer!=nullptr)
+  {
+    memPool->returnMem(fReceiveBuffer);
+  }
   delete[] fStreamId;
   //fclose(fp);
 }
@@ -99,9 +102,9 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
     memPool->returnMem(fReceiveBuffer);
     envir() << "corrupted frame!!!: data size is "<<header->size<<" frame size is "<< frameSize <<"\n";
   }
-
+  fReceiveBuffer = nullptr;
   //fwrite(fReceiveBuffer, frameSize, 1, fp);
-  // Then continue, to request the next frame of data:
+  // Then continue, to request the next frame of data
   continuePlaying();
 }
 
@@ -110,7 +113,7 @@ Boolean camOESink::continuePlaying() {
   if (fSource == NULL) return False; // sanity check (should not happen)
 
   // Request the next frame of data from our input source.  "afterGettingFrame()" will get called later, when it arrives:
-  fReceiveBuffer = (memPool->getNextMem());
+  fReceiveBuffer = memPool->getNextMem();
   if (fReceiveBuffer == nullptr)
   {
     return false;
