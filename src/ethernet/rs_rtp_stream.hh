@@ -3,7 +3,6 @@
 #include <librealsense2/rs.hpp>
 #include "camOERtspClient.h"
 #include "software-device.h"
-#include "../../tools/rs-server/RsCommon.hh"
 
 const int RTP_QUEUE_MAX_SIZE = 30;
 

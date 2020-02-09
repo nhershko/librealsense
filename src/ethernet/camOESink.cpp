@@ -1,7 +1,7 @@
 #include "camOESink.h"
 #include "stdio.h"
 #include <string>
-#include "../../tools/rs-server/RsCommon.hh"
+
 
 #define WRITE_FRAMES_TO_FILE 0
 
