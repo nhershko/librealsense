@@ -5304,11 +5304,7 @@ namespace rs2
         // draw device header
         ////////////////////////////////////////
         const bool is_playback_device = dev.is<playback>();
-        bool is_ip_device = false;
-        if(dev.supports(RS2_CAMERA_INFO_NAME) && (std::string (dev.get_info(RS2_CAMERA_INFO_NAME))).find("\n IP Device")!= std::string::npos)
-        {
-            is_ip_device = true;
-        }
+        bool is_ip_device = dev.supports(RS2_CAMERA_INFO_IP_ADDRESS);
         auto header_h = panel_height;
         if (is_playback_device || is_ip_device) header_h += 15;
 
@@ -5372,7 +5368,9 @@ namespace rs2
         if(is_ip_device)
         {
             ImGui::PushFont(window.get_font());
-            ImGui::Text("\t%s", "IP device");
+            ss.str("");
+            ss << dev.get_info(RS2_CAMERA_INFO_IP_ADDRESS);
+            ImGui::Text("\tIP device\t%s", ss.str().c_str());
             ImGui::PopFont();
         }
 

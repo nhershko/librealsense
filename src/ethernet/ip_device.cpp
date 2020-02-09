@@ -242,9 +242,9 @@ rs2::software_device ip_device::create_ip_device(std::string ip_address)
     // register device info to sw device
     device_data data = ip_dev->rtsp_clients[0]->getDeviceData();
     ip_dev->sw_dev.update_info(RS2_CAMERA_INFO_NAME, data.name + "\n IP Device");
+    ip_dev->sw_dev.register_info(rs2_camera_info::RS2_CAMERA_INFO_IP_ADDRESS, ip_address);
     ip_dev->sw_dev.register_info(rs2_camera_info::RS2_CAMERA_INFO_SERIAL_NUMBER, data.serial_num);
     ip_dev->sw_dev.register_info(rs2_camera_info::RS2_CAMERA_INFO_USB_TYPE_DESCRIPTOR, data.usb_type);
-    //ip_dev->sw_dev.register_info(rs2_camera_info::RS2_CAMERA_INFO_IP_ADDRESS, "ip_address"); TODO: Ester - add IP address info
     // return sw device 
     return sw_dev;
 }
