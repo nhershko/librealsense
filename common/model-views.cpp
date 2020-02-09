@@ -5305,10 +5305,9 @@ namespace rs2
         ////////////////////////////////////////
         const bool is_playback_device = dev.is<playback>();
         bool is_ip_device = false;
-        if(dev.supports(RS2_CAMERA_INFO_NAME))
+        if(dev.supports(RS2_CAMERA_INFO_NAME) && (std::string (dev.get_info(RS2_CAMERA_INFO_NAME))).find("\n IP Device")!= std::string::npos)
         {
-            std::string s (dev.get_info(RS2_CAMERA_INFO_NAME));
-            is_ip_device = s.find("\n IP Device")!= std::string::npos;
+            is_ip_device = true;
         }
         auto header_h = panel_height;
         if (is_playback_device || is_ip_device) header_h += 15;
