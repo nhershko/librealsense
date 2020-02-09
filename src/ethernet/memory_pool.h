@@ -5,6 +5,7 @@
 #include <iostream>
 
 #define POOL_SIZE 200 //TODO:: to define the right value
+#define MAX_FRAME_SIZE 1280 * 720 * 3 //TODO:: to define the right value
 class memory_pool
 {
 
@@ -14,7 +15,7 @@ public:
         //alloc memory
         for (int i = 0; i < POOL_SIZE; i++)
         {
-            unsigned char *mem = new unsigned char[1280 * 720 * 3]; //TODO:to use OutPacketBuffer::maxSize;
+            unsigned char *mem = new unsigned char[MAX_FRAME_SIZE]; //TODO:to use OutPacketBuffer::maxSize;
             pool.push(mem);
         }
         std::cout<<"memory_pool: pool size is: "<<pool.size()<<"\n";
