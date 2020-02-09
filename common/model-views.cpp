@@ -5373,7 +5373,7 @@ namespace rs2
         if(is_ip_device)
         {
             ImGui::PushFont(window.get_font());
-            ImGui::Text(" %s", "IP device");
+            ImGui::Text("\t%s", "IP device");
             ImGui::PopFont();
         }
 
