@@ -1,11 +1,10 @@
 
 #pragma once
 
-#include <liveMedia.hh>
 #include <queue>
 #include <iostream>
 
-#define POOL_SIZE 10000 //TODO:: to define the right value
+#define POOL_SIZE 200 //TODO:: to define the right value
 class memory_pool
 {
 
@@ -15,8 +14,7 @@ public:
         //alloc memory
         for (int i = 0; i < POOL_SIZE; i++)
         {
-            unsigned char *mem = new unsigned char[1280 * 720 * 2]; //TODO:to use OutPacketBuffer::maxSize;
-            //memset(mem,'X',1280 * 720 * 3);
+            unsigned char *mem = new unsigned char[1280 * 720 * 3]; //TODO:to use OutPacketBuffer::maxSize;
             pool.push(mem);
         }
         std::cout<<"memory_pool: pool size is: "<<pool.size()<<"\n";
@@ -26,7 +24,6 @@ public:
     {
         unsigned char *mem = nullptr;
 
-        //std::cout<<"before getMem: pool size is: "<<pool.size()<<"\n";
         if (!pool.empty())
         {
             mem = pool.front();
@@ -36,6 +33,7 @@ public:
         {
             std::cout<< "pool is empty\n";
         }
+        //printf("memory_pool:  after getMem: pool size is: %d, mem is %p\n",pool.size(),mem);
         return mem;
     }
 
@@ -44,7 +42,7 @@ public:
         if (mem != nullptr)
         {
             pool.push(mem);
-            //std::cout<<"after returnMem: pool size is: "<<pool.size()<<"\n";
+            //printf("memory_pool: after returnMem: pool size is: %d, mem is %p\n",pool.size(),mem);
         }
         else
         {
@@ -57,6 +55,7 @@ public:
         while (!pool.empty())
         {
             unsigned char *mem = pool.front();
+            //printf("memory_pool: ~memory_pool:not empty, mem is %p\n",mem);
             pool.pop();
             if (mem != nullptr)
             {

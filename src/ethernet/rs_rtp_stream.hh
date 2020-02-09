@@ -3,6 +3,7 @@
 #include <librealsense2/rs.hpp>
 #include "camOERtspClient.h"
 #include "software-device.h"
+#include "../../tools/rs-server/RsCommon.hh"
 
 const int RTP_QUEUE_MAX_SIZE = 30;
 
@@ -98,7 +99,7 @@ class rs_rtp_stream
 
         
         static void frame_deleter(void* p) { 
-                get_memory_pool().returnMem((unsigned char*)p);
+                get_memory_pool().returnMem((unsigned char*)p - sizeof(rs_over_ethernet_data_header));
             }
 
         std::mutex stream_lock;
