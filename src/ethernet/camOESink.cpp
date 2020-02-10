@@ -83,11 +83,11 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
     {
 #ifdef COMPRESSION
       fto =  memPool->getNextMem();
-      if (fReceiveBuffer == nullptr)
+      if (fto == nullptr)
       {
         return;
       }
-      iCompress->decompressBuffer(fReceiveBuffer + sizeof(rs_over_ethernet_data_header), header->size, fto);
+      iCompress->decompressBuffer(fReceiveBuffer + sizeof(rs_over_ethernet_data_header), header->size, fto + sizeof(rs_over_ethernet_data_header));
       this->m_rtp_callback->on_frame((u_int8_t*)fto + sizeof(rs_over_ethernet_data_header), fstream.width * fstream.height *fstream.bpp, presentationTime);//todo: change to bpp
       memPool->returnMem(fReceiveBuffer);
 #else
