@@ -16,9 +16,7 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
   fStreamId = strDup(streamId);
   fBufferSize = stream.width*stream.height*stream.bpp + sizeof(rs_over_ethernet_data_header);
   fReceiveBuffer = nullptr;
-  //fReceiveBuffer = new u_int8_t[fBufferSize];
-  //envir()<<"first fReceiveBuffer: "<<fReceiveBuffer<<"\n";
-  fto = new u_int8_t[fBufferSize];
+  fto = nullptr;
   std::string url_str = fStreamId;
   // Remove last "/"
   url_str = url_str.substr(0, url_str.size()-1);
@@ -84,8 +82,14 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
     if (this->m_rtp_callback != NULL)
     {
 #ifdef COMPRESSION
-      iCompress->decompressBuffer(fReceiveBuffer +sizeof(rs_over_ethernet_data_header), header->size, fto);
-      this->m_rtp_callback->on_frame(fto, fstream.width * fstream.height *fstream.bpp, presentationTime);//todo: change to bpp
+      fto =  memPool->getNextMem();
+      if (fReceiveBuffer == nullptr)
+      {
+        return;
+      }
+      iCompress->decompressBuffer(fReceiveBuffer + sizeof(rs_over_ethernet_data_header), header->size, fto);
+      this->m_rtp_callback->on_frame((u_int8_t*)fto + sizeof(rs_over_ethernet_data_header), fstream.width * fstream.height *fstream.bpp, presentationTime);//todo: change to bpp
+      memPool->returnMem(fReceiveBuffer);
 #else
     this->m_rtp_callback->on_frame(fReceiveBuffer+sizeof(rs_over_ethernet_data_header), header->size, presentationTime);
 #endif     
