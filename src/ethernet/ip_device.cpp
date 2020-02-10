@@ -274,7 +274,8 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
         else 
         {			
             Raw_Frame* frame = rtp_stream.get()->extract_frame();
-            rtp_stream.get()->frame_data_buff.pixels = frame->m_buffer;			rtp_stream.get()->frame_data_buff.timestamp = (frame->m_timestamp.tv_sec*1000)+(frame->m_timestamp.tv_usec/1000); // convert to milliseconds
+            rtp_stream.get()->frame_data_buff.pixels = frame->m_buffer;
+            rtp_stream.get()->frame_data_buff.timestamp = (frame->m_timestamp.tv_sec*1000)+(frame->m_timestamp.tv_usec/1000); // convert to milliseconds
 			rtp_stream.get()->frame_data_buff.frame_number++;
             // TODO Michal: change this to HW time once we pass the metadata
             rtp_stream.get()->frame_data_buff.domain = RS2_TIMESTAMP_DOMAIN_SYSTEM_TIME;
