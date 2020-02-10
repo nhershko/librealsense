@@ -67,9 +67,10 @@ void RsDeviceSource::doGetNextFrame()
   {
     frame = frames_queue->wait_for_frame(); //todo: check if it copies the frame
     frame.keep();
-    /*
-	//drop old packets	
+	
     gotFrame = std::chrono::high_resolution_clock::now();
+    /*
+	  //drop old packets
     rs2::frame f2;
     while (frames_queue->poll_for_frame(&f2))
     {
