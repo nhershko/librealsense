@@ -58,6 +58,7 @@ private:
 #ifdef COMPRESSION
   ICompression * iCompress;
 #endif
+std::chrono::high_resolution_clock::time_point getFrame,gotFrame,sendFrame;
 };
 
 #endif

@@ -54,6 +54,7 @@ void RsDeviceSource::doGetNextFrame()
 {
   // This function is called (by our 'downstream' object) when it asks for new data.
   // Note: If, for some reason, the source device stops being readable (e.g., it gets closed), then you do the following:
+  getFrame = std::chrono::high_resolution_clock::now();
   if (0)
   { // the source stops being readable
     handleClosure();
@@ -66,6 +67,15 @@ void RsDeviceSource::doGetNextFrame()
   {
     frame = frames_queue->wait_for_frame(); //todo: check if it copies the frame
     frame.keep();
+    /*
+	//drop old packets	
+    gotFrame = std::chrono::high_resolution_clock::now();
+    rs2::frame f2;
+    while (frames_queue->poll_for_frame(&f2))
+    {
+      printf("pop frame type %d, but dont send it\n",stream_profile->stream_type());
+    }
+    */
     deliverRSFrame(&frame);
   }
   catch (const std::exception &e)
@@ -99,5 +109,11 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
   memmove(fTo, &header, sizeof(header));
   assert(fMaxSize > fFrameSize); //TODO: to remove on release
   // After delivering the data, inform the reader that it is now available:
+  std::chrono::high_resolution_clock::time_point curTime = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> networkTimeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(getFrame-sendFrame);
+  std::chrono::duration<double> waitingTimeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(gotFrame-getFrame);
+  std::chrono::duration<double> processingTimeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(curTime-gotFrame);
+  //printf ("stream %d:tranfer time is %f, waiting time was %f, processing time was %f\n",frame->get_profile().format(),networkTimeSpan*1000,waitingTimeSpan*1000,processingTimeSpan*1000);
+  sendFrame = curTime;
   FramedSource::afterGetting(this);
 }
