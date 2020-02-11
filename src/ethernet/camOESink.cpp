@@ -37,7 +37,7 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
   iCompress = CompressionFactory::getObject(fstream.width, fstream.height, fstream.fmt, fstream.type);
 #endif
   envir() << "create new sink";
-
+  statistic::statisticStreams.insert(std::pair<int,stream_statistic *>(fstream.type,new stream_statistic()));
 }
 
 camOESink::~camOESink() {
@@ -78,17 +78,17 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   envir() << "\n";
 #endif
 */
-  if (fstream.type == RS2_STREAM_DEPTH) {
-      statistic::depthClockBegin = std::chrono::system_clock::now();
-      statistic::depthGetFrameDiffTime = std::chrono::duration_cast<std::chrono::duration<double>>(statistic::depthClockBegin - statistic::prevDepthClockBegin);
-      printf("STATISTIC LOG: get depth frame every : %0.3f\n",statistic::depthGetFrameDiffTime.count()*1000);
-      statistic::prevDepthClockBegin = statistic::depthClockBegin;
-  } else if (fstream.type == RS2_STREAM_COLOR ){
-      statistic::colorClockBegin = std::chrono::system_clock::now();
-      statistic::colorGetFrameDiffTime = std::chrono::duration_cast<std::chrono::duration<double>>(statistic::colorClockBegin - statistic::prevColorClockBegin);
-      printf("STATISTIC LOG: get color frame every : %0.3f\n",statistic::colorGetFrameDiffTime.count()*1000);
-      statistic::prevColorClockBegin = statistic::colorClockBegin;
+#ifdef STATISTICS_LOG
+  statistic::statisticStreams[fstream.type]->frameCounter++;
+  statistic::statisticStreams[fstream.type]->clockBegin = std::chrono::system_clock::now();
+  if(statistic::statisticStreams[fstream.type]->frameCounter > 1) {
+    statistic::statisticStreams[fstream.type]->getFrameDiffTime = statistic::statisticStreams[fstream.type]->clockBegin - statistic::statisticStreams[fstream.type]->prevClockBegin;
+    statistic::statisticStreams[fstream.type]->avgGettingTime += statistic::statisticStreams[fstream.type]->getFrameDiffTime.count();
+    printf("STATISTIC LOG: stream type: %d, get frame every : %0.2fm, average: %0.2fm, counter %d\n", fstream.type, statistic::statisticStreams[fstream.type]->getFrameDiffTime.count()*1000,
+            (statistic::statisticStreams[fstream.type]->avgGettingTime*1000)/statistic::statisticStreams[fstream.type]->frameCounter,statistic::statisticStreams[fstream.type]->frameCounter);
   }
+  statistic::statisticStreams[fstream.type]->prevClockBegin = statistic::statisticStreams[fstream.type]->clockBegin;
+#endif
   rs_over_ethernet_data_header *header = (rs_over_ethernet_data_header *)fReceiveBuffer;
   if (header->size == frameSize - sizeof(rs_over_ethernet_data_header))
   {

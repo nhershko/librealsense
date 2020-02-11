@@ -57,6 +57,10 @@ if(COMPRESSION)
     add_definitions(-DCOMPRESSION)
 endif()
 
+if(STATISTICS_LOG)
+    add_definitions(-DSTATISTICS_LOG)
+endif()
+
 target_include_directories(${PROJECT_NAME} PUBLIC "rtsp_client/*.h")
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${LIVE}/groupsock/include ${LIVE}/liveMedia/include  ${LIVE}/UsageEnvironment/include ${LIVE}/BasicUsageEnvironment/include inc)

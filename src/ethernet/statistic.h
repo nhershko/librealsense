@@ -3,17 +3,20 @@
 #pragma once
 #include "time.h"
 #include <chrono>
+#include <map>
 
 class stream_statistic {
+    public:
+        double avgProcessingTime = 0, avgGettingTime = 0;
+        std::chrono::system_clock::time_point clockBegin, clockEnd, prevClockBegin;
+        std::chrono::duration<double> processingTime, getFrameDiffTime;
+        int frameCounter = 0;
 
 };
 
 class statistic
 {
     public:
-        static std::chrono::system_clock::time_point depthClockBegin, depthClockEnd, colorClockBegin, colorClockEnd, prevDepthClockBegin, prevColorClockBegin;
-        static int depthframeCounter, colorframeCounter;
-        static std::chrono::duration<double> depthProcessingTime, colorProcessingTime, depthGetFrameDiffTime, colorGetFrameDiffTime ;
-        static float avgDepthProcessingTime, avgColorProcessingTime, avgDepthGettingTime;
+       static std::map<int, stream_statistic*> statisticStreams;
 };
 #endif

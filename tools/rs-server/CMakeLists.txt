@@ -50,6 +50,9 @@ if(COMPRESSION)
     add_definitions(-DCOMPRESSION)
 endif()
 
+if(STATISTICS_LOG)
+    add_definitions(-DSTATISTICS_LOG)
+endif()
 
 set_target_properties (rs-server PROPERTIES
     FOLDER Tools
