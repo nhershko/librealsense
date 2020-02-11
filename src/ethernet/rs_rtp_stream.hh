@@ -9,12 +9,12 @@ const int RTP_QUEUE_MAX_SIZE = 30;
 
 struct Raw_Frame
 {
-	Raw_Frame(char* buffer, int size,  struct timeval timestamp) :m_header((rs_frame_header*)buffer), m_buffer(buffer+sizeof(rs_frame_header)), m_size(size), m_timestamp(timestamp) {};
+	Raw_Frame(char* buffer, int size,  struct timeval timestamp) :m_metadata((rs_frame_metadata*)buffer), m_buffer(buffer+sizeof(rs_frame_metadata)), m_size(size), m_timestamp(timestamp) {};
 	Raw_Frame(const Raw_Frame&);
 	Raw_Frame& operator=(const Raw_Frame&);
 	~Raw_Frame()  { delete [] m_buffer; };
 	
-    rs_frame_header* m_header;
+    rs_frame_metadata* m_metadata;
 	char* m_buffer;
 	unsigned int m_size;
 	struct timeval m_timestamp;

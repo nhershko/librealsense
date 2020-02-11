@@ -102,10 +102,12 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
   fFrameSize = iCompress->compressBuffer((unsigned char *)frame->get_data(), frame->get_data_size(), fTo + sizeof(header));
 #else
   fFrameSize = frame->get_data_size();
-  memmove(fTo + sizeof(header), frame->get_data(), fFrameSize);
+
+  memmove(fTo + sizeof(rs_frame_metadata)+sizeof(rs_over_ethernet_data_header), frame->get_data(), fFrameSize);
 #endif
-  fFrameSize += sizeof(header);
+  fFrameSize += sizeof(rs_frame_metadata);
   header.ethernet_header.size = fFrameSize;
+  fFrameSize += sizeof(rs_over_ethernet_data_header);
   /*if (frame->supports_frame_metadata(RS2_FRAME_METADATA_FRAME_TIMESTAMP))
   {
     header.metadata.timestamp = frame->get_frame_metadata(RS2_FRAME_METADATA_FRAME_TIMESTAMP);

@@ -76,8 +76,8 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   envir() << "\n";
 #endif
 */
-  rs_frame_header *header = (rs_frame_header *)fReceiveBuffer;
-  if (header->ethernet_header.size == frameSize /*- sizeof(rs_frame_header)*/)
+  rs_over_ethernet_data_header *header = (rs_over_ethernet_data_header *)fReceiveBuffer;
+  if (header->size == frameSize - sizeof(rs_over_ethernet_data_header))
   {
     if (this->m_rtp_callback != NULL)
     {
@@ -91,7 +91,7 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
       this->m_rtp_callback->on_frame((u_int8_t*)fto + sizeof(rs_over_ethernet_data_header), fstream.width * fstream.height *fstream.bpp, presentationTime);//todo: change to bpp
       memPool->returnMem(fReceiveBuffer);
 #else
-    this->m_rtp_callback->on_frame(fReceiveBuffer, header->ethernet_header.size, presentationTime);
+    this->m_rtp_callback->on_frame(fReceiveBuffer+sizeof(rs_over_ethernet_data_header), header->size, presentationTime);
 #endif     
     }
     else
@@ -104,7 +104,7 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   else
   {
     memPool->returnMem(fReceiveBuffer);
-    envir() << "corrupted frame!!!: data size is "<<header->ethernet_header.size<<" frame size is "<< frameSize <<"\n";
+    envir() << "corrupted frame!!!: data size is "<<header->size<<" frame size is "<< frameSize <<"\n";
   }
   fReceiveBuffer = nullptr;
   //fwrite(fReceiveBuffer, frameSize, 1, fp);
