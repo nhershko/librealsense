@@ -99,11 +99,11 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
   gettimeofday(&fPresentationTime, NULL); // If you have a more accurate time - e.g., from an encoder - then use that instead.
   rs_frame_header header;
 #ifdef COMPRESSION
-  fFrameSize = iCompress->compressBuffer((unsigned char *)frame->get_data(), frame->get_data_size(), fTo + sizeof(rs_frame_metadata)+sizeof(rs_over_ethernet_data_header));
+  fFrameSize = iCompress->compressBuffer((unsigned char *)frame->get_data(), frame->get_data_size(), fTo + sizeof(rs_frame_header));
 #else
   fFrameSize = frame->get_data_size();
 
-  memmove(fTo + sizeof(rs_frame_metadata)+sizeof(rs_over_ethernet_data_header), frame->get_data(), fFrameSize);
+  memmove(fTo + sizeof(rs_frame_header), frame->get_data(), fFrameSize);
 #endif
   fFrameSize += sizeof(rs_frame_metadata);
   header.ethernet_header.size = fFrameSize;
