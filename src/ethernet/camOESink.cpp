@@ -88,6 +88,8 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
         return;
       }
       iCompress->decompressBuffer(fReceiveBuffer + sizeof(rs_over_ethernet_data_header) + sizeof(rs_frame_metadata), header->size-sizeof(rs_frame_metadata), fto + sizeof(rs_over_ethernet_data_header) + sizeof(rs_frame_metadata));
+      // copy metadata
+      memcpy(fto+sizeof(rs_over_ethernet_data_header), fReceiveBuffer+sizeof(rs_over_ethernet_data_header), sizeof(rs_frame_metadata));
       this->m_rtp_callback->on_frame((u_int8_t*)fto + sizeof(rs_over_ethernet_data_header), fstream.width * fstream.height *fstream.bpp + sizeof(rs_frame_metadata), presentationTime);//todo: change to bpp
       memPool->returnMem(fReceiveBuffer);
 #else
