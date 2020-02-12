@@ -100,7 +100,7 @@ class rs_rtp_stream
 
         
         static void frame_deleter(void* p) { 
-                get_memory_pool().returnMem((unsigned char*)p - sizeof(rs_over_ethernet_data_header));
+                get_memory_pool().returnMem((unsigned char*)p -sizeof(rs_over_ethernet_data_header)-sizeof(rs_frame_metadata));
             }
 
         std::mutex stream_lock;

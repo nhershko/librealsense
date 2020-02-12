@@ -99,7 +99,7 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
   gettimeofday(&fPresentationTime, NULL); // If you have a more accurate time - e.g., from an encoder - then use that instead.
   rs_frame_header header;
 #ifdef COMPRESSION
-  fFrameSize = iCompress->compressBuffer((unsigned char *)frame->get_data(), frame->get_data_size(), fTo + sizeof(header));
+  fFrameSize = iCompress->compressBuffer((unsigned char *)frame->get_data(), frame->get_data_size(), fTo + sizeof(rs_frame_metadata)+sizeof(rs_over_ethernet_data_header));
 #else
   fFrameSize = frame->get_data_size();
 
@@ -108,20 +108,29 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
   fFrameSize += sizeof(rs_frame_metadata);
   header.ethernet_header.size = fFrameSize;
   fFrameSize += sizeof(rs_over_ethernet_data_header);
-  /*if (frame->supports_frame_metadata(RS2_FRAME_METADATA_FRAME_TIMESTAMP))
+  if (frame->supports_frame_metadata(RS2_FRAME_METADATA_FRAME_TIMESTAMP))
   {
     header.metadata.timestamp = frame->get_frame_metadata(RS2_FRAME_METADATA_FRAME_TIMESTAMP);
   }
+  else
+  {
+    header.metadata.timestamp = frame->get_timestamp();
+  }
+  
   if (frame->supports_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER))
   {
     header.metadata.frame_counter = frame->get_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER);
   }
+  else
+  {
+    header.metadata.frame_counter = frame->get_frame_number();
+  }
+  
   if (frame->supports_frame_metadata(RS2_FRAME_METADATA_ACTUAL_FPS))
   {
     header.metadata.actual_fps = frame->get_frame_metadata(RS2_FRAME_METADATA_ACTUAL_FPS);
-  }*/
-  header.metadata.frame_counter = frame->get_frame_number();
-  header.metadata.timestamp = frame->get_timestamp();
+  }
+  
   header.metadata.timestamp_domain = frame->get_frame_timestamp_domain();
 
   memmove(fTo, &header, sizeof(header));
