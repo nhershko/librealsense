@@ -192,3 +192,29 @@ endforeach(i)
 if(NOT ${BUILD_SHARED_LIBS} AND ${BUILD_INTERNAL_UNIT_TESTS})
     add_subdirectory(internal)
 endif()
+
+################################
+# GTest
+################################
+## enable_testing()
+set(gtest_SOURCE_DIR ${CMAKE_HOME_DIRECTORY}/third-party/googletest-1.10.x/googletest/)
+
+file(GLOB GTEST_SOURCES 
+ ${gtest_SOURCE_DIR}/src/*.h*
+ ${gtest_SOURCE_DIR}/src/*.c*
+)
+
+include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+
+################################
+# Unit Tests
+################################
+set (unit_tests_ip_sources
+    unit-tests-ip.cpp
+    ${gtest_SOURCE_DIR}/src/gtest-all.cc
+    # ${gtest_SOURCE_DIR}/src/gtest_main.cc
+)
+# Add test cpp file
+add_executable(ip-test ${unit_tests_ip_sources})
+target_link_libraries(ip-test ${DEPENDENCIES})
+target_link_libraries(ip-test realsense2-ethernet)
