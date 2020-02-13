@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstring>
 #include "lz_compression.h"
+#include <ipDevice_Common/statistic.h>
 
  LZCompression::LZCompression(int width, int height, rs2_format format)
  {
@@ -13,8 +14,8 @@
 
 int LZCompression::compressBuffer(unsigned char* buffer, int size, unsigned char* compressedBuf)
 {
-#ifdef COMPRESSION_STATISTICS
-	tCompBegin = clock();
+#ifdef STATISTICS
+	statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_DEPTH]->compressionBegin = std::chrono::system_clock::now();
 #endif
     const int max_dst_size = LZ4_compressBound(size);
     const int compressed_data_size = LZ4_compress_default((const char *)buffer, (char*)compressedBuf, size, max_dst_size);
@@ -25,12 +26,17 @@ int LZCompression::compressBuffer(unsigned char* buffer, int size, unsigned char
 	if (compframeCounter++%50 == 0) {
 		printf("finish lz depth compression, size: %lu, compressed size %u, frameNum: %d \n",size, compressed_data_size, compframeCounter);
 	}
-#ifdef COMPRESSION_STATISTICS	
-	tCompEnd = clock();
-	compTimeDiff += tCompEnd - tCompBegin;
-	if (compframeCounter%50 == 0) {
-		printf("lz compress time measurement is: %0.2f, average: %0.2f, frameCounter: %d\n",((float)(tCompEnd - tCompBegin))/1000, ((float)compTimeDiff/compframeCounter)/1000, compframeCounter);
-	}
+#ifdef STATISTICS
+	stream_statistic * st  = statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_DEPTH];
+	st->compressionFrameCounter++;
+	st->compressionEnd = std::chrono::system_clock::now();
+	st->compressionTime = st->compressionEnd - st->compressionBegin;
+    st->avgCompressionTime += st->compressionTime.count();
+    printf("STATISTICS: streamType: %d, lz4 compress time: %0.2fm, average: %0.2fm, counter: %d\n",rs2_stream::RS2_STREAM_DEPTH, st->compressionTime*1000, 
+            (st->avgCompressionTime*1000)/st->compressionFrameCounter,st->compressionFrameCounter);
+	st->decompressedSizeSum = size;
+	st->compressedSizeSum = compressed_data_size;
+	printf("STATISTICS: streamType: %d, lz4 ratio: %0.2fm, counter: %d\n",rs2_stream::RS2_STREAM_DEPTH,st->decompressedSizeSum/(float)st->compressedSizeSum, st->compressionFrameCounter);
 #endif
 	return compressed_data_size;
 }
@@ -38,8 +44,8 @@ int LZCompression::compressBuffer(unsigned char* buffer, int size, unsigned char
 
 int  LZCompression::decompressBuffer(unsigned char* buffer, int compressedSize, unsigned char* uncompressedBuf) 
 {	
-#ifdef COMPRESSION_STATISTICS
-	tDecompBegin = clock();
+#ifdef STATISTICS
+	statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_DEPTH]->decompressionBegin = std::chrono::system_clock::now();
 #endif
     const int decompressed_size = LZ4_decompress_fast((const char *)buffer, (char *)uncompressedBuf, m_width* m_height * 2); //change to bpp
     if (decompressed_size < 0) {
@@ -52,16 +58,14 @@ int  LZCompression::decompressBuffer(unsigned char* buffer, int compressedSize, 
 	if (decompframeCounter++%50 == 0) {
 		printf("finish lz depth decompression, size: %lu, compressed size %u, frameNum: %d \n", decompressed_size, compressedSize, decompframeCounter);
 	}
-#ifdef COMPRESSION_STATISTICS
-	tDecompEnd = clock();
-	decompTimeDiff += tDecompEnd - tDecompBegin;
-
-	fullSizeSum += m_width*m_height*2;//change to bpp
-	compressedSizeSum += compressedSize;
-	if (decompframeCounter%50 == 0) {
-		printf("lz decompress zip ratio is: %0.2f , frameCounter: %d\n", fullSizeSum/(float)compressedSizeSum, decompframeCounter);
-		printf("lz decompress time measurement is: %0.2f, average: %0.2f, frameCounter: %d\n",((float)(tDecompEnd - tDecompBegin))/1000, ((float)decompTimeDiff/decompframeCounter)/1000, decompframeCounter);
-	}
+#ifdef STATISTICS
+	stream_statistic * st  = statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_DEPTH];
+	st->decompressionFrameCounter++;
+	st->decompressionEnd = std::chrono::system_clock::now();
+	st->decompressionTime = st->decompressionEnd - st->decompressionBegin;
+    st->avgDecompressionTime += st->decompressionTime.count();
+    printf("STATISTICS: streamType: %d, lz4 decompress time: %0.2fm, average: %0.2fm, counter: %d\n",rs2_stream::RS2_STREAM_DEPTH, st->decompressionTime*1000, 
+            (st->avgDecompressionTime*1000)/st->decompressionFrameCounter,st->decompressionFrameCounter);
 #endif
 	return decompressed_size;
 }

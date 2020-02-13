@@ -1,7 +1,7 @@
 #include "camOESink.h"
 #include "stdio.h"
 #include <string>
-#include "statistic.h"
+#include <ipDevice_Common/statistic.h>
 
 #define WRITE_FRAMES_TO_FILE 0
 
@@ -37,7 +37,9 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
   iCompress = CompressionFactory::getObject(fstream.width, fstream.height, fstream.fmt, fstream.type);
 #endif
   envir() << "create new sink";
-  statistic::statisticStreams.insert(std::pair<int,stream_statistic *>(fstream.type,new stream_statistic()));
+#ifdef STATISTICS  
+  statistic::getStatisticStreams().insert(std::pair<int,stream_statistic *>(fstream.type,new stream_statistic()));
+#endif
 }
 
 camOESink::~camOESink() {
@@ -78,16 +80,18 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   envir() << "\n";
 #endif
 */
-#ifdef STATISTICS_LOG
-  statistic::statisticStreams[fstream.type]->frameCounter++;
-  statistic::statisticStreams[fstream.type]->clockBegin = std::chrono::system_clock::now();
-  if(statistic::statisticStreams[fstream.type]->frameCounter > 1) {
-    statistic::statisticStreams[fstream.type]->getFrameDiffTime = statistic::statisticStreams[fstream.type]->clockBegin - statistic::statisticStreams[fstream.type]->prevClockBegin;
-    statistic::statisticStreams[fstream.type]->avgGettingTime += statistic::statisticStreams[fstream.type]->getFrameDiffTime.count();
-    printf("STATISTIC LOG: stream type: %d, get frame every : %0.2fm, average: %0.2fm, counter %d\n", fstream.type, statistic::statisticStreams[fstream.type]->getFrameDiffTime.count()*1000,
-            (statistic::statisticStreams[fstream.type]->avgGettingTime*1000)/statistic::statisticStreams[fstream.type]->frameCounter,statistic::statisticStreams[fstream.type]->frameCounter);
+#ifdef STATISTICS
+  stream_statistic * st  = statistic::getStatisticStreams()[fstream.type];
+  st->frameCounter++;
+  st->clockBegin = std::chrono::system_clock::now();
+  st->clockBeginVec.push(st->clockBegin);
+  if(st->frameCounter > 1) {
+    st->getFrameDiffTime = st->clockBegin - st->prevClockBegin;
+    st->avgGettingTime += st->getFrameDiffTime.count();
+    printf("STATISTICS: streamType: %d, got frame: %0.2fm, average: %0.2fm, counter %d\n", fstream.type, st->getFrameDiffTime.count()*1000,
+            (st->avgGettingTime*1000)/st->frameCounter,st->frameCounter);
   }
-  statistic::statisticStreams[fstream.type]->prevClockBegin = statistic::statisticStreams[fstream.type]->clockBegin;
+  st->prevClockBegin = st->clockBegin;
 #endif
   rs_over_ethernet_data_header *header = (rs_over_ethernet_data_header *)fReceiveBuffer;
   if (header->size == frameSize - sizeof(rs_over_ethernet_data_header))

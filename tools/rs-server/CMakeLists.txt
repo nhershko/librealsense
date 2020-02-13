@@ -26,6 +26,10 @@ file(GLOB RS_SERVER_SOURCES
  ${LIVE}/BasicUsageEnvironment/*.c*
 )
 
+include_directories(rs-server
+        ../../common
+		../ipDevice_Common
+)
 
 # config-ui
 if(WIN32)
@@ -50,9 +54,7 @@ if(COMPRESSION)
     add_definitions(-DCOMPRESSION)
 endif()
 
-if(STATISTICS_LOG)
-    add_definitions(-DSTATISTICS_LOG)
-endif()
+
 
 set_target_properties (rs-server PROPERTIES
     FOLDER Tools
