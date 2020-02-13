@@ -375,7 +375,29 @@ int main(int argc, const char** argv) try
 
 
         ImGui::PushFont(window.get_font());
-        ImGui::SetNextWindowSize({ viewer_model.panel_width, 20.f * new_devices_count + 8 + (is_ip_device_connected? 0 : 24)});
+
+        int multiline_devices_names = 0;
+        for (size_t i = 0; i < device_names.size(); i++)
+        {
+            if(device_names[i].first.find("\n") != std::string::npos)
+            {
+                bool show_device_in_list = true;
+                for (auto&& dev_model : *device_models)
+                {
+                    if (get_device_name(dev_model->dev) == device_names[i])
+                    {
+                        show_device_in_list = false;
+                        break;
+                    }
+                }
+                if(show_device_in_list)
+                {
+                    multiline_devices_names++;
+                }
+            }
+        }
+
+        ImGui::SetNextWindowSize({ viewer_model.panel_width, 20.f * (new_devices_count + multiline_devices_names) + 8 + (is_ip_device_connected? 0 : 24)});
         if (ImGui::BeginPopup("select"))
         {
             ImGui::PushStyleColor(ImGuiCol_Text, dark_grey);
@@ -437,7 +459,7 @@ int main(int argc, const char** argv) try
             if (!is_ip_device_connected)
             {
                 ImGui::Separator();
-                if (ImGui::Selectable("Add IP Device", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups))//
+                if (ImGui::Selectable("Add IP Device", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_DontClosePopups))
                 {
                     ImGui::OpenPopup("Enter Device IP");
                 }
@@ -463,7 +485,7 @@ int main(int argc, const char** argv) try
                     ImGui::PushItemWidth(width * 0.7f);
                     if (ImGui::GetWindowIsFocused() && !ImGui::IsAnyItemActive()) 
                         ImGui::SetKeyboardFocusHere();
-                    if (ImGui::InputText("", ip_input, 255, ImGuiInputTextFlags_CharsDecimal)) //TODO: Ester - enable leeters when host name is supported
+                    if (ImGui::InputText("", ip_input, 255, ImGuiInputTextFlags_CharsDecimal)) //TODO: Ester - enable letters when host name is supported
                     {
                         ip_address = ip_input;
                     }

@@ -36,7 +36,7 @@ private:
 
 private:
   unsigned char* fReceiveBuffer;
-  u_int8_t* fto;
+  unsigned char* fto;
   int fBufferSize;
   MediaSubsession& fSubsession;
   char* fStreamId;

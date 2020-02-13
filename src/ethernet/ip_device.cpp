@@ -242,9 +242,9 @@ rs2::software_device ip_device::create_ip_device(std::string ip_address)
     // register device info to sw device
     device_data data = ip_dev->rtsp_clients[0]->getDeviceData();
     ip_dev->sw_dev.update_info(RS2_CAMERA_INFO_NAME, data.name + "\n IP Device");
+    ip_dev->sw_dev.register_info(rs2_camera_info::RS2_CAMERA_INFO_IP_ADDRESS, ip_address);
     ip_dev->sw_dev.register_info(rs2_camera_info::RS2_CAMERA_INFO_SERIAL_NUMBER, data.serial_num);
     ip_dev->sw_dev.register_info(rs2_camera_info::RS2_CAMERA_INFO_USB_TYPE_DESCRIPTOR, data.usb_type);
-    //ip_dev->sw_dev.register_info(rs2_camera_info::RS2_CAMERA_INFO_IP_ADDRESS, "ip_address"); TODO: Ester - add IP address info
     // return sw device 
     return sw_dev;
 }
@@ -259,6 +259,8 @@ int stream_type_to_sensor_id(rs2_stream type)
 void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
 {
     rtp_stream.get()->is_enabled=true;
+
+    rtp_stream.get()->frame_data_buff.frame_number = 0;
     int uid = rtp_stream.get()->m_rs_stream.uid;
     rs2_stream type = rtp_stream.get()->m_rs_stream.type;
     int sensor_id = stream_type_to_sensor_id(type);
@@ -270,14 +272,16 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
 	        
 		} 
         else 
-        {				
+        {			
             Raw_Frame* frame = rtp_stream.get()->extract_frame();
             rtp_stream.get()->frame_data_buff.pixels = frame->m_buffer;
-			//memcpy(rtp_stream.get()->frame_data_buff.pixels, frame->m_buffer, frame->m_size);
-			rtp_stream.get()->frame_data_buff.timestamp = frame->m_timestamp.tv_usec;
-			rtp_stream.get()->frame_data_buff.frame_number++;
-            
-            
+            //rtp_stream.get()->frame_data_buff.timestamp = (frame->m_timestamp.tv_sec*1000)+(frame->m_timestamp.tv_usec/1000); // convert to milliseconds
+	    rtp_stream.get()->frame_data_buff.timestamp = frame->m_metadata->timestamp;
+            rtp_stream.get()->frame_data_buff.frame_number++;
+            // TODO Michal: change this to HW time once we pass the metadata
+            //rtp_stream.get()->frame_data_buff.domain = RS2_TIMESTAMP_DOMAIN_SYSTEM_TIME;
+            rtp_stream.get()->frame_data_buff.domain = frame->m_metadata->timestamp_domain;
+
             sensors[sensor_id]->set_metadata(RS2_FRAME_METADATA_FRAME_TIMESTAMP,rtp_stream.get()->frame_data_buff.timestamp);
             sensors[sensor_id]->set_metadata(RS2_FRAME_METADATA_ACTUAL_FPS,rtp_stream.get()->m_rs_stream.fps);
             sensors[sensor_id]->set_metadata(RS2_FRAME_METADATA_FRAME_COUNTER,rtp_stream.get()->frame_data_buff.frame_number);

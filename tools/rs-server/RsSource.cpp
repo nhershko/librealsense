@@ -60,6 +60,7 @@ void RsDeviceSource::doGetNextFrame()
 {
   // This function is called (by our 'downstream' object) when it asks for new data.
   // Note: If, for some reason, the source device stops being readable (e.g., it gets closed), then you do the following:
+  getFrame = std::chrono::high_resolution_clock::now();
   if (0)
   { // the source stops being readable
     handleClosure();
@@ -72,6 +73,16 @@ void RsDeviceSource::doGetNextFrame()
   {
     frame = frames_queue->wait_for_frame(); //todo: check if it copies the frame
     frame.keep();
+	
+    gotFrame = std::chrono::high_resolution_clock::now();
+    /*
+	  //drop old packets
+    rs2::frame f2;
+    while (frames_queue->poll_for_frame(&f2))
+    {
+      printf("pop frame type %d, but dont send it\n",stream_profile->stream_type());
+    }
+    */
     deliverRSFrame(&frame);
   }
   catch (const std::exception &e)
@@ -92,18 +103,50 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
   unsigned newFrameSize = frame->get_data_size();
 
   gettimeofday(&fPresentationTime, NULL); // If you have a more accurate time - e.g., from an encoder - then use that instead.
-  rs_over_ethernet_data_header header;
+  rs_frame_header header;
 #ifdef COMPRESSION
-  fFrameSize = iCompress->compressBuffer((unsigned char *)frame->get_data(), frame->get_data_size(), fTo + sizeof(header));
+  fFrameSize = iCompress->compressBuffer((unsigned char *)frame->get_data(), frame->get_data_size(), fTo + sizeof(rs_frame_header));
 #else
   fFrameSize = frame->get_data_size();
-  memmove(fTo + sizeof(header), frame->get_data(), fFrameSize);
-#endif
 
-  header.size = fFrameSize;
-  fFrameSize += sizeof(header);
+  memmove(fTo + sizeof(rs_frame_header), frame->get_data(), fFrameSize);
+#endif
+  fFrameSize += sizeof(rs_frame_metadata);
+  header.ethernet_header.size = fFrameSize;
+  fFrameSize += sizeof(rs_over_ethernet_data_header);
+  if (frame->supports_frame_metadata(RS2_FRAME_METADATA_FRAME_TIMESTAMP))
+  {
+    header.metadata.timestamp = frame->get_frame_metadata(RS2_FRAME_METADATA_FRAME_TIMESTAMP);
+  }
+  else
+  {
+    header.metadata.timestamp = frame->get_timestamp();
+  }
+  
+  if (frame->supports_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER))
+  {
+    header.metadata.frame_counter = frame->get_frame_metadata(RS2_FRAME_METADATA_FRAME_COUNTER);
+  }
+  else
+  {
+    header.metadata.frame_counter = frame->get_frame_number();
+  }
+  
+  if (frame->supports_frame_metadata(RS2_FRAME_METADATA_ACTUAL_FPS))
+  {
+    header.metadata.actual_fps = frame->get_frame_metadata(RS2_FRAME_METADATA_ACTUAL_FPS);
+  }
+  
+  header.metadata.timestamp_domain = frame->get_frame_timestamp_domain();
+
   memmove(fTo, &header, sizeof(header));
   assert(fMaxSize > fFrameSize); //TODO: to remove on release
   // After delivering the data, inform the reader that it is now available:
+  std::chrono::high_resolution_clock::time_point curTime = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> networkTimeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(getFrame-sendFrame);
+  std::chrono::duration<double> waitingTimeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(gotFrame-getFrame);
+  std::chrono::duration<double> processingTimeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(curTime-gotFrame);
+  //printf ("stream %d:tranfer time is %f, waiting time was %f, processing time was %f\n",frame->get_profile().format(),networkTimeSpan*1000,waitingTimeSpan*1000,processingTimeSpan*1000);
+  sendFrame = curTime;
   FramedSource::afterGetting(this);
 }

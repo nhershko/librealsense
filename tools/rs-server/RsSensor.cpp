@@ -12,6 +12,8 @@ RsSensor::RsSensor(rs2::sensor sensor, rs2::device device)
 		{
 			//make a map with all the sensor's stream profiles
 			m_stream_profiles.emplace(getStreamProfileKey(stream_profile), stream_profile.as<rs2::video_stream_profile>());
+			prevSample.emplace(getStreamProfileKey(stream_profile), std::chrono::high_resolution_clock::now());
+
 		}
 	}
 }
@@ -45,8 +47,12 @@ int RsSensor::start(std::unordered_map<long long int, rs2::frame_queue> &stream_
 
 		if (stream_profiles_queues.find(profile_key) != stream_profiles_queues.end())
 		{
+			std::chrono::high_resolution_clock::time_point curSample = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<double> timeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(curSample - prevSample[profile_key]);
+			//printf("%d:diff time is %f\n",frame.get_profile().format(),timeSpan.count()*1000);
 			//push frame to its queue
 			stream_profiles_queues[profile_key].enqueue(frame);
+			prevSample[profile_key] = curSample;
 		}
 	};
 
