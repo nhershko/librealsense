@@ -28,8 +28,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RsCommon.hh"
 #include <cassert>
 #include <compression/compression_factory.h>
+#include "RsStatistics.h"
 
-    RsDeviceSource *
+
+RsDeviceSource *
     RsDeviceSource::createNew(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile, rs2::frame_queue &queue)
 {
   return new RsDeviceSource(env, video_stream_profile, queue);
@@ -53,31 +55,32 @@ RsDeviceSource::~RsDeviceSource()
 void RsDeviceSource::doGetNextFrame()
 {
   // This function is called (by our 'downstream' object) when it asks for new data.
-  // Note: If, for some reason, the source device stops being readable (e.g., it gets closed), then you do the following:
   getFrame = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> TimeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(getFrame - RsStatistics::get_TPresetPacketStart());
+  
+  std::chrono::high_resolution_clock::time_point* tp = &RsStatistics::get_TPsendPacket();
+  networkTimeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(getFrame-*tp);
+  *tp = std::chrono::high_resolution_clock::now();
+
   if (0)
   { // the source stops being readable
     handleClosure();
-
     return;
   }
   // If a new frame of data is immediately available to be delivered, then do this now:
   rs2::frame frame;
   try
   {
-    frame = frames_queue->wait_for_frame(); //todo: check if it copies the frame
-    frame.keep();
-	
-    gotFrame = std::chrono::high_resolution_clock::now();
-    /*
-	  //drop old packets
-    rs2::frame f2;
-    while (frames_queue->poll_for_frame(&f2))
+    if (!frames_queue->poll_for_frame(&frame))
     {
-      printf("pop frame type %d, but dont send it\n",stream_profile->stream_type());
+      nextTask() = envir().taskScheduler().scheduleDelayedTask(0, (TaskFunc *)waitForFrame, this);
     }
-    */
-    deliverRSFrame(&frame);
+    else
+    {
+      frame.keep();
+      gotFrame = std::chrono::high_resolution_clock::now();
+      deliverRSFrame(&frame);
+    }
   }
   catch (const std::exception &e)
   {
@@ -85,12 +88,40 @@ void RsDeviceSource::doGetNextFrame()
   }
 }
 
+void RsDeviceSource::handleWaitForFrame()
+{
+  // If a new frame of data is immediately available to be delivered, then do this now:
+  rs2::frame frame;
+  try
+  {
+    if (!(getFramesQueue()->poll_for_frame(&frame)))
+    {
+      nextTask() = envir().taskScheduler().scheduleDelayedTask(0, (TaskFunc *)RsDeviceSource::waitForFrame, this);
+    }
+    else
+    {
+      frame.keep();
+      gotFrame = std::chrono::high_resolution_clock::now();
+      deliverRSFrame(&frame);
+    }
+  }
+  catch (const std::exception &e)
+  {
+    envir() << "RsDeviceSource: " << e.what() << '\n';
+  }
+}
+
+// The following is called after each delay between packet sends:
+void RsDeviceSource::waitForFrame(RsDeviceSource* deviceSource)
+{
+  deviceSource->handleWaitForFrame();
+}
+
 void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
 {
   if (!isCurrentlyAwaitingData())
   {
-    envir() << "isCurrentlyAwaitingData returned false"
-            << "\n";
+    envir() << "isCurrentlyAwaitingData returned false\n";
     return; // we're not ready for the data yet
   }
 
@@ -109,12 +140,13 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
   fFrameSize += sizeof(header);
   memmove(fTo, &header, sizeof(header));
   assert(fMaxSize > fFrameSize); //TODO: to remove on release
-  // After delivering the data, inform the reader that it is now available:
+
+  std::chrono::high_resolution_clock::time_point* tp = &RsStatistics::get_TPsendPacket();
   std::chrono::high_resolution_clock::time_point curTime = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> networkTimeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(getFrame-sendFrame);
-  std::chrono::duration<double> waitingTimeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(gotFrame-getFrame);
-  std::chrono::duration<double> processingTimeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(curTime-gotFrame);
-  //printf ("stream %d:tranfer time is %f, waiting time was %f, processing time was %f\n",frame->get_profile().format(),networkTimeSpan*1000,waitingTimeSpan*1000,processingTimeSpan*1000);
-  sendFrame = curTime;
+  waitingTimeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(gotFrame-getFrame);
+  processingTimeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(curTime-gotFrame);
+  *tp = curTime;
+  //printf ("stream %d:tranfer time is %f, waiting time was %f, processing time was %f, sum is %f\n",frame->get_profile().format(),networkTimeSpan*1000,waitingTimeSpan*1000,processingTimeSpan*1000,(networkTimeSpan+waitingTimeSpan+processingTimeSpan)*1000);
+  // After delivering the data, inform the reader that it is now available:
   FramedSource::afterGetting(this);
 }

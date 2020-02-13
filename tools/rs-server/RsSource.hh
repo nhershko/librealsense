@@ -41,12 +41,15 @@ class RsDeviceSource : public FramedSource
 {
 public:
   static RsDeviceSource *createNew(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile, rs2::frame_queue &queue);
-
+  void handleWaitForFrame();
+  static void waitForFrame(RsDeviceSource* deviceSource);
 protected:
   RsDeviceSource(UsageEnvironment &env, rs2::video_stream_profile &video_stream_profile, rs2::frame_queue &queue);
   virtual ~RsDeviceSource();
 private:
   virtual void doGetNextFrame();
+ 
+  rs2::frame_queue* getFramesQueue(){return frames_queue;};
   //virtual void doStopGettingFrames(); // optional
 
 private:
@@ -58,7 +61,8 @@ private:
 #ifdef COMPRESSION
   ICompression * iCompress;
 #endif
-std::chrono::high_resolution_clock::time_point getFrame,gotFrame,sendFrame;
+std::chrono::high_resolution_clock::time_point getFrame,gotFrame;
+std::chrono::duration<double> networkTimeSpan,waitingTimeSpan,processingTimeSpan;
 };
 
 #endif
