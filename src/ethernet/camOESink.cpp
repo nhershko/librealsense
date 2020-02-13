@@ -148,34 +148,17 @@ Boolean camOESink::continuePlaying() {
     return false;
   }
 
-  if(fstream.uid == 0)
+  if (fstream.uid>=0 && fstream.uid<4)
   {
   fSource->getNextFrame(fReceiveBuffer, fBufferSize,
-                        afterGettingUid0Frame, this,
-                        onSourceClosure, this);
-  }
-  else if(fstream.uid == 1)
-  {
-  fSource->getNextFrame(fReceiveBuffer, fBufferSize,
-                        afterGettingUid1Frame, this,
-                        onSourceClosure, this);
-  }
-  else if(fstream.uid == 2)
-  {
-  fSource->getNextFrame(fReceiveBuffer, fBufferSize,
-                        afterGettingUid2Frame, this,
-                        onSourceClosure, this);
-  }
-  else if(fstream.uid == 3)
-  {
-  fSource->getNextFrame(fReceiveBuffer, fBufferSize,
-                        afterGettingUid3Frame, this,
+                        afterGettingFunctions[fstream.uid], this,
                         onSourceClosure, this);
   }
   else
   {
     return false;
   }
+  
   return True;
 }
 
