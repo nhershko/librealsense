@@ -275,11 +275,13 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
         {			
             Raw_Frame* frame = rtp_stream.get()->extract_frame();
             rtp_stream.get()->frame_data_buff.pixels = frame->m_buffer;
-            rtp_stream.get()->frame_data_buff.timestamp = (frame->m_timestamp.tv_sec*1000)+(frame->m_timestamp.tv_usec/1000); // convert to milliseconds
-			rtp_stream.get()->frame_data_buff.frame_number++;
+            //rtp_stream.get()->frame_data_buff.timestamp = (frame->m_timestamp.tv_sec*1000)+(frame->m_timestamp.tv_usec/1000); // convert to milliseconds
+	    rtp_stream.get()->frame_data_buff.timestamp = frame->m_metadata->timestamp;
+            rtp_stream.get()->frame_data_buff.frame_number++;
             // TODO Michal: change this to HW time once we pass the metadata
-            rtp_stream.get()->frame_data_buff.domain = RS2_TIMESTAMP_DOMAIN_SYSTEM_TIME;
-           
+            //rtp_stream.get()->frame_data_buff.domain = RS2_TIMESTAMP_DOMAIN_SYSTEM_TIME;
+            rtp_stream.get()->frame_data_buff.domain = frame->m_metadata->timestamp_domain;
+
             sensors[sensor_id]->set_metadata(RS2_FRAME_METADATA_FRAME_TIMESTAMP,rtp_stream.get()->frame_data_buff.timestamp);
             sensors[sensor_id]->set_metadata(RS2_FRAME_METADATA_ACTUAL_FPS,rtp_stream.get()->m_rs_stream.fps);
             sensors[sensor_id]->set_metadata(RS2_FRAME_METADATA_FRAME_COUNTER,rtp_stream.get()->frame_data_buff.frame_number);

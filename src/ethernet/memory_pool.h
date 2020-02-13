@@ -16,7 +16,7 @@ public:
         //alloc memory
         for (int i = 0; i < POOL_SIZE; i++)
         {
-            unsigned char *mem = new unsigned char[sizeof(rs_over_ethernet_data_header) + MAX_FRAME_SIZE]; //TODO:to use OutPacketBuffer::maxSize;
+            unsigned char *mem = new unsigned char[sizeof(rs_frame_header) + MAX_FRAME_SIZE]; //TODO:to use OutPacketBuffer::maxSize;
             pool.push(mem);
         }
         std::cout<<"memory_pool: pool size is: "<<pool.size()<<"\n";
