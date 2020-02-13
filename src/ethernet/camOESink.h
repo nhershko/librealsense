@@ -23,7 +23,7 @@ private:
   camOESink(UsageEnvironment &env, MediaSubsession &subsession, rs2_video_stream stream, memory_pool *mempool, char const *streamId);
   // called only by "createNew()"
   virtual ~camOESink();
-  
+
   static void afterGettingUid0Frame(void *clientData, unsigned frameSize,
                                 unsigned numTruncatedBytes,
                                 struct timeval presentationTime,
@@ -59,6 +59,7 @@ private:
   rs2_video_stream fstream;
   ICompression *iCompress;
   memory_pool *memPool;
+  FramedSource::afterGettingFunc* afterGettingFunctions[4] = {afterGettingUid0Frame,afterGettingUid1Frame,afterGettingUid2Frame,afterGettingUid3Frame};
 };
 
 #endif // CAM_OE_SINK_H
