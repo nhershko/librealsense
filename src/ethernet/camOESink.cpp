@@ -49,8 +49,32 @@ camOESink::~camOESink() {
   //fclose(fp);
 }
 
-void camOESink::afterGettingFrame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
+
+void camOESink::afterGettingUid0Frame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
 				  struct timeval presentationTime, unsigned durationInMicroseconds) {
+  
+  camOESink* sink = (camOESink*)clientData;
+  sink->afterGettingFrame(frameSize, numTruncatedBytes, presentationTime, durationInMicroseconds);
+}
+
+void camOESink::afterGettingUid1Frame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
+				  struct timeval presentationTime, unsigned durationInMicroseconds) {
+  
+  camOESink* sink = (camOESink*)clientData;
+  sink->afterGettingFrame(frameSize, numTruncatedBytes, presentationTime, durationInMicroseconds);
+
+}
+                
+void camOESink::afterGettingUid2Frame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
+				  struct timeval presentationTime, unsigned durationInMicroseconds) {
+  
+  camOESink* sink = (camOESink*)clientData;
+  sink->afterGettingFrame(frameSize, numTruncatedBytes, presentationTime, durationInMicroseconds);
+}
+
+void camOESink::afterGettingUid3Frame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
+				  struct timeval presentationTime, unsigned durationInMicroseconds) {
+  
   camOESink* sink = (camOESink*)clientData;
   sink->afterGettingFrame(frameSize, numTruncatedBytes, presentationTime, durationInMicroseconds);
 }
@@ -121,7 +145,8 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   else
   {
     memPool->returnMem(fReceiveBuffer);
-    envir() << "corrupted frame!!!: data size is "<<header->size<<" frame size is "<< frameSize <<"\n";
+    envir() << fStreamId <<":corrupted frame!!!: data size is "<<header->size<<" frame size is "<< frameSize <<"\n";
+    //printf("%p:corrupted frame!!!: data size is %d frame size is %d \n",fStreamId,header->size,frameSize);
   }
   fReceiveBuffer = nullptr;
   //fwrite(fReceiveBuffer, frameSize, 1, fp);
@@ -139,9 +164,35 @@ Boolean camOESink::continuePlaying() {
   {
     return false;
   }
+
+  if(fstream.uid == 0)
+  {
   fSource->getNextFrame(fReceiveBuffer, fBufferSize,
-                        afterGettingFrame, this,
+                        afterGettingUid0Frame, this,
                         onSourceClosure, this);
+  }
+  else if(fstream.uid == 1)
+  {
+  fSource->getNextFrame(fReceiveBuffer, fBufferSize,
+                        afterGettingUid1Frame, this,
+                        onSourceClosure, this);
+  }
+  else if(fstream.uid == 2)
+  {
+  fSource->getNextFrame(fReceiveBuffer, fBufferSize,
+                        afterGettingUid2Frame, this,
+                        onSourceClosure, this);
+  }
+  else if(fstream.uid == 3)
+  {
+  fSource->getNextFrame(fReceiveBuffer, fBufferSize,
+                        afterGettingUid3Frame, this,
+                        onSourceClosure, this);
+  }
+  else
+  {
+    return false;
+  }
   return True;
 }
 
