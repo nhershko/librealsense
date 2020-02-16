@@ -6,28 +6,28 @@
 #include "lz_compression.h"
 #include "compression_factory.h"
 
-ICompression* CompressionFactory::getObject(int width, int height, rs2_format format, rs2_stream stream_type)
+ICompression* CompressionFactory::getObject(rs2::video_stream_profile stream)
 { 	
 	zipMethod zipMeth;
-	if(stream_type == RS2_STREAM_COLOR || stream_type == RS2_STREAM_INFRARED) {
+	if(stream.stream_type() == RS2_STREAM_COLOR || stream.stream_type() == RS2_STREAM_INFRARED) {
 		zipMeth = zipMethod::Jpeg;
-   	} else if(stream_type == RS2_STREAM_DEPTH ) {
+   	} else if(stream.stream_type() == RS2_STREAM_DEPTH ) {
         zipMeth = zipMethod::lz;
   	}//todo:set default compression for unknown format 
 
 	switch(zipMeth)
 	{
 		case zipMethod::gzip:
-			return new GzipCompression(width, height, format);
+			return new GzipCompression(stream);
 			break;
 		case zipMethod::rvl:
-			return new RvlCompression(width, height, format);
+			return new RvlCompression(stream);
 			break;
 		case zipMethod::Jpeg:
-			return new JpegCompression(width, height, format);
+			return new JpegCompression(stream);
 			break;
 		case zipMethod::lz:
-			return new LZCompression(width, height, format);
+			return new LZCompression(stream);
 			break;
 		default:
 			printf("unknown zip method\n");

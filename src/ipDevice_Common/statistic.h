@@ -19,8 +19,12 @@ class stream_statistic {
 class statistic
 {
     public:
-        static std::map<int, stream_statistic*>& getStatisticStreams(){ return statisticStreams;};
+        static std::map<int, stream_statistic*>& getStatisticStreams()
+        { 
+            static std::map<int, stream_statistic*> statisticStreams;
+            return statisticStreams;
+        };
     private:
-        static std::map<int, stream_statistic*> statisticStreams;
+        
 };
 #endif
