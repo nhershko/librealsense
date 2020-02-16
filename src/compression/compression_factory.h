@@ -12,5 +12,5 @@ typedef enum zipMethod {
 class CompressionFactory
 {
     public: 
-        static ICompression* getObject(rs2::video_stream_profile stream);
+        static ICompression* getObject(int width, int height, rs2_format format, rs2_stream stream_type);
 };

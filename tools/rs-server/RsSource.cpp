@@ -42,13 +42,13 @@ RsDeviceSource::RsDeviceSource(UsageEnvironment &env, rs2::video_stream_profile 
   frames_queue = &queue;
   stream_profile = &video_stream_profile;
 #ifdef COMPRESSION
-  iCompress = CompressionFactory::getObject(video_stream_profile);
+  iCompress = CompressionFactory::getObject(video_stream_profile.width(), video_stream_profile.height(), video_stream_profile.format(), video_stream_profile.stream_type());
 #endif
-#ifdef STATISTICS
-  if(statistic::getStatisticStreams().find(video_stream_profile.unique_id()) == statistic::getStatisticStreams().end()) {
-      statistic::getStatisticStreams().insert(std::pair<int,stream_statistic *>(video_stream_profile..unique_id(),new stream_statistic()));
+//#ifdef STATISTICS
+  if(statistic::getStatisticStreams().find(video_stream_profile.stream_type()) == statistic::getStatisticStreams().end()) {
+      statistic::getStatisticStreams().insert(std::pair<int,stream_statistic *>(video_stream_profile.stream_type(),new stream_statistic()));
   } 
-#endif
+//#endif
 }
 
 RsDeviceSource::~RsDeviceSource()
