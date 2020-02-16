@@ -9,7 +9,7 @@
 class stream_statistic {
     public:
         std::queue<std::chrono::system_clock::time_point> clockBeginVec;
-        std::chrono::system_clock::time_point clockBegin, clockEnd, prevClockBegin, compressionBegin, compressionEnd, decompressionBegin, decompressionEnd;
+        std::chrono::system_clock::time_point prevClockBegin, compressionBegin,decompressionBegin;
         std::chrono::duration<double> processingTime, getFrameDiffTime, compressionTime, decompressionTime;
         int frameCounter = 0, compressionFrameCounter = 0, decompressionFrameCounter = 0;
         double avgProcessingTime = 0, avgGettingTime = 0, avgCompressionTime = 0, avgDecompressionTime = 0;
@@ -19,8 +19,10 @@ class stream_statistic {
 class statistic
 {
     public:
-        static std::map<int, stream_statistic*>& getStatisticStreams(){ return statisticStreams;};
-    private:
-        static std::map<int, stream_statistic*> statisticStreams;
+        static std::map<int, stream_statistic*>& getStatisticStreams()
+        { 
+            static std::map<int, stream_statistic*> statisticStreams;
+            return statisticStreams;
+        };     
 };
 #endif

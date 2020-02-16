@@ -292,8 +292,8 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
                 std::chrono::duration<double, std::milli>(std::chrono::system_clock::now().time_since_epoch()).count());
 #ifdef STATISTICS
             stream_statistic * st  = statistic::getStatisticStreams()[ rtp_stream.get()->stream_type()];
-            st->clockEnd = std::chrono::system_clock::now();
-            st->processingTime = st->clockEnd - st->clockBeginVec.front();
+            std::chrono::system_clock::time_point clockEnd = std::chrono::system_clock::now();
+            st->processingTime = clockEnd - st->clockBeginVec.front();
             st->clockBeginVec.pop();
             st->avgProcessingTime +=st->processingTime.count();
             printf("STATISTICS: streamType: %d, processing time: %0.2fm, average: %0.2fm, counter: %d\n",type,st->processingTime*1000, (st->avgProcessingTime*1000)/st->frameCounter,st->frameCounter);

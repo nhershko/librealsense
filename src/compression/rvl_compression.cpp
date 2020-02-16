@@ -87,8 +87,8 @@ int RvlCompression::compressBuffer(unsigned char* buffer, int size, unsigned cha
 #ifdef STATISTICS
 	stream_statistic * st  = statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_DEPTH];
 	st->compressionFrameCounter++;
-	st->compressionEnd = std::chrono::system_clock::now();
-	st->compressionTime = st->compressionEnd - st->compressionBegin;
+	std::chrono::system_clock::time_point compressionEnd = std::chrono::system_clock::now();
+	st->compressionTime = compressionEnd - st->compressionBegin;
     st->avgCompressionTime += st->compressionTime.count();
     printf("STATISTICS: streamType: %d, rvl compress time: %0.2fm, average: %0.2fm, counter: %d\n",rs2_stream::RS2_STREAM_DEPTH, st->compressionTime*1000, 
             (st->avgCompressionTime*1000)/st->compressionFrameCounter,st->compressionFrameCounter);
@@ -136,8 +136,8 @@ int RvlCompression::decompressBuffer(unsigned char* buffer, int size, unsigned c
 #ifdef STATISTICS
 	stream_statistic * st  = statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_DEPTH];
 	st->decompressionFrameCounter++;
-	st->decompressionEnd = std::chrono::system_clock::now();
-	st->decompressionTime = st->decompressionEnd - st->decompressionBegin;
+	std::chrono::system_clock::time_point decompressionEnd = std::chrono::system_clock::now();
+	st->decompressionTime = decompressionEnd - st->decompressionBegin;
     st->avgDecompressionTime += st->decompressionTime.count();
     printf("STATISTICS: streamType: %d, rvl decompress time: %0.2fm, average: %0.2fm, counter: %d\n",rs2_stream::RS2_STREAM_DEPTH, st->decompressionTime*1000, 
             (st->avgDecompressionTime*1000)/st->decompressionFrameCounter,st->decompressionFrameCounter);
