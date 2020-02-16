@@ -9,10 +9,5 @@ class ICompression {
         int m_width, m_height;
         rs2_format m_format;
         int decompframeCounter = 0, compframeCounter = 0;
-#ifdef COMPRESSION_STATISTICS
-        clock_t tCompBegin, tCompEnd, tDecompBegin, tDecompEnd;
-        float compTimeDiff = 0, decompTimeDiff = 0;
-        long long  fullSizeSum = 0, compressedSizeSum = 0;
-#endif
 
 };

@@ -20,16 +20,20 @@ file(GLOB ETHERNET_SOURCES
  "rtp_stream.cpp"
  "rtp_callback.cpp"
  "rtsp_client/*.cpp"
+ "../ipDevice_Common/*.h"
+ "../ipDevice_Common/*.cpp"
  ${LIVE}/groupsock/*.c* 
  ${LIVE}/liveMedia/*.c* 
  ${LIVE}/UsageEnvironment/*.c* 
  ${LIVE}/BasicUsageEnvironment/*.c* 
+ 
 )
 
 add_library(${PROJECT_NAME} SHARED ${ETHERNET_SOURCES})
 
 include_directories(${PROJECT_NAME}
         ../../common
+		../ipDevice_Common
 	#/usr/include/BasicUsageEnvironment
 	#/usr/include/UsageEnvironment
 	#/usr/include/groupsock
@@ -49,12 +53,14 @@ target_link_libraries(${PROJECT_NAME}
 	#UsageEnvironment
 	#groupsock
 	#liveMedia
-	${ZLIB_LIBRARIES}
-	${JPEG_LIBRARIES}
 )
 
 if(COMPRESSION)
     add_definitions(-DCOMPRESSION)
+endif()
+
+if(STATISTICS)
+    add_definitions(-DSTATISTICS)
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC "rtsp_client/*.h")

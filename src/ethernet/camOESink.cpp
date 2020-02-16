@@ -1,7 +1,7 @@
 #include "camOESink.h"
 #include "stdio.h"
 #include <string>
-
+#include <ipDevice_Common/statistic.h>
 
 #define WRITE_FRAMES_TO_FILE 0
 
@@ -35,7 +35,9 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
   iCompress = CompressionFactory::getObject(fstream.width, fstream.height, fstream.fmt, fstream.type);
 #endif
   envir() << "create new sink";
-
+#ifdef STATISTICS  
+  statistic::getStatisticStreams().insert(std::pair<int,stream_statistic *>(fstream.type,new stream_statistic()));
+#endif
 }
 
 camOESink::~camOESink() {
@@ -105,6 +107,19 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
   {
     if (this->m_rtp_callback != NULL)
     {
+#ifdef STATISTICS
+  stream_statistic * st  = statistic::getStatisticStreams()[fstream.type];
+  st->frameCounter++;
+  std::chrono::system_clock::time_point clockBegin = std::chrono::system_clock::now();
+  st->clockBeginVec.push(clockBegin);
+  if(st->frameCounter > 1) {
+    st->getFrameDiffTime = clockBegin - st->prevClockBegin;
+    st->avgGettingTime += st->getFrameDiffTime.count();
+    printf("STATISTICS: streamType: %d, got frame: %0.2fm, average: %0.2fm, counter %d\n", fstream.type, st->getFrameDiffTime.count()*1000,
+            (st->avgGettingTime*1000)/st->frameCounter,st->frameCounter);
+  }
+  st->prevClockBegin = clockBegin;
+#endif
 #ifdef COMPRESSION
       fto =  memPool->getNextMem();
       if (fto == nullptr)
