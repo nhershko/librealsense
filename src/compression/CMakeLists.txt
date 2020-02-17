@@ -14,12 +14,15 @@ file(GLOB COMPRESSION_SOURCES
  "*.hh"
  "*.h"
  "*.cpp"
+  "../ipDevice_Common/*.h"
+ "../ipDevice_Common/*.cpp"
 )
 
 add_library(${PROJECT_NAME} SHARED ${COMPRESSION_SOURCES})
 
 include_directories(${PROJECT_NAME}
         ../../common
+        ../ipDevice_Common
 )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
@@ -53,8 +56,8 @@ if(COMPRESSION)
     add_definitions(-DCOMPRESSION)
 endif()
 
-if(COMPRESSION_STATISTICS)
-    add_definitions(-DCOMPRESSION_STATISTICS)
+if(STATISTICS)
+    add_definitions(-DSTATISTICS)
 endif()
 
 

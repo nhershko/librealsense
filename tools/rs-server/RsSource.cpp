@@ -28,6 +28,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RsCommon.hh"
 #include <cassert>
 #include <compression/compression_factory.h>
+#include <ipDevice_Common/statistic.h>
 #include "RsStatistics.h"
 
 
@@ -44,6 +45,12 @@ RsDeviceSource::RsDeviceSource(UsageEnvironment &env, rs2::video_stream_profile 
   stream_profile = &video_stream_profile;
 #ifdef COMPRESSION
   iCompress = CompressionFactory::getObject(video_stream_profile.width(), video_stream_profile.height(), video_stream_profile.format(), video_stream_profile.stream_type());
+#endif
+#ifdef STATISTICS
+  if(statistic::getStatisticStreams().find(video_stream_profile.stream_type()) == statistic::getStatisticStreams().end()) {
+      statistic::getStatisticStreams().insert(std::pair<int,stream_statistic *>(video_stream_profile.stream_type(),new stream_statistic()));
+  } 
+  //todo:change to uid instead of type.
 #endif
 }
 

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "jpeglib.h"
 #include <time.h>
+#include <ipDevice_Common/statistic.h>
 
 #define MAX_INPUT_COMPONENT 3
 
@@ -28,7 +29,7 @@ JpegCompression::JpegCompression(int width, int height, rs2_format format)
 	} else if(RS2_FORMAT_RGB8){
 		cinfo.in_color_space = JCS_RGB;
 	}else {
-		printf("unsupport format on jpeg compression");
+		printf("unsupport format %d on jpeg compression\n", format);
 		return;
 	}
 	jpeg_set_defaults(&cinfo);
@@ -54,6 +55,20 @@ void JpegCompression::convertYUYVtoYUV(unsigned char** buffer)
 	(*buffer) += cinfo.image_width * 2; 
 }
 
+void JpegCompression::convertUYVYtoYUV(unsigned char** buffer)
+{
+	for (int i = 0; i < cinfo.image_width; i += 2) { //input strides by 4 bytes, output strides by 6 (2 pixels)
+        rowBuffer[i*3] = (*buffer)[i*2 + 1]; // Y (unique to this pixel)
+        rowBuffer[i*3 + 1] = (*buffer)[i*2 + 0]; // U (shared between pixels)
+        rowBuffer[i*3 + 2] = (*buffer)[i*2 + 2]; // V (shared between pixels)
+        rowBuffer[i*3 + 3] = (*buffer)[i*2 + 3]; // Y (unique to this pixel)
+        rowBuffer[i*3 + 4] = (*buffer)[i*2 + 0]; // U (shared between pixels)
+        rowBuffer[i*3 + 5] = (*buffer)[i*2 + 2]; // V (shared between pixels)
+    }
+	row_pointer[0] = rowBuffer;
+	(*buffer) += cinfo.image_width * 2; 
+}
+
 void JpegCompression::convertYUVtoYUYV(unsigned char** uncompressBuff) 
 {
 	for (int i = 0; i < dinfo.output_width ; i += 2) {
@@ -65,38 +80,23 @@ void JpegCompression::convertYUVtoYUYV(unsigned char** uncompressBuff)
 	(*uncompressBuff)+= dinfo.output_width *2;
 }
 
-void JpegCompression::convertUYVYtoYUV(unsigned char** buffer)
-{
-               for (int i = 0; i < cinfo.image_width; i += 2) { //input strides by 4 bytes, output strides by 6 (2 pixels)
-        rowBuffer[i*3] = (*buffer)[i*2 + 1]; // Y (unique to this pixel)
-        rowBuffer[i*3 + 1] = (*buffer)[i*2 + 0]; // U (shared between pixels)
-        rowBuffer[i*3 + 2] = (*buffer)[i*2 + 2]; // V (shared between pixels)
-        rowBuffer[i*3 + 3] = (*buffer)[i*2 + 3]; // Y (unique to this pixel)
-        rowBuffer[i*3 + 4] = (*buffer)[i*2 + 0]; // U (shared between pixels)
-        rowBuffer[i*3 + 5] = (*buffer)[i*2 + 2]; // V (shared between pixels)
-    }
-               row_pointer[0] = rowBuffer;
-               (*buffer) += cinfo.image_width * 2; 
-}
-
 void JpegCompression::convertYUVtoUYVY(unsigned char** uncompressBuff) 
 {
-               for (int i = 0; i < dinfo.output_width ; i += 2) {
-                              (*uncompressBuff)[i*2] = destBuffer[0][i*3 +1]; // Y (unique to this pixel)
+	for (int i = 0; i < dinfo.output_width ; i += 2) {
+		(*uncompressBuff)[i*2] = destBuffer[0][i*3 +1]; // Y (unique to this pixel)
         (*uncompressBuff)[i*2 + 1] = destBuffer[0][i*3 + 0]; // U (shared between pixels)
         (*uncompressBuff)[i*2 + 2] = destBuffer[0][i*3 + 2]; // Y (unique to this pixel)
         (*uncompressBuff)[i*2 + 3] = destBuffer[0][i*3 + 3]; // V (shared between pixels)
     }
-               (*uncompressBuff)+= dinfo.output_width *2;
+	(*uncompressBuff)+= dinfo.output_width *2;
 }
-
 
 int JpegCompression::compressBuffer(unsigned char* buffer, int size, unsigned char* compressedBuf)
 {	
 	long unsigned int compressedSize = 0;
 	unsigned char * data;
-#ifdef COMPRESSION_STATISTICS
-	tCompBegin = clock();
+#ifdef STATISTICS
+	statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_COLOR]->compressionBegin = std::chrono::system_clock::now();
 #endif
 	jpeg_mem_dest(&cinfo, &data, &compressedSize);
 	cinfo.image_width = m_width;
@@ -108,7 +108,7 @@ int JpegCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 			row_pointer[0] = & buffer[cinfo.next_scanline * row_stride];
 		} else if(m_format == RS2_FORMAT_YUYV){
 			convertYUYVtoYUV(&buffer);
-		} else if(m_format == RS2_FORMAT_UYVY){//nhershko
+		} else if(m_format == RS2_FORMAT_UYVY) {
 			convertUYVYtoYUV(&buffer);
 		} else {
 			printf("unsupport format on jpeg compression");
@@ -122,12 +122,17 @@ int JpegCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 	if (compframeCounter++%50 == 0) {
 		printf("finish jpeg color compression, size: %lu, compressed size %u, frameNum: %d \n", size, compressedSize, compframeCounter);
 	}
-#ifdef COMPRESSION_STATISTICS	
-	tCompEnd = clock();
-	compTimeDiff += tCompEnd - tCompBegin;
-	if (compframeCounter%50 == 0) {
-		printf("jpeg compress time measurement is: %0.2f, average: %0.2f, frameCounter: %d\n",((float)(tCompEnd - tCompBegin))/1000, ((float)compTimeDiff/compframeCounter)/1000, compframeCounter);
-	}
+#ifdef STATISTICS
+	stream_statistic * st  = statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_COLOR];
+	st->compressionFrameCounter++;
+	std::chrono::system_clock::time_point compressionEnd = std::chrono::system_clock::now();
+	st->compressionTime = compressionEnd - st->compressionBegin;
+    st->avgCompressionTime += st->compressionTime.count();
+    printf("STATISTICS: streamType: %d, jpeg compress time: %0.2fm, average: %0.2fm, counter: %d\n",rs2_stream::RS2_STREAM_COLOR, st->compressionTime*1000, 
+            (st->avgCompressionTime*1000)/st->compressionFrameCounter,st->compressionFrameCounter);
+	st->decompressedSizeSum = size;
+	st->compressedSizeSum = compressedSize;
+	printf("STATISTICS: streamType: %d, jpeg ratio: %0.2fm, counter: %d\n",rs2_stream::RS2_STREAM_COLOR,st->decompressedSizeSum/(float)st->compressedSizeSum, st->compressionFrameCounter);
 #endif
 	return compressedSize;
 }
@@ -138,8 +143,8 @@ int  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSize
 	unsigned char * ptr =  uncompressedBuf;
 	unsigned char* data = buffer;
 	uint jpegHeader, res;
-#ifdef COMPRESSION_STATISTICS
-	tDecompBegin = clock();
+#ifdef STATISTICS
+	statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_COLOR]->decompressionBegin = std::chrono::system_clock::now();
 #endif
 	jpeg_mem_src(&dinfo, data , compressedSize);
 	memcpy(&jpegHeader, buffer, sizeof(unsigned int));
@@ -176,8 +181,8 @@ int  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSize
 			//ptr+= row_stride;
 		} else if(m_format == RS2_FORMAT_YUYV){
 			convertYUVtoYUYV(&ptr);
-		} else if(m_format == RS2_FORMAT_UYVY){//nhershko
-			convertYUVtoUYVY(&buffer);
+		} else if (m_format == RS2_FORMAT_UYVY) {
+			convertYUVtoUYVY(&ptr);
 		} else {
 			printf("unsupport format on jpeg compression");
 			return -1;
@@ -189,16 +194,14 @@ int  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSize
 		printf("finish jpeg color decompression, size: %lu, compressed size %u, frameNum: %d \n",uncompressedSize, compressedSize, decompframeCounter);
 	}
 
-#ifdef COMPRESSION_STATISTICS	
-	tDecompEnd = clock();
-	decompTimeDiff += tDecompEnd - tDecompBegin;
-
-	fullSizeSum += m_width*m_height*2; //TODO: change to bpp 
-	compressedSizeSum += compressedSize;
-	if (decompframeCounter%50 == 0) {
-		printf("jpeg decompress zip ratio is: %0.2f , frameCounter: %d\n", fullSizeSum/(float)compressedSizeSum, decompframeCounter);
-		printf("jpeg decompress time measurement is: %0.2f, average: %0.2f, frameCounter: %d\n",((float)(tDecompEnd - tDecompBegin))/1000, ((float)decompTimeDiff/decompframeCounter)/1000, decompframeCounter);
-	}
+#ifdef STATISTICS
+	stream_statistic * st  = statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_COLOR];
+	st->decompressionFrameCounter++;
+	std::chrono::system_clock::time_point decompressionEnd = std::chrono::system_clock::now();
+	st->decompressionTime = decompressionEnd - st->decompressionBegin;
+    st->avgDecompressionTime += st->decompressionTime.count();
+    printf("STATISTICS: streamType: %d, jpeg decompress time: %0.2fm, average: %0.2fm, counter: %d\n",rs2_stream::RS2_STREAM_COLOR, st->decompressionTime*1000, 
+            (st->avgDecompressionTime*1000)/st->decompressionFrameCounter,st->decompressionFrameCounter);
 #endif
 	return uncompressedSize;
 }

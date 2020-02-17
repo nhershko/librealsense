@@ -1,6 +1,6 @@
 #include "ip_device.hh"
 #include <librealsense2/rs.hpp>
-
+#include <ipDevice_Common/statistic.h>
 
 rs2_intrinsics get_hard_coded_sensor_intrinsics(rs2_video_stream stream)
 {
@@ -290,7 +290,14 @@ void ip_device::inject_frames_loop(std::shared_ptr<rs_rtp_stream> rtp_stream)
             //nhershko todo: set it at actuqal arrivial time
             sensors[sensor_id]->set_metadata(RS2_FRAME_METADATA_TIME_OF_ARRIVAL,
                 std::chrono::duration<double, std::milli>(std::chrono::system_clock::now().time_since_epoch()).count());
-
+#ifdef STATISTICS
+            stream_statistic * st  = statistic::getStatisticStreams()[ rtp_stream.get()->stream_type()];
+            std::chrono::system_clock::time_point clockEnd = std::chrono::system_clock::now();
+            st->processingTime = clockEnd - st->clockBeginVec.front();
+            st->clockBeginVec.pop();
+            st->avgProcessingTime +=st->processingTime.count();
+            printf("STATISTICS: streamType: %d, processing time: %0.2fm, average: %0.2fm, counter: %d\n",type,st->processingTime*1000, (st->avgProcessingTime*1000)/st->frameCounter,st->frameCounter);
+#endif
             sensors[sensor_id]->on_video_frame(rtp_stream.get()->frame_data_buff);
             //std::cout<<"\t@@@ added frame from type " << type << " with uid " << rtp_stream.get()->m_rs_stream.uid << " time stamp: " << (double)rtp_stream.get()->frame_data_buff.frame_number <<" profile: " << rtp_stream.get()->frame_data_buff.profile->profile->get_stream_type() << "   \n";
         }
