@@ -23,13 +23,13 @@ JpegCompression::JpegCompression(int width, int height, rs2_format format)
 	m_width = width;
 	m_height = height;
 	cinfo.input_components = MAX_INPUT_COMPONENT; //TODO:change to bpp
-	if (m_format == RS2_FORMAT_YUYV) {
+	if (m_format == RS2_FORMAT_YUYV || m_format == RS2_FORMAT_UYVY) {
 		cinfo.in_color_space = JCS_YCbCr;
 		cinfo.input_components = 3; //yuyv is 2 bpp, we need to change to yuv that is 3 bpp
 	} else if(RS2_FORMAT_RGB8){
 		cinfo.in_color_space = JCS_RGB;
-	}else {
-		printf("unsupport format on jpeg compression");
+	} else {
+		printf("unsupport format %d on jpeg compression\n", format);
 		return;
 	}
 	jpeg_set_defaults(&cinfo);
@@ -55,6 +55,20 @@ void JpegCompression::convertYUYVtoYUV(unsigned char** buffer)
 	(*buffer) += cinfo.image_width * 2; 
 }
 
+void JpegCompression::convertUYVYtoYUV(unsigned char** buffer)
+{
+	for (int i = 0; i < cinfo.image_width; i += 2) { //input strides by 4 bytes, output strides by 6 (2 pixels)
+        rowBuffer[i*3] = (*buffer)[i*2 + 1]; // Y (unique to this pixel)
+        rowBuffer[i*3 + 1] = (*buffer)[i*2 + 0]; // U (shared between pixels)
+        rowBuffer[i*3 + 2] = (*buffer)[i*2 + 2]; // V (shared between pixels)
+        rowBuffer[i*3 + 3] = (*buffer)[i*2 + 3]; // Y (unique to this pixel)
+        rowBuffer[i*3 + 4] = (*buffer)[i*2 + 0]; // U (shared between pixels)
+        rowBuffer[i*3 + 5] = (*buffer)[i*2 + 2]; // V (shared between pixels)
+    }
+	row_pointer[0] = rowBuffer;
+	(*buffer) += cinfo.image_width * 2; 
+}
+
 void JpegCompression::convertYUVtoYUYV(unsigned char** uncompressBuff) 
 {
 	for (int i = 0; i < dinfo.output_width ; i += 2) {
@@ -62,6 +76,17 @@ void JpegCompression::convertYUVtoYUYV(unsigned char** uncompressBuff)
         (*uncompressBuff)[i*2 + 1] = destBuffer[0][i*3 + 1]; // U (shared between pixels)
         (*uncompressBuff)[i*2 + 2] = destBuffer[0][i*3 + 3]; // Y (unique to this pixel)
         (*uncompressBuff)[i*2 + 3] = destBuffer[0][i*3 + 2]; // V (shared between pixels)
+    }
+	(*uncompressBuff)+= dinfo.output_width *2;
+}
+
+void JpegCompression::convertYUVtoUYVY(unsigned char** uncompressBuff) 
+{
+	for (int i = 0; i < dinfo.output_width ; i += 2) {
+		(*uncompressBuff)[i*2] = destBuffer[0][i*3 +1]; // Y (unique to this pixel)
+        (*uncompressBuff)[i*2 + 1] = destBuffer[0][i*3 + 0]; // U (shared between pixels)
+        (*uncompressBuff)[i*2 + 2] = destBuffer[0][i*3 + 2]; // Y (unique to this pixel)
+        (*uncompressBuff)[i*2 + 3] = destBuffer[0][i*3 + 3]; // V (shared between pixels)
     }
 	(*uncompressBuff)+= dinfo.output_width *2;
 }
@@ -83,6 +108,8 @@ int JpegCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 			row_pointer[0] = & buffer[cinfo.next_scanline * row_stride];
 		} else if(m_format == RS2_FORMAT_YUYV){
 			convertYUYVtoYUV(&buffer);
+		} else if(m_format == RS2_FORMAT_UYVY) {
+			convertUYVYtoYUV(&buffer);
 		} else {
 			printf("unsupport format on jpeg compression");
 			return -1;
@@ -154,6 +181,8 @@ int  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSize
 			//ptr+= row_stride;
 		} else if(m_format == RS2_FORMAT_YUYV){
 			convertYUVtoYUYV(&ptr);
+		} else if (m_format == RS2_FORMAT_UYVY) {
+			convertYUVtoUYVY(&ptr);
 		} else {
 			printf("unsupport format on jpeg compression");
 			return -1;

@@ -14,6 +14,8 @@ class JpegCompression :public ICompression
     private:
         void convertYUYVtoYUV(unsigned char** buffer);
         void convertYUVtoYUYV(unsigned char** uncompressBuff);
+        void convertUYVYtoYUV(unsigned char** buffer);
+        void convertYUVtoUYVY(unsigned char** uncompressBuff);
 
         struct jpeg_error_mgr jerr;
 	    struct jpeg_compress_struct cinfo;
