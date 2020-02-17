@@ -28,7 +28,7 @@ JpegCompression::JpegCompression(int width, int height, rs2_format format)
 		cinfo.input_components = 3; //yuyv is 2 bpp, we need to change to yuv that is 3 bpp
 	} else if(RS2_FORMAT_RGB8){
 		cinfo.in_color_space = JCS_RGB;
-	}else {
+	} else {
 		printf("unsupport format %d on jpeg compression\n", format);
 		return;
 	}
