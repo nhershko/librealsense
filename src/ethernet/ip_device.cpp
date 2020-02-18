@@ -168,6 +168,7 @@ rs2_video_stream convert_stream_object(rs2::video_stream_profile sp)
     retVal.fps = sp.fps();
     retVal.width = sp.width();
     retVal.height = sp.height();
+    retVal.index = sp.stream_index();
     
     return retVal;
 }
