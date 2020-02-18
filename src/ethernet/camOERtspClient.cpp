@@ -20,7 +20,7 @@
 long long int camOERTSPClient::getStreamProfileUniqueKey(rs2_video_stream profile)
 {
 	long long int key;
-	key = profile.type * pow(10, 12) + profile.fmt * pow(10, 10) + profile.fps * pow(10, 8);
+	key = profile.type * pow(10, 12) + profile.fmt * pow(10, 10) + profile.fps * pow(10, 8) + profile.index;
 	//if (profile.is<rs2::video_stream_profile>())
 	{
 		//rs2::video_stream_profile video_stream_profile = profile.as<rs2::video_stream_profile>();

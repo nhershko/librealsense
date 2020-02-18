@@ -64,7 +64,7 @@ int RsSensor::start(std::unordered_map<long long int, rs2::frame_queue> &stream_
 long long int RsSensor::getStreamProfileKey(rs2::stream_profile profile)
 {
 	long long int key;
-	key = profile.stream_type() * pow(10, 12) + profile.format() * pow(10, 10) + profile.fps() * pow(10, 8);
+	key = profile.stream_type() * pow(10, 12) + profile.format() * pow(10, 10) + profile.fps() * pow(10, 8) + profile.stream_index();
 	if (profile.is<rs2::video_stream_profile>())
 	{
 		rs2::video_stream_profile video_stream_profile = profile.as<rs2::video_stream_profile>();
