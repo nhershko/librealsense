@@ -19,8 +19,10 @@ add_subdirectory(terminal)
 add_subdirectory(stream-server)
 add_subdirectory(recorder)
 add_subdirectory(fw-update)
-add_subdirectory(rs-server)
 
+if(NOT WIN32)
+    add_subdirectory(rs-server)
+endif()
 
 if(BUILD_GRAPHICAL_EXAMPLES)
     include(${CMAKE_SOURCE_DIR}/CMake/opengl_config.cmake)

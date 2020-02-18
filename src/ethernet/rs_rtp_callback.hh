@@ -9,6 +9,12 @@
 
 #include "rs_rtp_stream.hh"
 
+#ifdef _WIN64
+#  define ssize_t __int64
+#else
+#  define ssize_t long
+#endif
+
 class rs_rtp_callback : public rtp_callback
 {
 
@@ -30,7 +36,7 @@ public:
 
     ~rs_rtp_callback();
 
-    void on_frame(unsigned char*buffer,ssize_t size, struct timeval presentationTime);
+    void on_frame(unsigned char*buffer, ssize_t size, struct timeval presentationTime);
 
     int arrived_frames(){   return arrive_frames_counter;   }
 };

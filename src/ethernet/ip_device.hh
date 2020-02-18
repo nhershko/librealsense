@@ -1,13 +1,26 @@
-//#include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
-//#include <librealsense2/hpp/rs_internal.hpp>
 #pragma once
 
+//////////////////////////////////////////////////////////////////////////
+#ifdef _WIN32
+
+#define _WINSOCKAPI_ 
+
+#include <windows.h>
+#pragma comment(lib, "Ws2_32.lib")
+
+#include <SIGNAL.H>
+
+#endif
+//////////////////////////////////////////////////////////////////////////
+
 #include <librealsense2/rs.hpp>
+
 #include "camOERtspClient.h"
 #include "software-device.h"
 
-#include "rs_rtp_stream.hh"
 #include <list>
+
+#include "rs_rtp_stream.hh"
 #include "rs_rtp_callback.hh"
 
 #define MAX_ACTIVE_STREAMS 4
@@ -22,7 +35,7 @@ class ip_device
         #ifdef _WIN32
             __declspec(dllexport)
         #endif
-        static rs2::software_device create_ip_device(std::string ip_address);
+        static rs2::software_device create_ip_device(const char* ip_address);
 
         ~ip_device();
         

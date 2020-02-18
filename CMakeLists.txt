@@ -92,7 +92,7 @@ if(BUILD_IPDEV)
     add_subdirectory(src/ethernet)
 endif()
 
-#if(COMPRESSION)
+#if(BUILD_COMPRESSION)
     add_subdirectory(src/compression)
 #endif()
 
