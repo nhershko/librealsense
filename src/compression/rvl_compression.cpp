@@ -96,6 +96,7 @@ int RvlCompression::compressBuffer(unsigned char* buffer, int size, unsigned cha
 	st->compressedSizeSum = compressedSize;
 	printf("STATISTICS: streamType: %d, rvl ratio: %0.2fm, counter: %d\n",rs2_stream::RS2_STREAM_DEPTH, st->decompressedSizeSum/(float)st->compressedSizeSum, st->compressionFrameCounter);
 #endif
+	memcpy(compressedBuf, &compressedSize , sizeof(int));
 	return compressedSize;
 }
 

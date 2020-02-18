@@ -25,7 +25,7 @@ int GzipCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 	strm.opaque = Z_NULL;
 	strm.next_in = (Bytef *)buffer;
 	strm.avail_in =  size;
-	strm.next_out = (Bytef *)compressedBuf;
+	strm.next_out = (Bytef *)compressedBuf + sizeof(int);
 	strm.avail_out = size;
 	int z_result = deflateInit2 (&strm, Z_BEST_SPEED/*Z_DEFAULT_COMPRESSION*/, Z_DEFLATED, windowsBits | GZIP_ENCODING, 8, Z_DEFAULT_STRATEGY);
 	if(z_result != Z_OK) {
@@ -38,6 +38,7 @@ int GzipCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 		return -1;
 	}
 	int compressedSize = strm.total_out;
+	memcpy(compressedBuf, &compressedSize , sizeof(int));
 	deflateEnd(&strm);
 	if (compframeCounter++%50 == 0) {
 		printf("finish gzip depth compression, size: %lu, compressed size %u, frameNum: %d \n",size, compressedSize, compframeCounter);
@@ -54,7 +55,7 @@ int GzipCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 	st->compressedSizeSum = compressedSize;
 	printf("STATISTICS: streamType: %d, gzip ratio: %0.2fm, counter: %d\n",rs2_stream::RS2_STREAM_DEPTH,st->decompressedSizeSum/(float)st->compressedSizeSum, st->compressionFrameCounter);
 #endif
-	return strm.total_out;
+	return compressedSize;
 }
 
 int  GzipCompression::decompressBuffer(unsigned char* buffer, int compressedSize, unsigned char* uncompressedBuf) 
