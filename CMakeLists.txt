@@ -87,7 +87,9 @@ if(BUILD_ETHERNET_DEVICE)
 	add_subdirectory(src/ethernet)
 endif()
 
-add_subdirectory(src/compression)
+if(COMPRESSION)
+    add_subdirectory(src/compression)
+endif()
 
 if(BUILD_UNIT_TESTS)
     add_subdirectory(unit-tests)
