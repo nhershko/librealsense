@@ -79,7 +79,7 @@ target_link_libraries(realsense-viewer ${DEPENDENCIES}
                                         Threads::Threads
                                         realsense2-gl)
 
-if(BUILD_ETHERNET_DEVICE)
+if(BUILD_IPDEV)
 	target_link_libraries(realsense-viewer realsense2-ethernet)
 endif()
 

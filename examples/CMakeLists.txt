@@ -22,7 +22,7 @@ else()
 endif()
 
 
-if(BUILD_ETHERNET_DEVICE)
+if(BUILD_IPDEV)
     add_subdirectory(ethernet-device)
 endif()
 

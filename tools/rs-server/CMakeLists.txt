@@ -54,7 +54,7 @@ if(COMPRESSION)
     add_definitions(-DCOMPRESSION)
 endif()
 
-if(STATISTICS)
+if(IPDEV_STATS)
     add_definitions(-DSTATISTICS)
 endif()
 

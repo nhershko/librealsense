@@ -13,7 +13,7 @@ set(DEPENDENCIES ${DEPENDENCIES} realsense2)
 # set(LIVE third-party/live555)
 set(LIVE ../../third-party/live/)
 
-file(GLOB ETHERNET_SOURCES 
+file(GLOB IPDEV_SOURCES 
  "*.hh"
  "*.h"
  "*.cpp"
@@ -29,7 +29,7 @@ file(GLOB ETHERNET_SOURCES
  
 )
 
-add_library(${PROJECT_NAME} SHARED ${ETHERNET_SOURCES})
+add_library(${PROJECT_NAME} SHARED ${IPDEV_SOURCES})
 
 include_directories(${PROJECT_NAME}
         ../../common
@@ -59,7 +59,7 @@ if(COMPRESSION)
     add_definitions(-DCOMPRESSION)
 endif()
 
-if(STATISTICS)
+if(IPDEV_STATS)
     add_definitions(-DSTATISTICS)
 endif()
 
