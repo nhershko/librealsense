@@ -33,8 +33,8 @@ add_library(${PROJECT_NAME} SHARED ${IPDEV_SOURCES})
 
 if(WIN32)
 	#
-	# Windows doesn't support POSIX ssize_t type 
-	# by defaultso we use the following defines:
+	# Windows doesn't support POSIX ssize_t type
+	# by default so I use the following defines:
 	#
 	# #ifdef _WIN64
 	# #  define ssize_t __int64
@@ -52,8 +52,6 @@ if(WIN32)
 		add_definitions(-Dssize_t=long)
 	endif("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
 endif()
-
-add_library(${PROJECT_NAME} SHARED ${ETHERNET_SOURCES})
 
 include_directories(${PROJECT_NAME}
         ../../common

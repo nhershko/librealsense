@@ -27,39 +27,49 @@ include_directories(${PROJECT_NAME}
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 
-find_package(ZLIB REQUIRED)
-find_package(JPEG REQUIRED)
-
 target_link_libraries(${PROJECT_NAME} 
-    PRIVATE ${DEPENDENCIES}
+  PRIVATE ${DEPENDENCIES}
 	realsense2
-	${ZLIB_LIBRARIES}
+)
+
+find_package(ZLIB REQUIRED)
+target_link_libraries(${PROJECT_NAME} 
 	${JPEG_LIBRARIES}
 )
 
-find_package(PkgConfig)
-
-pkg_check_modules(LZ4_PKGCONF liblz4)
-
-find_path(LZ4_INCLUDE_DIRS
-  NAMES lz4frame.h
-  PATHS ${LZ4_PKGCONF_INCLUDE_DIRS}
+find_package(JPEG REQUIRED)
+target_link_libraries(${PROJECT_NAME} 
+	${JPEG_LIBRARIES}
 )
 
-
-find_library(LZ4_LIBRARIES
-  NAMES lz4
-  PATHS ${LZ4_PKGCONF_LIBRARY_DIRS}
+find_package(LZ4 REQUIRED)
+target_link_libraries(${PROJECT_NAME} 
+	${LZ4_LIBRARIES}
 )
 
-if(COMPRESSION)
+#
+#find_package(PkgConfig)
+#
+#pkg_check_modules(LZ4_PKGCONF liblz4)
+#
+#find_path(LZ4_INCLUDE_DIRS
+#  NAMES lz4frame.h
+#  PATHS ${LZ4_PKGCONF_INCLUDE_DIRS}
+#)
+#
+#find_library(LZ4_LIBRARIES
+#  NAMES lz4
+#  PATHS ${LZ4_PKGCONF_LIBRARY_DIRS}
+#)
+#
+
+if(BUILD_COMPRESSION)
     add_definitions(-DCOMPRESSION)
 endif()
 
-if(IPDEV_STATS)
+if(BUILD_IPDEV_STATS)
     add_definitions(-DSTATISTICS)
 endif()
-
 
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "Library")
 
