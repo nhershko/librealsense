@@ -103,7 +103,7 @@ private:
 unsigned int frames = 0;
 TEST_F (Streaming, FrameDrop) {
 
-    rs2::software_device dev = ip_device::create_ip_device(serv_addr + ":" + serv_port);
+    rs2::software_device dev = ip_device::create_ip_device((serv_addr + ":" + serv_port).c_str());
 
     auto sensors = dev.query_sensors();
 

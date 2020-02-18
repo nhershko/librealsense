@@ -116,9 +116,7 @@ private:
 
 int main(int argc, char * argv[]) try
 {
-    std::string address = argv[1];
-
-    rs2::software_device dev = ip_device::create_ip_device(address);
+    rs2::software_device dev = ip_device::create_ip_device(argv[1]);
 
     auto sensors = dev.query_sensors();
 

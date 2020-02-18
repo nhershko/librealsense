@@ -47,14 +47,14 @@ endif()
 
 set_property(TARGET rs-server PROPERTY CXX_STANDARD 11)
 
-target_link_libraries(rs-server ${DEPENDENCIES} realsense2 ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES})
-target_link_libraries(rs-server realsense2-compression)
+target_link_libraries(rs-server ${DEPENDENCIES} realsense2)
 
-if(COMPRESSION)
+if(BUILD_COMPRESSION)
+    target_link_libraries(rs-server realsense2-compression ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES})
     add_definitions(-DCOMPRESSION)
 endif()
 
-if(IPDEV_STATS)
+if(BUILD_IPDEV_STATS)
     add_definitions(-DSTATISTICS)
 endif()
 
