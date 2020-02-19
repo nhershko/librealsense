@@ -24,19 +24,19 @@ private:
   // called only by "createNew()"
   virtual ~camOESink();
 
-  static void afterGettingUid0Frame(void *clientData, unsigned frameSize,
+  static void afterGettingFrameUid0(void *clientData, unsigned frameSize,
                                 unsigned numTruncatedBytes,
                                 struct timeval presentationTime,
                                 unsigned durationInMicroseconds);
-  static void afterGettingUid1Frame(void *clientData, unsigned frameSize,
+  static void afterGettingFrameUid1(void *clientData, unsigned frameSize,
                                 unsigned numTruncatedBytes,
                                 struct timeval presentationTime,
                                 unsigned durationInMicroseconds);
-  static void afterGettingUid2Frame(void *clientData, unsigned frameSize,
+  static void afterGettingFrameUid2(void *clientData, unsigned frameSize,
                                 unsigned numTruncatedBytes,
                                 struct timeval presentationTime,
                                 unsigned durationInMicroseconds);
-  static void afterGettingUid3Frame(void *clientData, unsigned frameSize,
+  static void afterGettingFrameUid3(void *clientData, unsigned frameSize,
                                 unsigned numTruncatedBytes,
                                 struct timeval presentationTime,
                                 unsigned durationInMicroseconds);

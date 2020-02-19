@@ -18,10 +18,10 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
   fReceiveBuffer = nullptr;
   fto = nullptr;
   std::string url_str = fStreamId;
-  afterGettingFunctions.push_back(afterGettingUid0Frame);
-  afterGettingFunctions.push_back(afterGettingUid1Frame);
-  afterGettingFunctions.push_back(afterGettingUid2Frame);
-  afterGettingFunctions.push_back(afterGettingUid3Frame);
+  afterGettingFunctions.push_back(afterGettingFrameUid0);
+  afterGettingFunctions.push_back(afterGettingFrameUid1);
+  afterGettingFunctions.push_back(afterGettingFrameUid2);
+  afterGettingFunctions.push_back(afterGettingFrameUid3);
 
   // Remove last "/"
   url_str = url_str.substr(0, url_str.size()-1);
@@ -53,14 +53,14 @@ camOESink::~camOESink() {
 }
 
 
-void camOESink::afterGettingUid0Frame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
+void camOESink::afterGettingFrameUid0(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
 				  struct timeval presentationTime, unsigned durationInMicroseconds) {
   
   camOESink* sink = (camOESink*)clientData;
   sink->afterGettingFrame(frameSize, numTruncatedBytes, presentationTime, durationInMicroseconds);
 }
 
-void camOESink::afterGettingUid1Frame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
+void camOESink::afterGettingFrameUid1(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
 				  struct timeval presentationTime, unsigned durationInMicroseconds) {
   
   camOESink* sink = (camOESink*)clientData;
@@ -68,14 +68,14 @@ void camOESink::afterGettingUid1Frame(void* clientData, unsigned frameSize, unsi
 
 }
                 
-void camOESink::afterGettingUid2Frame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
+void camOESink::afterGettingFrameUid2(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
 				  struct timeval presentationTime, unsigned durationInMicroseconds) {
   
   camOESink* sink = (camOESink*)clientData;
   sink->afterGettingFrame(frameSize, numTruncatedBytes, presentationTime, durationInMicroseconds);
 }
 
-void camOESink::afterGettingUid3Frame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
+void camOESink::afterGettingFrameUid3(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
 				  struct timeval presentationTime, unsigned durationInMicroseconds) {
   
   camOESink* sink = (camOESink*)clientData;
