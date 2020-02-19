@@ -9,7 +9,7 @@ class JpegCompression :public ICompression
     public: 
         int compressBuffer(unsigned char* buffer, int size, unsigned char* compressedBuf);
         int decompressBuffer(unsigned char* buffer, int size, unsigned char* uncompressedBuf);
-        JpegCompression(int width, int height, rs2_format format);
+        JpegCompression(int width, int height, rs2_format format, int bpp);
         ~JpegCompression();
     private:
         void convertYUYVtoYUV(unsigned char** buffer);

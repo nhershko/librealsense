@@ -6,7 +6,7 @@
 #include "lz_compression.h"
 #include "compression_factory.h"
 
-ICompression* CompressionFactory::getObject(int width, int height, rs2_format format, rs2_stream stream_type)
+ICompression* CompressionFactory::getObject(int width, int height, rs2_format format, rs2_stream stream_type, int bpp)
 { 	
 	zipMethod zipMeth;
 	if(stream_type == RS2_STREAM_COLOR || stream_type == RS2_STREAM_INFRARED) {
@@ -18,16 +18,16 @@ ICompression* CompressionFactory::getObject(int width, int height, rs2_format fo
 	switch(zipMeth)
 	{
 		case zipMethod::gzip:
-			return new GzipCompression(width, height, format);
+			return new GzipCompression(width, height, format, bpp);
 			break;
 		case zipMethod::rvl:
-			return new RvlCompression(width, height, format);
+			return new RvlCompression(width, height, format, bpp);
 			break;
 		case zipMethod::Jpeg:
-			return new JpegCompression(width, height, format);
+			return new JpegCompression(width, height, format, bpp);
 			break;
 		case zipMethod::lz:
-			return new LZCompression(width, height, format);
+			return new LZCompression(width, height, format, bpp);
 			break;
 		default:
 			printf("unknown zip method\n");

@@ -28,9 +28,10 @@ int RsSensor::open(std::unordered_map<long long int, rs2::frame_queue> &stream_p
 		//make a vector of all requested stream profiles
 		long long int stream_profile_key = stream_profile.first;
 		requested_stream_profiles.push_back(m_stream_profiles.at(stream_profile_key));
- #ifdef COMPRESSION
-		m_iCompress.insert(std::pair<long long int, ICompression *>(stream_profile_key, CompressionFactory::getObject(m_stream_profiles.at(stream_profile_key).width(), m_stream_profiles.at(stream_profile_key).height(), m_stream_profiles.at(stream_profile_key).format(), m_stream_profiles.at(stream_profile_key).stream_type())));
- #endif
+#ifdef COMPRESSION
+ 		rs2::video_stream_profile vsp = m_stream_profiles.at(stream_profile_key);
+		m_iCompress.insert(std::pair<long long int, ICompression *>(stream_profile_key, CompressionFactory::getObject(vsp.width(), vsp.height(), vsp.format(), vsp.stream_type(), RsSensor::getStreamProfileBpp(vsp.format()))));
+#endif
 	}
 	try
 	{
