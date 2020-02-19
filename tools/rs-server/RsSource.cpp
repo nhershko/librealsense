@@ -43,9 +43,6 @@ RsDeviceSource::RsDeviceSource(UsageEnvironment &env, rs2::video_stream_profile 
   envir() << "RsDeviceSource constructor " << this << "\n";
   frames_queue = &queue;
   stream_profile = &video_stream_profile;
-#ifdef COMPRESSION
-  iCompress = CompressionFactory::getObject(video_stream_profile.width(), video_stream_profile.height(), video_stream_profile.format(), video_stream_profile.stream_type());
-#endif
 #ifdef STATISTICS
   if(statistic::getStatisticStreams().find(video_stream_profile.stream_type()) == statistic::getStatisticStreams().end()) {
       statistic::getStatisticStreams().insert(std::pair<int,stream_statistic *>(video_stream_profile.stream_type(),new stream_statistic()));
@@ -136,13 +133,15 @@ void RsDeviceSource::deliverRSFrame(rs2::frame *frame)
 
   gettimeofday(&fPresentationTime, NULL); // If you have a more accurate time - e.g., from an encoder - then use that instead.
   rs_frame_header header;
+  unsigned char * data;
 #ifdef COMPRESSION
-  fFrameSize = iCompress->compressBuffer((unsigned char *)frame->get_data(), frame->get_data_size(), fTo + sizeof(rs_frame_header));
+  fFrameSize = ((int *)frame->get_data())[0];
+  data = (unsigned char *)frame->get_data() + sizeof(int);
 #else
   fFrameSize = frame->get_data_size();
-
-  memmove(fTo + sizeof(rs_frame_header), frame->get_data(), fFrameSize);
+  data = (unsigned char *)frame->get_data();
 #endif
+  memmove(fTo + sizeof(rs_frame_header), data, fFrameSize);
   fFrameSize += sizeof(rs_frame_metadata);
   header.ethernet_header.size = fFrameSize;
   fFrameSize += sizeof(rs_over_ethernet_data_header);

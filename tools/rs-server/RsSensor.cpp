@@ -1,6 +1,8 @@
 #include <iostream>
 #include <math.h>
 #include "RsDevice.hh"
+#include <thread>
+#include "compression/compression_factory.h"
 
 RsSensor::RsSensor(rs2::sensor sensor, rs2::device device)
 {
@@ -26,6 +28,9 @@ int RsSensor::open(std::unordered_map<long long int, rs2::frame_queue> &stream_p
 		//make a vector of all requested stream profiles
 		long long int stream_profile_key = stream_profile.first;
 		requested_stream_profiles.push_back(m_stream_profiles.at(stream_profile_key));
+ #ifdef COMPRESSION
+		m_iCompress.insert(std::pair<long long int, ICompression *>(stream_profile_key, CompressionFactory::getObject(m_stream_profiles.at(stream_profile_key).width(), m_stream_profiles.at(stream_profile_key).height(), m_stream_profiles.at(stream_profile_key).format(), m_stream_profiles.at(stream_profile_key).stream_type())));
+ #endif
 	}
 	try
 	{
@@ -50,6 +55,9 @@ int RsSensor::start(std::unordered_map<long long int, rs2::frame_queue> &stream_
 			std::chrono::high_resolution_clock::time_point curSample = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double> timeSpan = std::chrono::duration_cast<std::chrono::duration<double>>(curSample - prevSample[profile_key]);
 			//printf("%d:diff time is %f\n",frame.get_profile().format(),timeSpan.count()*1000);
+#ifdef COMPRESSION
+			int frameSize = m_iCompress.at(profile_key)->compressBuffer((unsigned char *)frame.get_data(), frame.get_data_size(), (unsigned char *)frame.get_data());
+#endif
 			//push frame to its queue
 			stream_profiles_queues[profile_key].enqueue(frame);
 			prevSample[profile_key] = curSample;

@@ -117,8 +117,8 @@ int JpegCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 		jpeg_write_scanlines(&cinfo, row_pointer, 1);
 	}
 	jpeg_finish_compress(&cinfo);
-	
-	memcpy(compressedBuf, data, compressedSize);
+	memcpy(compressedBuf, &compressedSize , sizeof(int));
+	memcpy(compressedBuf + sizeof(int), data, compressedSize);
 	if (compframeCounter++%50 == 0) {
 		printf("finish jpeg color compression, size: %lu, compressed size %u, frameNum: %d \n", size, compressedSize, compframeCounter);
 	}
