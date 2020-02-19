@@ -20,12 +20,13 @@ int GzipCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 #ifdef STATISTICS
 	statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_DEPTH]->compressionBegin = std::chrono::system_clock::now();
 #endif
+	int compressedSize = 0;
 	strm.zalloc = Z_NULL;
 	strm.zfree = Z_NULL;
 	strm.opaque = Z_NULL;
 	strm.next_in = (Bytef *)buffer;
 	strm.avail_in =  size;
-	strm.next_out = (Bytef *)compressedBuf + sizeof(int);
+	strm.next_out = (Bytef *)compressedBuf + sizeof(compressedSize);
 	strm.avail_out = size;
 	int z_result = deflateInit2 (&strm, Z_BEST_SPEED/*Z_DEFAULT_COMPRESSION*/, Z_DEFLATED, windowsBits | GZIP_ENCODING, 8, Z_DEFAULT_STRATEGY);
 	if(z_result != Z_OK) {
@@ -37,8 +38,8 @@ int GzipCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 		printf("error: compress frame with gzip failed\n");
 		return -1;
 	}
-	int compressedSize = strm.total_out;
-	memcpy(compressedBuf, &compressedSize , sizeof(int));
+	compressedSize = strm.total_out;
+	memcpy(compressedBuf, &compressedSize , sizeof(compressedSize));
 	deflateEnd(&strm);
 	if (compframeCounter++%50 == 0) {
 		printf("finish gzip depth compression, size: %lu, compressed size %u, frameNum: %d \n",size, compressedSize, compframeCounter);

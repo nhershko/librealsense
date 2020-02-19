@@ -22,9 +22,9 @@ public:
 private:
 	rs2::sensor m_sensor;
 	std::unordered_map<long long int, rs2::video_stream_profile> m_stream_profiles;
+	std::unordered_map<long long int, ICompression *> m_iCompress;
 	rs2::device m_device;
 	std::unordered_map<long long int,std::chrono::high_resolution_clock::time_point> prevSample;
-	ICompression *  iCompress;
 };
 
 #endif

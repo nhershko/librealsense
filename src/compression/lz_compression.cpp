@@ -18,13 +18,13 @@ int LZCompression::compressBuffer(unsigned char* buffer, int size, unsigned char
 	statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_DEPTH]->compressionBegin = std::chrono::system_clock::now();
 #endif
     const int max_dst_size = LZ4_compressBound(size);
-    const int compressed_data_size = LZ4_compress_default((const char *)buffer, (char*)compressedBuf+sizeof(int), size, max_dst_size);
-    if (compressed_data_size <= 0) {
+    const int compressedSize = LZ4_compress_default((const char *)buffer, (char*)compressedBuf+sizeof(int), size, max_dst_size);
+    if (compressedSize <= 0) {
 		printf("error: 0 or negative result from LZ4_compress_default() indicates a failure trying to compress the data. ");
 		return -1;
 	}
 	if (compframeCounter++%50 == 0) {
-		printf("finish lz depth compression, size: %lu, compressed size %u, frameNum: %d \n",size, compressed_data_size, compframeCounter);
+		printf("finish lz depth compression, size: %lu, compressed size %u, frameNum: %d \n",size, compressedSize, compframeCounter);
 	}
 #ifdef STATISTICS
 	stream_statistic * st  = statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_DEPTH];
@@ -35,11 +35,11 @@ int LZCompression::compressBuffer(unsigned char* buffer, int size, unsigned char
     printf("STATISTICS: streamType: %d, lz4 compress time: %0.2fm, average: %0.2fm, counter: %d\n",rs2_stream::RS2_STREAM_DEPTH, st->compressionTime*1000, 
             (st->avgCompressionTime*1000)/st->compressionFrameCounter,st->compressionFrameCounter);
 	st->decompressedSizeSum = size;
-	st->compressedSizeSum = compressed_data_size;
+	st->compressedSizeSum = compressedSize;
 	printf("STATISTICS: streamType: %d, lz4 ratio: %0.2fm, counter: %d\n",rs2_stream::RS2_STREAM_DEPTH,st->decompressedSizeSum/(float)st->compressedSizeSum, st->compressionFrameCounter);
 #endif
-	memcpy(compressedBuf, &compressed_data_size , sizeof(int));
-	return compressed_data_size;
+	memcpy(compressedBuf, &compressedSize , sizeof(compressedSize));
+	return compressedSize;
 }
 
 
