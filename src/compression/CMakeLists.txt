@@ -9,43 +9,54 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 set(DEPENDENCIES ${DEPENDENCIES} realsense2)
 
-
 file(GLOB COMPRESSION_SOURCES 
  "*.hh"
  "*.h"
  "*.cpp"
-  "../ipDevice_Common/*.h"
+ "../ipDevice_Common/*.h"
  "../ipDevice_Common/*.cpp"
+# "zlib-1.2.11/*.c"
+# "jpeg-9c/*.c"
+# "lz4/*.c"
 )
 
-add_library(${PROJECT_NAME} SHARED ${COMPRESSION_SOURCES})
+# add_library(${PROJECT_NAME} SHARED ${COMPRESSION_SOURCES})
+add_library(${PROJECT_NAME} STATIC ${COMPRESSION_SOURCES})
 
 include_directories(${PROJECT_NAME}
-        ../../common
-        ../ipDevice_Common
+    ../../common
+    ../ipDevice_Common
+    zlib-1.2.11/inc/
+    turbo-jpeg/inc/
+    lz4/inc/
 )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 
-target_link_libraries(${PROJECT_NAME} 
-  PRIVATE ${DEPENDENCIES}
-	realsense2
-)
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE ${DEPENDENCIES}
+#        realsense2
+        ${CMAKE_SOURCE_DIR}/src/compression/zlib-1.2.11/x86_64/zlibstaticd.lib
+        ${CMAKE_SOURCE_DIR}/src/compression/turbo-jpeg/x86_64/jpeg-static.lib
+        ${CMAKE_SOURCE_DIR}/src/compression/lz4/x86_64/lz4.lib
+    )
+else()
+    find_package(ZLIB REQUIRED)
+    target_link_libraries(${PROJECT_NAME}
+        ${ZLIB_LIBRARIES}
+    )
 
-find_package(ZLIB REQUIRED)
-target_link_libraries(${PROJECT_NAME} 
-	${JPEG_LIBRARIES}
-)
+    find_package(JPEG REQUIRED)
+    target_link_libraries(${PROJECT_NAME} 
+        ${JPEG_LIBRARIES}
+    )
 
-find_package(JPEG REQUIRED)
-target_link_libraries(${PROJECT_NAME} 
-	${JPEG_LIBRARIES}
-)
-
-find_package(LZ4 REQUIRED)
-target_link_libraries(${PROJECT_NAME} 
-	${LZ4_LIBRARIES}
-)
+    find_package(LZ4 REQUIRED)
+    target_link_libraries(${PROJECT_NAME} 
+        ${LZ4_LIBRARIES}
+    )
+endif()
 
 #
 #find_package(PkgConfig)
@@ -73,9 +84,20 @@ endif()
 
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "Library")
 
-#install(TARGETS rs-software-device RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+#if(WIN32)
+#    install(TARGETS ${PROJECT_NAME}
+#        RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+#    )
+#else()
+#    install(TARGETS ${PROJECT_NAME}
+#        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+#    )
+#endif()
+
 
 install(TARGETS ${PROJECT_NAME}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )

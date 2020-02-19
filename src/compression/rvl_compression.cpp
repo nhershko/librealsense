@@ -29,6 +29,8 @@ int RvlCompression::EncodeVLE(int value)
 		word = 0;
 		}
 	} while (value);
+
+	return 0;
 }
 
 int RvlCompression::decodeVLE()

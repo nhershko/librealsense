@@ -26,7 +26,6 @@ file(GLOB IPDEV_SOURCES
  ${LIVE}/liveMedia/*.c* 
  ${LIVE}/UsageEnvironment/*.c* 
  ${LIVE}/BasicUsageEnvironment/*.c* 
- 
 )
 
 add_library(${PROJECT_NAME} SHARED ${IPDEV_SOURCES})
@@ -60,15 +59,17 @@ include_directories(${PROJECT_NAME}
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 
-target_link_libraries(${PROJECT_NAME} 
-    PRIVATE ${DEPENDENCIES}
-	realsense2
-)
-
 if(BUILD_COMPRESSION)
     add_definitions(-DCOMPRESSION)
 	target_link_libraries(${PROJECT_NAME} 
+		PRIVATE ${DEPENDENCIES}
+#		realsense2
 		realsense2-compression
+	)
+else()
+	target_link_libraries(${PROJECT_NAME} 
+		PRIVATE ${DEPENDENCIES}
+#		realsense2
 	)
 endif()
 
@@ -78,7 +79,13 @@ endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC "rtsp_client/*.h")
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${LIVE}/groupsock/include ${LIVE}/liveMedia/include  ${LIVE}/UsageEnvironment/include ${LIVE}/BasicUsageEnvironment/include inc)
+target_include_directories(${PROJECT_NAME} PUBLIC 
+	${LIVE}/groupsock/include 
+	${LIVE}/liveMedia/include  
+	${LIVE}/UsageEnvironment/include 
+	${LIVE}/BasicUsageEnvironment/include 
+	inc
+)
 
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "Library")
 
