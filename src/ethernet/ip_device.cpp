@@ -1,6 +1,7 @@
 #include "ip_device.hh"
 #include <librealsense2/rs.hpp>
 #include <ipDevice_Common/statistic.h>
+#include <list>
 
 rs2_intrinsics get_hard_coded_sensor_intrinsics(rs2_video_stream stream)
 {
@@ -95,12 +96,33 @@ bool ip_device::init_device_data()
 
         sensors[sensor_id] = new rs2::software_sensor(tmp_sensor);
         
+        //TODO: DEMO_WW8 get option per sensor
+        //auto sensor_option = query_option(sensor_id);
+        /*
+        for opt in sensor option
+            sensor[ind].add_option(opt,opt_parameters)
+        */
         //hard_coded 
         if (sensor_id==0)
         {
             sensors[sensor_id]->add_read_only_option(RS2_OPTION_DEPTH_UNITS, 0.001);
             sensors[sensor_id]->add_read_only_option(RS2_OPTION_STEREO_BASELINE,0);
+
+            std::list<my_control> options;
+
+            //options.push_front({rs2_option::RS2_OPTION_EXPOSURE,{0,33,14,1}});
+            //options.push_back({rs2_option::RS2_OPTION_EXPOSURE,{0,33,14,1},true});
+            //options.push_back({rs2_option::RS2_OPTION_EXPOSURE,{0,33,14,1},true});
+            //options.push_back({rs2_option::RS2_OPTION_GAIN,{0,100,50,1},true});
+            
+            sensors[sensor_id]->add_option(rs2_option::RS2_OPTION_EXPOSURE,{0,33,14,1});
+            sensors[sensor_id]->add_option(rs2_option::RS2_OPTION_GAIN,{0,250,70,1});
+
+            //for (my_control opt : options) 
+            //        sensors[sensor_id]->add_option(opt.option,opt.range);
         }
+
+        std::cout << "\t@@@ sensor options number is " << sensors[sensor_id]->get_supported_options().size() << " streams per sensor " << sensor_id << std::endl;
 
         auto streams = query_streams(sensor_id);
 
@@ -136,8 +158,8 @@ void ip_device::polling_state_loop()
             //for eahc sensor check the size of active streams
             for (size_t i = 0; i < sensors.size(); i++)
             {
+                //poll start/stop events
                 auto current_active_streams = sensors[i].get_active_streams();
-                
                 if (active_stream_per_sensor[i] != current_active_streams.size())
                 {
                     std::cout<<"\t@@@ sensor: " << i << " active streams has changed.\n\n\n";
@@ -148,9 +170,23 @@ void ip_device::polling_state_loop()
                 {
                     //std::cout<<"sensor: " << i << " have not changed.\n";
                 }
+                //poll control change events
+                auto sensor_supported_option = sensors[i].get_supported_options();
+                for (rs2_option opt : sensor_supported_option)
+                    if(sensors_option[i][opt] != (float)sensors[i].get_option(opt))
+                    {
+                        //TODO: get from map once to reduce logarithmic complexity 
+                        sensors_option[i][opt] = (float)sensors[i].get_option(opt);
+                        std::cout<<"option: " << opt << " has changed to:  " << sensors_option[i][opt] << std::endl;
+                        //TODO: DEMO_WW8 rtspclient - set (opt,val)
+                    }
+                    else
+                    {
+                        //std::cout<<"option: " << opt << " was not changed! " <<std::endl;
+                    }
             }
             
-            usleep(1000);
+            usleep(POLLING_SW_DEVICE_STATE_INTERVAL);
             //check if the active streams vector was changed 
             //if added stream:
             // 1. add to active streams 

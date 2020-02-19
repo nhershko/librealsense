@@ -3,14 +3,31 @@
 #pragma once
 
 #include <librealsense2/rs.hpp>
+#include "option.h"
 #include "camOERtspClient.h"
 #include "software-device.h"
 
 #include "rs_rtp_stream.hh"
 #include <list>
 #include "rs_rtp_callback.hh"
+#include "ip_sensor.hh"
 
 #define NUM_OF_SENSORS 2
+
+#define POLLING_SW_DEVICE_STATE_INTERVAL 1000
+
+struct my_control
+{
+    rs2_option option;
+    rs2::option_range range;
+    bool is_writable=true;
+};
+
+struct sensor_option
+{
+    rs2_option option;
+    float value;
+};
 
 class ip_device
     {
@@ -32,12 +49,16 @@ class ip_device
     
         std::string ip_address;
 
-        //add to sensor object - change to on off state. the number is handeled later by the update function 
+        // add to ip_sensor object - change to on off state. the number is handeled later by the update function 
         std::map<int, int> active_stream_per_sensor;
-        //add to sensor object and keep only enabled
+        // add to ip_sensor object and keep only enabled
         std::map<int, std::list<long long int>> streams_uid_per_sensor;
-        // add to new sensor object
+        // add to ip_sensor object
+        // TODO: use better solution for keeping generic option value
+        std::map<int,std::map<rs2_option,float>> sensors_option;
+        // add to ip_sensor object
         rs2::software_sensor* sensors[NUM_OF_SENSORS];
+
 
         //todo: consider wrapp all maps to single container 
         std::map<long long int, std::shared_ptr<rs_rtp_stream>> streams_collection;
