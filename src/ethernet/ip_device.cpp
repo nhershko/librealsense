@@ -73,7 +73,7 @@ std::vector<rs2_video_stream> ip_device::query_streams(int sensor_id)
 bool ip_device::init_device_data()
 {
     std::string url,sensor_name;
-    for (int sensor_id = 0; sensor_id < SENSORS_NUMBER; sensor_id++)
+    for (int sensor_id = 0; sensor_id < NUM_OF_SENSORS; sensor_id++)
     {
         if(sensor_id==0)
         {
@@ -121,7 +121,6 @@ bool ip_device::init_device_data()
             streams_collection[stream_key] = std::make_shared<rs_rtp_stream>(st,sensors[sensor_id]->add_video_stream(st,stream_index==0));
             memPool = &rs_rtp_stream::get_memory_pool();
             std::cout << "\t@@@ added stream [uid:hash] ["  << st.uid<<":"<< stream_key <<"] of type: " << streams_collection[stream_key].get()->stream_type() << std::endl;
-            streams_uid_per_sensor[sensor_id].push_front(stream_key);
         }
         std::cout << "\t@@@ done adding streams for sensor ID: " << sensor_id <<std::endl;
     }
@@ -200,8 +199,6 @@ void ip_device::update_sensor_state(int sensor_index,std::vector<rs2::stream_pro
     {
         rs2::video_stream_profile vst(updated_streams[i]);
 
-        
-
         long long int requested_stream_key = camOERTSPClient::getStreamProfileUniqueKey(convert_stream_object(vst));
 
         if(streams_collection.find(requested_stream_key) == streams_collection.end())
@@ -223,9 +220,9 @@ void ip_device::update_sensor_state(int sensor_index,std::vector<rs2::stream_pro
         rtp_callbacks[requested_stream_key] = new rs_rtp_callback(streams_collection[requested_stream_key]);
         
         rtsp_clients[sensor_index]->addStream(streams_collection[requested_stream_key].get()->m_rs_stream ,rtp_callbacks[requested_stream_key]);
-        
         std::cout << "\t@@@ initiate new thread for stream: " << vst.unique_id() << "\n";    
         inject_frames_thread[requested_stream_key] = std::thread(&ip_device::inject_frames_loop,this,streams_collection[requested_stream_key]);
+        streams_uid_per_sensor[sensor_index].push_front(requested_stream_key);
     }
 
     rtsp_clients[sensor_index]->start();
