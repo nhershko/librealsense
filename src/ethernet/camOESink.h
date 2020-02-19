@@ -59,7 +59,7 @@ private:
   rs2_video_stream fstream;
   ICompression *iCompress;
   memory_pool *memPool;
-  FramedSource::afterGettingFunc* afterGettingFunctions[4] = {afterGettingUid0Frame,afterGettingUid1Frame,afterGettingUid2Frame,afterGettingUid3Frame};
+  std::vector<FramedSource::afterGettingFunc*> afterGettingFunctions;
 };
 
 #endif // CAM_OE_SINK_H

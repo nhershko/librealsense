@@ -18,6 +18,11 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
   fReceiveBuffer = nullptr;
   fto = nullptr;
   std::string url_str = fStreamId;
+  afterGettingFunctions.push_back(afterGettingUid0Frame);
+  afterGettingFunctions.push_back(afterGettingUid1Frame);
+  afterGettingFunctions.push_back(afterGettingUid2Frame);
+  afterGettingFunctions.push_back(afterGettingUid3Frame);
+
   // Remove last "/"
   url_str = url_str.substr(0, url_str.size()-1);
   std::size_t stream_name_index = url_str.find_last_of("/") + 1;
@@ -148,10 +153,10 @@ Boolean camOESink::continuePlaying() {
     return false;
   }
 
-  if (fstream.uid>=0 && fstream.uid<4)
+  if (fstream.uid>=0 && fstream.uid<afterGettingFunctions.size())
   {
   fSource->getNextFrame(fReceiveBuffer, fBufferSize,
-                        afterGettingFunctions[fstream.uid], this,
+                        afterGettingFunctions.at(fstream.uid), this,
                         onSourceClosure, this);
   }
   else
