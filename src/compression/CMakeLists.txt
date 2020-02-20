@@ -15,12 +15,8 @@ file(GLOB COMPRESSION_SOURCES
  "*.cpp"
  "../ipDevice_Common/*.h"
  "../ipDevice_Common/*.cpp"
-# "zlib-1.2.11/*.c"
-# "jpeg-9c/*.c"
-# "lz4/*.c"
 )
 
-# add_library(${PROJECT_NAME} SHARED ${COMPRESSION_SOURCES})
 add_library(${PROJECT_NAME} STATIC ${COMPRESSION_SOURCES})
 
 include_directories(${PROJECT_NAME}
@@ -39,7 +35,6 @@ if(WIN32)
 
     target_link_libraries(${PROJECT_NAME}
         PRIVATE ${DEPENDENCIES}
-#        realsense2
         ${CMAKE_SOURCE_DIR}/src/compression/zlib-1.2.11/x86_64/zlibstaticd.lib
         ${CMAKE_SOURCE_DIR}/src/compression/turbo-jpeg/x86_64/jpeg-static.lib
         ${CMAKE_SOURCE_DIR}/src/compression/lz4/x86_64/lz4.lib
@@ -48,43 +43,6 @@ else()
     find_package(PkgConfig)
     find_package(ZLIB REQUIRED)
     find_package(JPEG REQUIRED)
-
-   #    target_link_libraries(${PROJECT_NAME}
-    #        PRIVATE ${DEPENDENCIES}
-    #        realsense2
-    #    )
-
-    #    find_package(ZLIB REQUIRED)
-    #    target_link_libraries(${PROJECT_NAME}
-    #        ${ZLIB_LIBRARIES}
-    #    )
-
-    #    find_package(JPEG REQUIRED)
-    #    target_link_libraries(${PROJECT_NAME} 
-    #        ${JPEG_LIBRARIES}
-    #    )
-
-##    find_package(TURBOJPEG REQUIRED)
-##    target_link_libraries(${PROJECT_NAME} 
-##        ${JPEG_LIBRARIES}
-##    )
-#
-#    pkg_check_modules(TURBOJPEG_PKGCONF libturbojpeg)
-#
-#    find_path(TURBOJPEG_INCLUDE_DIRS
-#        NAMES turbojpeg.h
-#        PATHS ${TURBOJPEG_PKGCONF_INCLUDE_DIRS}
-#    )
-#
-#    find_library(LZ4_LIBRARIES
-#        NAMES turbojpeg
-#        PATHS ${TURBOJPEG_PKGCONF_LIBRARY_DIRS}
-#    )
-
-#   find_package(LZ4 REQUIRED)
-#   target_link_libraries(${PROJECT_NAME} 
-#       ${LZ4_LIBRARIES}
-#   )
 
     pkg_check_modules(LZ4_PKGCONF liblz4)
 
@@ -100,13 +58,12 @@ else()
 
     target_link_libraries(${PROJECT_NAME}
          PRIVATE ${DEPENDENCIES}
-         realsense2
+#        realsense2
          ${ZLIB_LIBRARIES}
          ${JPEG_LIBRARIES}
          ${LZ4_LIBRARIES}
     )
-
- endif()
+endif()
 
 if(BUILD_COMPRESSION)
     add_definitions(-DCOMPRESSION)
@@ -117,19 +74,6 @@ if(BUILD_IPDEV_STATS)
 endif()
 
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "Library")
-
-#if(WIN32)
-#    install(TARGETS ${PROJECT_NAME}
-#        RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-#    )
-#else()
-#    install(TARGETS ${PROJECT_NAME}
-#        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-#    )
-#endif()
-
 
 install(TARGETS ${PROJECT_NAME}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
