@@ -16,19 +16,6 @@
 
 #define POLLING_SW_DEVICE_STATE_INTERVAL 1000
 
-struct my_control
-{
-    rs2_option option;
-    rs2::option_range range;
-    bool is_writable=true;
-};
-
-struct sensor_option
-{
-    rs2_option option;
-    float value;
-};
-
 class ip_device
     {
 
@@ -49,16 +36,7 @@ class ip_device
     
         std::string ip_address;
 
-        // add to ip_sensor object - change to on off state. the number is handeled later by the update function 
-        std::map<int, int> active_stream_per_sensor;
-        // add to ip_sensor object and keep only enabled
-        std::map<int, std::list<long long int>> streams_uid_per_sensor;
-        // add to ip_sensor object
-        // TODO: use better solution for keeping generic option value
-        std::map<int,std::map<rs2_option,float>> sensors_option;
-        // add to ip_sensor object
-        rs2::software_sensor* sensors[NUM_OF_SENSORS];
-
+        ip_sensor* remote_sensors[NUM_OF_SENSORS];
 
         //todo: consider wrapp all maps to single container 
         std::map<long long int, std::shared_ptr<rs_rtp_stream>> streams_collection;
@@ -67,9 +45,6 @@ class ip_device
 
         std::map<long long int, rs_rtp_callback*> rtp_callbacks;
 
-        // consider add to sensor object
-        IcamOERtsp* rtsp_clients[NUM_OF_SENSORS] = {NULL};
-        
         rs2::software_device sw_dev;
 
         std::thread sw_device_status_check;

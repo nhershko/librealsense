@@ -14,19 +14,25 @@ class ip_sensor
 {
 private:
     
+public:
     rs2::software_sensor* sw_sensor;
 
     std::list<long long int> active_streams_keys;
 
-    bool enabled;
+    std::map<rs2_option,float> sensors_option;
 
-public:
+    bool is_enabled;
+
+    IcamOERtsp* rtsp_client;
+
+
     ip_sensor(/* args */);
     ~ip_sensor();
 };
 
 ip_sensor::ip_sensor(/* args */)
 {
+    is_enabled=false;
 }
 
 ip_sensor::~ip_sensor()
