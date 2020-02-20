@@ -26,14 +26,17 @@ add_library(${PROJECT_NAME} STATIC ${COMPRESSION_SOURCES})
 include_directories(${PROJECT_NAME}
     ../../common
     ../ipDevice_Common
-    zlib-1.2.11/inc/
-    turbo-jpeg/inc/
-    lz4/inc/
 )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 
 if(WIN32)
+    include_directories(${PROJECT_NAME}
+        zlib-1.2.11/inc/
+        turbo-jpeg/inc/
+        lz4/inc/
+    )
+
     target_link_libraries(${PROJECT_NAME}
         PRIVATE ${DEPENDENCIES}
 #        realsense2
@@ -42,37 +45,68 @@ if(WIN32)
         ${CMAKE_SOURCE_DIR}/src/compression/lz4/x86_64/lz4.lib
     )
 else()
+    find_package(PkgConfig)
     find_package(ZLIB REQUIRED)
-    target_link_libraries(${PROJECT_NAME}
-        ${ZLIB_LIBRARIES}
-    )
-
     find_package(JPEG REQUIRED)
-    target_link_libraries(${PROJECT_NAME} 
-        ${JPEG_LIBRARIES}
+
+   #    target_link_libraries(${PROJECT_NAME}
+    #        PRIVATE ${DEPENDENCIES}
+    #        realsense2
+    #    )
+
+    #    find_package(ZLIB REQUIRED)
+    #    target_link_libraries(${PROJECT_NAME}
+    #        ${ZLIB_LIBRARIES}
+    #    )
+
+    #    find_package(JPEG REQUIRED)
+    #    target_link_libraries(${PROJECT_NAME} 
+    #        ${JPEG_LIBRARIES}
+    #    )
+
+##    find_package(TURBOJPEG REQUIRED)
+##    target_link_libraries(${PROJECT_NAME} 
+##        ${JPEG_LIBRARIES}
+##    )
+#
+#    pkg_check_modules(TURBOJPEG_PKGCONF libturbojpeg)
+#
+#    find_path(TURBOJPEG_INCLUDE_DIRS
+#        NAMES turbojpeg.h
+#        PATHS ${TURBOJPEG_PKGCONF_INCLUDE_DIRS}
+#    )
+#
+#    find_library(LZ4_LIBRARIES
+#        NAMES turbojpeg
+#        PATHS ${TURBOJPEG_PKGCONF_LIBRARY_DIRS}
+#    )
+
+#   find_package(LZ4 REQUIRED)
+#   target_link_libraries(${PROJECT_NAME} 
+#       ${LZ4_LIBRARIES}
+#   )
+
+    pkg_check_modules(LZ4_PKGCONF liblz4)
+
+    find_path(LZ4_INCLUDE_DIRS
+        NAMES lz4frame.h
+        PATHS ${LZ4_PKGCONF_INCLUDE_DIRS}
     )
 
-    find_package(LZ4 REQUIRED)
-    target_link_libraries(${PROJECT_NAME} 
-        ${LZ4_LIBRARIES}
+    find_library(LZ4_LIBRARIES
+        NAMES lz4
+        PATHS ${LZ4_PKGCONF_LIBRARY_DIRS}
     )
-endif()
 
-#
-#find_package(PkgConfig)
-#
-#pkg_check_modules(LZ4_PKGCONF liblz4)
-#
-#find_path(LZ4_INCLUDE_DIRS
-#  NAMES lz4frame.h
-#  PATHS ${LZ4_PKGCONF_INCLUDE_DIRS}
-#)
-#
-#find_library(LZ4_LIBRARIES
-#  NAMES lz4
-#  PATHS ${LZ4_PKGCONF_LIBRARY_DIRS}
-#)
-#
+    target_link_libraries(${PROJECT_NAME}
+         PRIVATE ${DEPENDENCIES}
+         realsense2
+         ${ZLIB_LIBRARIES}
+         ${JPEG_LIBRARIES}
+         ${LZ4_LIBRARIES}
+    )
+
+ endif()
 
 if(BUILD_COMPRESSION)
     add_definitions(-DCOMPRESSION)

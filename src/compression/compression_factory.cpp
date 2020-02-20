@@ -1,5 +1,3 @@
-#pragma once
-
 #include "rvl_compression.h"
 #include "gzip_compression.h"
 #include "jpeg_compression.h"
