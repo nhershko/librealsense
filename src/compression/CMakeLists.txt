@@ -9,63 +9,73 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 set(DEPENDENCIES ${DEPENDENCIES} realsense2)
 
-
 file(GLOB COMPRESSION_SOURCES 
  "*.hh"
  "*.h"
  "*.cpp"
-  "../ipDevice_Common/*.h"
+ "../ipDevice_Common/*.h"
  "../ipDevice_Common/*.cpp"
 )
 
-add_library(${PROJECT_NAME} SHARED ${COMPRESSION_SOURCES})
+add_library(${PROJECT_NAME} STATIC ${COMPRESSION_SOURCES})
 
 include_directories(${PROJECT_NAME}
-        ../../common
-        ../ipDevice_Common
+    ../../common
+    ../ipDevice_Common
 )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 
-find_package(ZLIB REQUIRED)
-find_package(JPEG REQUIRED)
+if(WIN32)
+    include_directories(${PROJECT_NAME}
+        zlib-1.2.11/inc/
+        turbo-jpeg/inc/
+        lz4/inc/
+    )
 
-target_link_libraries(${PROJECT_NAME} 
-    PRIVATE ${DEPENDENCIES}
-	realsense2
-	${ZLIB_LIBRARIES}
-	${JPEG_LIBRARIES}
-)
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE ${DEPENDENCIES}
+        ${CMAKE_SOURCE_DIR}/src/compression/zlib-1.2.11/x86_64/zlibstaticd.lib
+        ${CMAKE_SOURCE_DIR}/src/compression/turbo-jpeg/x86_64/jpeg-static.lib
+        ${CMAKE_SOURCE_DIR}/src/compression/lz4/x86_64/lz4.lib
+    )
+else()
+    find_package(PkgConfig)
+    find_package(ZLIB REQUIRED)
+    find_package(JPEG REQUIRED)
 
-find_package(PkgConfig)
+    pkg_check_modules(LZ4_PKGCONF liblz4)
 
-pkg_check_modules(LZ4_PKGCONF liblz4)
+    find_path(LZ4_INCLUDE_DIRS
+        NAMES lz4frame.h
+        PATHS ${LZ4_PKGCONF_INCLUDE_DIRS}
+    )
 
-find_path(LZ4_INCLUDE_DIRS
-  NAMES lz4frame.h
-  PATHS ${LZ4_PKGCONF_INCLUDE_DIRS}
-)
+    find_library(LZ4_LIBRARIES
+        NAMES lz4
+        PATHS ${LZ4_PKGCONF_LIBRARY_DIRS}
+    )
 
+    target_link_libraries(${PROJECT_NAME}
+         PRIVATE ${DEPENDENCIES}
+#        realsense2
+         ${ZLIB_LIBRARIES}
+         ${JPEG_LIBRARIES}
+         ${LZ4_LIBRARIES}
+    )
+endif()
 
-find_library(LZ4_LIBRARIES
-  NAMES lz4
-  PATHS ${LZ4_PKGCONF_LIBRARY_DIRS}
-)
-
-if(COMPRESSION)
+if(BUILD_COMPRESSION)
     add_definitions(-DCOMPRESSION)
 endif()
 
-if(IPDEV_STATS)
+if(BUILD_IPDEV_STATS)
     add_definitions(-DSTATISTICS)
 endif()
 
-
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "Library")
 
-#install(TARGETS rs-software-device RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
 install(TARGETS ${PROJECT_NAME}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )

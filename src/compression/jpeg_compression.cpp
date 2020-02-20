@@ -1,5 +1,3 @@
-#pragma once
-
 #include <iostream>
 #include <cstdint>
 #include <cstring>
@@ -146,7 +144,7 @@ int  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSize
 {	
 	unsigned char * ptr =  uncompressedBuf;
 	unsigned char* data = buffer;
-	uint jpegHeader, res;
+	unsigned int jpegHeader, res;
 #ifdef STATISTICS
 	statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_COLOR]->decompressionBegin = std::chrono::system_clock::now();
 #endif
