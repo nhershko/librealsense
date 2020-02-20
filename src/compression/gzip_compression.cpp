@@ -6,11 +6,12 @@
 #include "gzip_compression.h"
 #include <ipDevice_Common/statistic.h>
 
- GzipCompression::GzipCompression(int width, int height, rs2_format format)
+ GzipCompression::GzipCompression(int width, int height, rs2_format format, int bpp)
  {
 	 	m_format = format;
 		m_width = width;
 		m_height = height;
+		m_bpp = bpp;
 		windowsBits = 15;
 		GZIP_ENCODING = 16;
  }
@@ -70,7 +71,7 @@ int  GzipCompression::decompressBuffer(unsigned char* buffer, int compressedSize
 	strm.next_in = (Bytef *)buffer;
 	strm.avail_in =  compressedSize;
 	strm.next_out = (Bytef *)uncompressedBuf;
-	strm.avail_out = m_width*m_height*2; //change to bpp
+	strm.avail_out = m_width * m_height * m_bpp;
 	int z_result = inflateInit2(&strm, windowsBits | GZIP_ENCODING);
 	z_result = inflate(&strm, Z_FINISH);
 	if(z_result == Z_STREAM_ERROR || z_result == Z_BUF_ERROR) {

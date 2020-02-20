@@ -11,27 +11,31 @@
 
 #define MAX_INPUT_COMPONENT 3
 
-JpegCompression::JpegCompression(int width, int height, rs2_format format)
+JpegCompression::JpegCompression(int width, int height, rs2_format format, int bpp)
 {
 	cinfo.err = jpeg_std_error(&jerr);
 	dinfo.err = jpeg_std_error(&jerr);
 	jpeg_create_compress(&cinfo);
 	jpeg_create_decompress(&dinfo);
 	rowBuffer = new unsigned char[MAX_INPUT_COMPONENT * width];
-	destBuffer = (*cinfo.mem->alloc_sarray)((j_common_ptr) &cinfo, JPOOL_IMAGE, MAX_INPUT_COMPONENT * width, 1);//TODO: use  bpp instead of MAX_INPUT_COMPONENT
 	m_format = format;
 	m_width = width;
 	m_height = height;
-	cinfo.input_components = MAX_INPUT_COMPONENT; //TODO:change to bpp
+	m_bpp = bpp;
+	cinfo.input_components = m_bpp;
 	if (m_format == RS2_FORMAT_YUYV || m_format == RS2_FORMAT_UYVY) {
 		cinfo.in_color_space = JCS_YCbCr;
-		cinfo.input_components = 3; //yuyv is 2 bpp, we need to change to yuv that is 3 bpp
-	} else if(RS2_FORMAT_RGB8){
+		cinfo.input_components = 3; //yuyv is 2 bpp, changed to yuv that is 3 bpp.
+	} else if(m_format == RS2_FORMAT_RGB8){
 		cinfo.in_color_space = JCS_RGB;
+	} else if(m_format == RS2_FORMAT_Y8){
+		cinfo.in_color_space = JCS_GRAYSCALE;
+		cinfo.input_components = 1;
 	} else {
 		printf("unsupport format %d on jpeg compression\n", format);
 		return;
 	}
+	destBuffer = (*cinfo.mem->alloc_sarray)((j_common_ptr) &cinfo, JPOOL_IMAGE, cinfo.input_components * width, 1);
 	jpeg_set_defaults(&cinfo);
 }
 
@@ -52,7 +56,7 @@ void JpegCompression::convertYUYVtoYUV(unsigned char** buffer)
         rowBuffer[i*3 + 5] = (*buffer)[i*2 + 3]; // V (shared between pixels)
     }
 	row_pointer[0] = rowBuffer;
-	(*buffer) += cinfo.image_width * 2; 
+	(*buffer) += cinfo.image_width * m_bpp; 
 }
 
 void JpegCompression::convertUYVYtoYUV(unsigned char** buffer)
@@ -66,7 +70,7 @@ void JpegCompression::convertUYVYtoYUV(unsigned char** buffer)
         rowBuffer[i*3 + 5] = (*buffer)[i*2 + 2]; // V (shared between pixels)
     }
 	row_pointer[0] = rowBuffer;
-	(*buffer) += cinfo.image_width * 2; 
+	(*buffer) += cinfo.image_width * m_bpp; 
 }
 
 void JpegCompression::convertYUVtoYUYV(unsigned char** uncompressBuff) 
@@ -104,7 +108,7 @@ int JpegCompression::compressBuffer(unsigned char* buffer, int size, unsigned ch
 	uint64_t row_stride = cinfo.image_width * cinfo.input_components;
 	jpeg_start_compress(&cinfo, TRUE);
 	while (cinfo.next_scanline < cinfo.image_height) {
-		if (m_format == RS2_FORMAT_RGB8) {
+		if (m_format == RS2_FORMAT_RGB8 || m_format == RS2_FORMAT_Y8) {
 			row_pointer[0] = & buffer[cinfo.next_scanline * row_stride];
 		} else if(m_format == RS2_FORMAT_YUYV){
 			convertYUYVtoYUV(&buffer);
@@ -161,6 +165,8 @@ int  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSize
 		dinfo.out_color_space = JCS_RGB;
 	} else if(m_format == RS2_FORMAT_YUYV){
 		dinfo.out_color_space = JCS_YCbCr;
+	} else if(m_format == RS2_FORMAT_Y8){
+		dinfo.out_color_space = JCS_GRAYSCALE;
 	}
 	res =  jpeg_start_decompress(&dinfo);
 	if (!res) {
@@ -170,15 +176,9 @@ int  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSize
 	uint64_t row_stride = dinfo.output_width * dinfo.output_components;
 	while (dinfo.output_scanline < dinfo.output_height) {
 		(void) jpeg_read_scanlines(&dinfo, destBuffer, 1);
-		if (m_format == RS2_FORMAT_RGB8) {
-			for (int i = 0; i < dinfo.output_width; i ++) {
-		 		ptr[i] = destBuffer[0][i];
-		  		ptr[i+ 1] = destBuffer[0][i +1];
-		    	ptr[i+ 2] = destBuffer[0][i +2];
-		    }
-			ptr += dinfo.output_width  * dinfo.output_components;
-			//memcpy(ptr,destBuffer[0], row_stride);
-			//ptr+= row_stride;
+		if (m_format == RS2_FORMAT_RGB8 || m_format == RS2_FORMAT_Y8) {
+			memcpy(ptr, destBuffer[0], row_stride);
+			ptr+= row_stride;
 		} else if(m_format == RS2_FORMAT_YUYV){
 			convertYUVtoYUYV(&ptr);
 		} else if (m_format == RS2_FORMAT_UYVY) {
@@ -189,7 +189,7 @@ int  JpegCompression::decompressBuffer(unsigned char* buffer, int compressedSize
 		}
 	}
 	(void) jpeg_finish_decompress(&dinfo);
-	int uncompressedSize = dinfo.output_width*dinfo.output_height*2;//TODO: change to bpp 
+	int uncompressedSize = dinfo.output_width * dinfo.output_height * m_bpp;
 	if (decompframeCounter++%50 == 0) {
 		printf("finish jpeg color decompression, size: %lu, compressed size %u, frameNum: %d \n",uncompressedSize, compressedSize, decompframeCounter);
 	}

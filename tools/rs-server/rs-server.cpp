@@ -88,7 +88,7 @@ int main(int argc, char **argv)
       rs2::video_stream_profile stream = stream_profile.second;
       //TODO: expose all streams when host is ready
       //if (stream.format() != RS2_FORMAT_Y16)// || stream.format() == RS2_FORMAT_Y8 || stream.format() == RS2_FORMAT_Y16 || stream.format() == RS2_FORMAT_RAW16 || stream.format() == RS2_FORMAT_YUYV || stream.format() == RS2_FORMAT_UYVY)
-      if (stream.format() == RS2_FORMAT_Z16 || stream.format() == RS2_FORMAT_Y8 || stream.format() == RS2_FORMAT_YUYV || stream.format() == RS2_FORMAT_UYVY)
+      if (stream.format() == RS2_FORMAT_RGB8 ||stream.format() == RS2_FORMAT_Z16 || stream.format() == RS2_FORMAT_Y8 || stream.format() == RS2_FORMAT_YUYV || stream.format() == RS2_FORMAT_UYVY)
       {
         if (stream.fps() == 6)
         {
