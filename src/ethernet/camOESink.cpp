@@ -18,6 +18,11 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
   fReceiveBuffer = nullptr;
   fto = nullptr;
   std::string url_str = fStreamId;
+  afterGettingFunctions.push_back(afterGettingFrameUid0);
+  afterGettingFunctions.push_back(afterGettingFrameUid1);
+  afterGettingFunctions.push_back(afterGettingFrameUid2);
+  afterGettingFunctions.push_back(afterGettingFrameUid3);
+
   // Remove last "/"
   url_str = url_str.substr(0, url_str.size()-1);
   std::size_t stream_name_index = url_str.find_last_of("/") + 1;
@@ -32,7 +37,7 @@ camOESink::camOESink(UsageEnvironment& env, MediaSubsession& subsession,rs2_vide
     fp = fopen("file_rgb.bin", "ab");
   }*/
 #ifdef COMPRESSION
-  iCompress = CompressionFactory::getObject(fstream.width, fstream.height, fstream.fmt, fstream.type);
+  iCompress = CompressionFactory::getObject(fstream.width, fstream.height, fstream.fmt, fstream.type, fstream.bpp);
 #endif
   envir() << "create new sink";
 #ifdef STATISTICS  
@@ -50,14 +55,14 @@ camOESink::~camOESink() {
 }
 
 
-void camOESink::afterGettingUid0Frame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
+void camOESink::afterGettingFrameUid0(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
 				  struct timeval presentationTime, unsigned durationInMicroseconds) {
   
   camOESink* sink = (camOESink*)clientData;
   sink->afterGettingFrame(frameSize, numTruncatedBytes, presentationTime, durationInMicroseconds);
 }
 
-void camOESink::afterGettingUid1Frame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
+void camOESink::afterGettingFrameUid1(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
 				  struct timeval presentationTime, unsigned durationInMicroseconds) {
   
   camOESink* sink = (camOESink*)clientData;
@@ -65,14 +70,14 @@ void camOESink::afterGettingUid1Frame(void* clientData, unsigned frameSize, unsi
 
 }
                 
-void camOESink::afterGettingUid2Frame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
+void camOESink::afterGettingFrameUid2(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
 				  struct timeval presentationTime, unsigned durationInMicroseconds) {
   
   camOESink* sink = (camOESink*)clientData;
   sink->afterGettingFrame(frameSize, numTruncatedBytes, presentationTime, durationInMicroseconds);
 }
 
-void camOESink::afterGettingUid3Frame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
+void camOESink::afterGettingFrameUid3(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
 				  struct timeval presentationTime, unsigned durationInMicroseconds) {
   
   camOESink* sink = (camOESink*)clientData;
@@ -129,7 +134,7 @@ void camOESink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
       int decompressedSize = iCompress->decompressBuffer(fReceiveBuffer+sizeof(rs_frame_header), header->size-sizeof(rs_frame_metadata), fto+sizeof(rs_frame_header));
       // copy metadata
       memcpy(fto+sizeof(rs_over_ethernet_data_header), fReceiveBuffer+sizeof(rs_over_ethernet_data_header), sizeof(rs_frame_metadata));
-      this->m_rtp_callback->on_frame((u_int8_t*)fto+sizeof(rs_over_ethernet_data_header), decompressedSize + sizeof(rs_frame_metadata), presentationTime);//todo: change to bpp
+      this->m_rtp_callback->on_frame((u_int8_t*)fto+sizeof(rs_over_ethernet_data_header), decompressedSize + sizeof(rs_frame_metadata), presentationTime);
       memPool->returnMem(fReceiveBuffer);
 #else
     this->m_rtp_callback->on_frame(fReceiveBuffer+sizeof(rs_over_ethernet_data_header), header->size, presentationTime);
@@ -165,34 +170,17 @@ Boolean camOESink::continuePlaying() {
     return false;
   }
 
-  if(fstream.uid == 0)
+  if (fstream.uid>=0 && fstream.uid<afterGettingFunctions.size())
   {
   fSource->getNextFrame(fReceiveBuffer, fBufferSize,
-                        afterGettingUid0Frame, this,
-                        onSourceClosure, this);
-  }
-  else if(fstream.uid == 1)
-  {
-  fSource->getNextFrame(fReceiveBuffer, fBufferSize,
-                        afterGettingUid1Frame, this,
-                        onSourceClosure, this);
-  }
-  else if(fstream.uid == 2)
-  {
-  fSource->getNextFrame(fReceiveBuffer, fBufferSize,
-                        afterGettingUid2Frame, this,
-                        onSourceClosure, this);
-  }
-  else if(fstream.uid == 3)
-  {
-  fSource->getNextFrame(fReceiveBuffer, fBufferSize,
-                        afterGettingUid3Frame, this,
+                        afterGettingFunctions.at(fstream.uid), this,
                         onSourceClosure, this);
   }
   else
   {
     return false;
   }
+  
   return True;
 }
 

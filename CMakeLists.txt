@@ -23,10 +23,10 @@ if(IMPORT_DEPTH_CAM_FW AND NOT INTERNET_CONNECTION)
     set(IMPORT_DEPTH_CAM_FW OFF)
 endif()
 
-set(BUILD_COMPRESSION ON CACHE PATH "Enable various compression engines support")
-set(BUILD_IPDEV ON CACHE PATH "Enable IP device support")
-set(BUILD_IPDEV_UNITTESTS ON CACHE PATH "Enable unittests for IP device")
-set(BUILD_IPDEV_STATS ON CACHE PATH "Enable statistics for IP device")
+set(BUILD_COMPRESSION     ON CACHE BOOL "Enable various compression engines support")
+set(BUILD_IPDEV           ON CACHE BOOL "Enable IP device support")
+set(BUILD_IPDEV_UNITTESTS ON CACHE BOOL "Enable unittests for IP device")
+set(BUILD_IPDEV_STATS     ON CACHE BOOL "Enable statistics for IP device")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/CMake)
 
@@ -92,9 +92,9 @@ if(BUILD_IPDEV)
     add_subdirectory(src/ethernet)
 endif()
 
-#if(COMPRESSION)
+if(BUILD_COMPRESSION)
     add_subdirectory(src/compression)
-#endif()
+endif()
 
 if(BUILD_IPDEV_UNITTESTS)
     add_subdirectory(unit-tests-ip)

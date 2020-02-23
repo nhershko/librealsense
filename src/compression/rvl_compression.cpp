@@ -7,11 +7,12 @@
 #include "rvl_compression.h"
 #include <ipDevice_Common/statistic.h>
 
- RvlCompression::RvlCompression(int width, int height, rs2_format format)
+ RvlCompression::RvlCompression(int width, int height, rs2_format format, int bpp)
  {
 	 	m_format = format;
 		m_width = width;
 		m_height = height;
+		m_bpp = bpp;
  }
 
 
@@ -29,6 +30,8 @@ int RvlCompression::EncodeVLE(int value)
 		word = 0;
 		}
 	} while (value);
+
+	return 0;
 }
 
 int RvlCompression::decodeVLE()
@@ -53,11 +56,10 @@ int RvlCompression::decodeVLE()
 
 int RvlCompression::compressBuffer(unsigned char* buffer, int size, unsigned char* compressedBuf) 
 {
-	int bpp = 2;
 	short * buffer2 = (short *)buffer;
 	int * pHead =  pBuffer = (int*)compressedBuf + 1;
 	nibblesWritten = 0;
-	short *end = buffer2 + size/bpp;
+	short *end = buffer2 + size/m_bpp;
 	short previous = 0;
 #ifdef STATISTICS
 	statistic::getStatisticStreams()[rs2_stream::RS2_STREAM_DEPTH]->compressionBegin = std::chrono::system_clock::now();
@@ -96,6 +98,7 @@ int RvlCompression::compressBuffer(unsigned char* buffer, int size, unsigned cha
 	st->compressedSizeSum = compressedSize;
 	printf("STATISTICS: streamType: %d, rvl ratio: %0.2fm, counter: %d\n",rs2_stream::RS2_STREAM_DEPTH, st->decompressedSizeSum/(float)st->compressedSizeSum, st->compressionFrameCounter);
 #endif
+	memcpy(compressedBuf, &compressedSize, sizeof(compressedSize));
 	return compressedSize;
 }
 

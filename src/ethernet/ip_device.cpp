@@ -1,7 +1,12 @@
 #include "ip_device.hh"
-#include <librealsense2/rs.hpp>
+
 #include <ipDevice_Common/statistic.h>
 #include <list>
+
+#include <chrono>
+#include <thread>
+
+ char* sensors_str[] = {"depth","color"};
 
 rs2_intrinsics get_hard_coded_sensor_intrinsics(rs2_video_stream stream)
 {
@@ -18,14 +23,8 @@ void ip_device::recover_rtsp_client(int sensor_index)
 {
     std::cout <<"\t@@@ do second init for rtsp client\n";
 
-    if(sensor_index==0)
-    {
-        remote_sensors[sensor_index]->rtsp_client = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/depth").c_str(),"ethernet_device");
-	}
-    else if (sensor_index==1)
-    {
-        remote_sensors[sensor_index]->rtsp_client = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/color").c_str(),"ethernet_device");
-	}
+    remote_sensors[sensor_index]->rtsp_client = camOERTSPClient::getRtspClient(std::string("rtsp://" + ip_address + ":8554/"+ sensors_str[sensor_index]).c_str(),"ethernet_device");
+	
     ((camOERTSPClient*)remote_sensors[sensor_index]->rtsp_client)->initFunc(&rs_rtp_stream::get_memory_pool());
     ((camOERTSPClient*)remote_sensors[sensor_index]->rtsp_client)->queryStreams();
     
@@ -73,19 +72,12 @@ std::vector<rs2_video_stream> ip_device::query_streams(int sensor_id)
 
 bool ip_device::init_device_data()
 {
-    std::string url,sensor_name;
+    std::string url,sensor_name="";
     for (int sensor_id = 0; sensor_id < NUM_OF_SENSORS; sensor_id++)
     {
-        if(sensor_id==0)
-        {
-            url = std::string("rtsp://" + ip_address + ":8554/depth");
-            sensor_name = "Depth (Remote)";
-        }
-        else if (sensor_id==1)
-        {
-            url = std::string("rtsp://" + ip_address + ":8554/color");
-            sensor_name = "Color (Remote)";
-        }
+
+        url = std::string("rtsp://" + ip_address + ":8554/"+sensors_str[sensor_id]);
+        sensor_name = sensors_str[sensor_id] + std::string(" (Remote)");
 
         remote_sensors[sensor_id] = new ip_sensor();
 
@@ -191,8 +183,7 @@ void ip_device::polling_state_loop()
                         //std::cout<<"option: " << opt << " was not changed! " <<std::endl;
                     }
             }
-            
-            usleep(POLLING_SW_DEVICE_STATE_INTERVAL);
+			std::this_thread::sleep_for(std::chrono::microseconds(POLLING_SW_DEVICE_STATE_INTERVAL));
         }
 
 }
@@ -227,7 +218,7 @@ void ip_device::update_sensor_state(int sensor_index,std::vector<rs2::stream_pro
                 continue;
             std::cout << "\t@@@ stopping stream [uid:key] " << streams_collection[key].get()->m_rs_stream.uid <<":"<<key<< "]" <<std::endl;
             streams_collection[key].get()->is_enabled=false;
-            inject_frames_thread[key].join();
+            if (inject_frames_thread[key].joinable()) inject_frames_thread[key].join();
         }
         remote_sensors[sensor_index]->active_streams_keys.clear();
         return;
@@ -270,18 +261,20 @@ void ip_device::update_sensor_state(int sensor_index,std::vector<rs2::stream_pro
     std::cout << "stream started for sensor index: " << sensor_index << "  \n";
 }
 
-rs2::software_device ip_device::create_ip_device(std::string ip_address)
+rs2::software_device ip_device::create_ip_device(const char* ip_address)
 {
+	std::string addr(ip_address);
+
     // create sw device
     rs2::software_device sw_dev = rs2::software_device();
     // create IP instance
-    ip_device* ip_dev = new ip_device(ip_address, sw_dev);
+    ip_device* ip_dev = new ip_device(addr, sw_dev);
     // set client destruction functioun
     ip_dev->sw_dev.set_destruction_callback([ip_dev]{delete ip_dev;});
     // register device info to sw device
     device_data data = ip_dev->remote_sensors[0]->rtsp_client->getDeviceData();
     ip_dev->sw_dev.update_info(RS2_CAMERA_INFO_NAME, data.name + "\n IP Device");
-    ip_dev->sw_dev.register_info(rs2_camera_info::RS2_CAMERA_INFO_IP_ADDRESS, ip_address);
+    ip_dev->sw_dev.register_info(rs2_camera_info::RS2_CAMERA_INFO_IP_ADDRESS, addr);
     ip_dev->sw_dev.register_info(rs2_camera_info::RS2_CAMERA_INFO_SERIAL_NUMBER, data.serial_num);
     ip_dev->sw_dev.register_info(rs2_camera_info::RS2_CAMERA_INFO_USB_TYPE_DESCRIPTOR, data.usb_type);
     // return sw device 
