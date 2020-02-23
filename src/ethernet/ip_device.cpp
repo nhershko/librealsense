@@ -60,7 +60,7 @@ std::vector<rs2_video_stream> ip_device::query_streams(int sensor_id)
 			return streams;
     
     //workaround 
-    if(!((camOERTSPClient*)remote_sensors[sensor_id]->rtsp_client)->isConnected())
+    if(remote_sensors[sensor_id]->rtsp_client==nullptr)
             recover_rtsp_client(sensor_id);
     
     streams = remote_sensors[sensor_id]->rtsp_client->queryStreams();
@@ -210,6 +210,7 @@ void ip_device::update_sensor_state(int sensor_index,std::vector<rs2::stream_pro
         std::cout <<"\t@@@ removing all streams for sensor index: " << sensor_index <<std::endl;
         remote_sensors[sensor_index]->rtsp_client->stop();
         remote_sensors[sensor_index]->rtsp_client->close();
+        remote_sensors[sensor_index]->rtsp_client=nullptr;
 
         //for (long long int key : streams_uid_per_sensor[sensor_index]) 
         for (long long int key : remote_sensors[sensor_index]->active_streams_keys) 
@@ -243,7 +244,7 @@ void ip_device::update_sensor_state(int sensor_index,std::vector<rs2::stream_pro
         std::cout<< "\t@@@ starting new stream with [uid:key] [" << vst.unique_id() <<":"<< requested_stream_key << "] of type: " << vst.stream_type()  << std::endl;
 
         //temporary nhershko workaround for start after stop
-        if(!((camOERTSPClient*)remote_sensors[sensor_index]->rtsp_client)->isConnected())
+        if(remote_sensors[sensor_index]->rtsp_client==nullptr)
         {
             recover_rtsp_client(sensor_index);
         }

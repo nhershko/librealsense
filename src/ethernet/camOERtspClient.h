@@ -22,8 +22,7 @@ public:
     void describe();
     void setup(rs2_video_stream stream);
     void initFunc(memory_pool* pool);
-    virtual bool isConnected();
-
+    
     static long long int getStreamProfileUniqueKey(rs2_video_stream profile);
     void setDeviceData(device_data data);
 
@@ -60,8 +59,6 @@ private:
     std::condition_variable cv;
     std::mutex command_mtx;
     bool cammand_done = false;
-    // TODO: W/A for stop - should be removed
-    bool is_connected;
     device_data fDeviceData;
     memory_pool* memPool;
 

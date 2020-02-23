@@ -160,13 +160,12 @@ int camOERTSPClient::close()
   cv.wait(lck, [this]{return cammand_done;}); 
   // for the next command
   cammand_done = false;
-  is_connected = false;
   
   int res_code = this->commandResultCode;
 
   // delete the rtsp instance
   this->envir() <<  "Closing the stream.\n";
-  //Medium::close(this);
+  Medium::close(this);
 
   return res_code;
 }
@@ -182,13 +181,7 @@ void camOERTSPClient::initFunc(memory_pool* pool)
 {
    std::thread thread_scheduler(schedulerThread, this);
    thread_scheduler.detach();
-   is_connected=true;
    memPool = pool;
-}
-
-bool camOERTSPClient::isConnected()
-{
-  return is_connected;
 }
 
 void camOERTSPClient::setDeviceData(device_data data)
