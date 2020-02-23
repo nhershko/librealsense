@@ -20,6 +20,7 @@ struct Raw_Frame
 	struct timeval m_timestamp;
 };
 
+// TODO: consider use and extend librs c+ stream object
 class rs_rtp_stream
 {
     public:
@@ -110,7 +111,4 @@ class rs_rtp_stream
         
         // pixels data 
         std::vector<uint8_t> pixels_buff;
-        
-        //nhershko consider remove the below profile
-        rs2::stream_profile profile;
 };
